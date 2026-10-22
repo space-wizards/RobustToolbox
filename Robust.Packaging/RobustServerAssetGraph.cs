@@ -24,8 +24,9 @@ namespace Robust.Packaging;
 ///     PresetPassesCore       --2--> Output
 ///     InputResources         -->    PresetPassesResources
 ///     PresetPassesResources  --1--> AudioMetadata
-///     PresetPassesResources  --2--> NormalizeTextResources
-///     PresetPassesResources  --3--> PrefixResources
+///     PresetPassesResources  --2--> DropAudioFiles
+///     PresetPassesResources  --3--> NormalizeTextResources
+///     PresetPassesResources  --4--> PrefixResources
 ///     AudioMetadata          -->    PrefixResources
 ///     NormalizeTextResources -->    PrefixResources
 ///     PrefixResources        -->    Output
@@ -58,6 +59,17 @@ public sealed class RobustServerAssetGraph
     public AssetPassPipe InputResources { get; }
     public AssetPassPipe PresetPassesResources { get; }
     public AssetPassAudioMetadata AudioMetadata { get; }
+
+    /// <summary>
+    /// Used to drop all files in the <c>Audio/</c> directory.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Most audio files are actually removed by <see cref="AudioMetadata"/>.
+    /// This pass cleans up stuff like attribution files and soundfonts in <c>Audio/MidiCustom</c>.
+    /// </para>
+    /// </remarks>
+    public AssetPassFilterDrop DropAudioFiles { get; }
 
     /// <summary>
     /// Normalizes text files in resources.
@@ -103,10 +115,12 @@ public sealed class RobustServerAssetGraph
         PresetPassesResources = new AssetPassPipe { Name = "RobustServerAssetGraphPresetPassesResources" };
         NormalizeTextResources = new AssetPassNormalizeText { Name = "RobustServerAssetGraphNormalizeTextResources" };
         AudioMetadata = new AssetPassAudioMetadata { Name = "RobustServerAssetGraphAudioMetadata" };
+        DropAudioFiles = new AssetPassFilterDrop(p => p.Path.StartsWith("Audio/")) { Name = "RobustServerAssetGraphDropAudioFiles" };
         PrefixResources = new AssetPassPrefix("Resources/") { Name = "RobustServerAssetGraphPrefixResources" };
 
         PresetPassesResources.AddDependency(InputResources);
-        AudioMetadata.AddDependency(PresetPassesResources).AddBefore(NormalizeTextResources);
+        AudioMetadata.AddDependency(PresetPassesResources).AddBefore(DropAudioFiles);
+        DropAudioFiles.AddDependency(PresetPassesResources).AddBefore(NormalizeTextResources);
         NormalizeTextResources.AddDependency(PresetPassesResources).AddBefore(PrefixResources);
         PrefixResources.AddDependency(PresetPassesResources);
         PrefixResources.AddDependency(AudioMetadata);
@@ -124,6 +138,7 @@ public sealed class RobustServerAssetGraph
             NormalizeTextResources,
             AudioMetadata,
             PrefixResources,
+            DropAudioFiles
         };
     }
 }

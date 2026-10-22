@@ -22,6 +22,8 @@ namespace Robust.Client.Graphics.Clyde
 
             private readonly Dictionary<WindowId, WindowData> _windowData = new();
 
+            private readonly ISawmill _sawmill;
+
             private void* _eglDisplay;
             private void* _eglContext;
             private void* _eglConfig;
@@ -30,6 +32,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public GLContextEgl(Clyde clyde) : base(clyde)
             {
+                _sawmill = clyde._logManager.GetSawmill("clyde.ogl.egl");
             }
 
             public override GLContextSpec? SpecWithOpenGLVersion(RendererOpenGLVersion version)
@@ -47,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
             public void InitializePublic()
             {
                 var extensions = Marshal.PtrToStringUTF8((nint) eglQueryString(null, EGL_EXTENSIONS));
-                Logger.DebugS("clyde.ogl.egl", $"EGL client extensions: {extensions}!");
+                _sawmill.Debug($"EGL client extensions: {extensions}!");
             }
 
             public override void WindowCreated(GLContextSpec? spec, WindowReg reg)
@@ -133,10 +136,10 @@ namespace Robust.Client.Graphics.Clyde
                 var version = Marshal.PtrToStringUTF8((nint) eglQueryString(_eglDisplay, EGL_VERSION));
                 var extensions = Marshal.PtrToStringUTF8((nint) eglQueryString(_eglDisplay, EGL_EXTENSIONS));
 
-                Logger.DebugS("clyde.ogl.egl", "EGL initialized!");
-                Logger.DebugS("clyde.ogl.egl", $"EGL vendor: {vendor}!");
-                Logger.DebugS("clyde.ogl.egl", $"EGL version: {version}!");
-                Logger.DebugS("clyde.ogl.egl", $"EGL extensions: {extensions}!");
+                _sawmill.Debug("EGL initialized!");
+                _sawmill.Debug($"EGL vendor: {vendor}!");
+                _sawmill.Debug($"EGL version: {version}!");
+                _sawmill.Debug($"EGL extensions: {extensions}!");
 
                 if (eglBindAPI(EGL_OPENGL_ES_API) != EGL_TRUE)
                     throw new Exception("eglBindAPI failed.");
@@ -164,11 +167,11 @@ namespace Robust.Client.Graphics.Clyde
                 if (numConfigs == 0)
                     throw new Exception("No compatible EGL configurations returned!");
 
-                Logger.DebugS("clyde.ogl.egl", $"{numConfigs} EGL configs possible!");
+                _sawmill.Debug($"{numConfigs} EGL configs possible!");
 
                 for (var i = 0; i < numConfigs; i++)
                 {
-                    Logger.DebugS("clyde.ogl.egl", DumpEglConfig(_eglDisplay, configs[i]));
+                    _sawmill.Debug(DumpEglConfig(_eglDisplay, configs[i]));
                 }
 
                 _eglConfig = configs[0];
@@ -183,7 +186,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (_eglContext == (void*) EGL_NO_CONTEXT)
                     throw new Exception("eglCreateContext failed!");
 
-                Logger.DebugS("clyde.ogl.egl", "EGL context created!");
+                _sawmill.Debug("EGL context created!");
             }
 
             public override void Shutdown()

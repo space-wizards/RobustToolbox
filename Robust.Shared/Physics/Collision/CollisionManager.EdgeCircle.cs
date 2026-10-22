@@ -79,9 +79,9 @@ internal sealed partial class CollisionManager
 		        manifold.Type = ManifoldType.Circles;
 		        manifold.LocalNormal = Vector2.Zero;
 		        manifold.LocalPoint = P;
-		        manifold.Points[0].Id.Key = 0;
-		        manifold.Points[0].Id.Features = cf;
-		        manifold.Points[0].LocalPoint = circleB.Position;
+		        manifold.Points._00.Id.Key = 0;
+		        manifold.Points._00.Id.Features = cf;
+		        manifold.Points._00.LocalPoint = circleB.Position;
 		        return;
 	        }
 
@@ -114,9 +114,9 @@ internal sealed partial class CollisionManager
 		        manifold.Type = ManifoldType.Circles;
 		        manifold.LocalNormal = Vector2.Zero;
 		        manifold.LocalPoint = P;
-		        manifold.Points[0].Id.Key = 0;
-		        manifold.Points[0].Id.Features = cf;
-		        manifold.Points[0].LocalPoint = circleB.Position;
+		        manifold.Points._00.Id.Key = 0;
+		        manifold.Points._00.Id.Features = cf;
+		        manifold.Points._00.LocalPoint = circleB.Position;
 		        return;
 	        }
 
@@ -142,8 +142,8 @@ internal sealed partial class CollisionManager
 	        manifold.Type = ManifoldType.FaceA;
 	        manifold.LocalNormal = n;
 	        manifold.LocalPoint = A;
-	        manifold.Points[0].Id.Key = 0;
-	        manifold.Points[0].Id.Features = cf;
-	        manifold.Points[0].LocalPoint = circleB.Position;
+	        manifold.Points._00.Id.Key = 0;
+	        manifold.Points._00.Id.Features = cf;
+	        manifold.Points._00.LocalPoint = circleB.Position;
         }
 }

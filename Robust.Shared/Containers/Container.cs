@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -17,7 +15,6 @@ namespace Robust.Shared.Containers
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
     [UsedImplicitly]
-    [SerializedType(nameof(Container))]
     public sealed partial class Container : BaseContainer
     {
         /// <summary>
@@ -51,14 +48,7 @@ namespace Robust.Shared.Containers
             if (!_containerList.Contains(contained))
                 return false;
 
-#if DEBUG
-            if (IoCManager.Resolve<IGameTiming>().ApplyingState)
-                return true;
-
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            var flags = entMan.GetComponent<MetaDataComponent>(contained).Flags;
-            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0, $"Entity has bad container flags. Ent: {entMan.ToPrettyString(contained)}. Container: {ID}, Owner: {entMan.ToPrettyString(Owner)}");
-#endif
+            System?.AssertInContainer(contained, this);
             return true;
         }
 

@@ -15,11 +15,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Npgsql;
 using Npgsql.Internal;
-using Npgsql.Internal.TypeHandlers;
-using Npgsql.Internal.TypeHandling;
 
 namespace Robust.Benchmarks.Exporters;
 
+/*
 public sealed class SQLExporter : IExporter
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
@@ -98,7 +97,9 @@ public sealed class SQLExporter : IExporter
 
     public string Name => "sql";
 }
+*/
 
+/*
 // https://github.com/npgsql/efcore.pg/issues/1107#issuecomment-945126627
 class JsonOverrideTypeHandlerResolverFactory : TypeHandlerResolverFactory
 {
@@ -138,6 +139,7 @@ class JsonOverrideTypeHandlerResolverFactory : TypeHandlerResolverFactory
             => null; // Let the built-in resolver do this
     }
 }
+*/
 
 public sealed class DesignTimeContextFactoryPostgres : IDesignTimeDbContextFactory<BenchmarkContext>
 {

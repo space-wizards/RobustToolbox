@@ -19,12 +19,19 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientGameStateManager _stateMan = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IClientNetManager _networkManager = default!;
+        [Dependency] private IClientGameTiming _gameTiming = default!;
+        [Dependency] private IClientGameStateManager _stateMan = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private IReplayRecordingManager _replayRecording = default!;
+
+        internal event Action? AfterStartup;
+        internal event Action? AfterShutdown;
+
+        private readonly HashSet<EntityUid> _predictedDetachedEntities = new();
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entityNetHistogram;
 
         public override void Initialize()
         {
@@ -34,11 +41,26 @@ namespace Robust.Client.GameObjects
             base.Initialize();
         }
 
+        public override void Startup()
+        {
+            base.Startup();
+
+            AfterStartup?.Invoke();
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            AfterShutdown?.Invoke();
+        }
+
         public override void FlushEntities()
         {
             // Server doesn't network deletions on client shutdown so we need to
             // manually clear these out or risk stale data getting used.
             PendingNetEntityStates.Clear();
+            _predictedDetachedEntities.Clear();
             using var _ = _gameTiming.StartStateApplicationArea();
             base.FlushEntities();
         }
@@ -46,16 +68,6 @@ namespace Robust.Client.GameObjects
         EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, out MetaDataComponent metadata)
         {
             return base.CreateEntity(prototypeName, out metadata);
-        }
-
-        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
-        {
-            base.InitializeEntity(entity, meta);
-        }
-
-        void IClientEntityManagerInternal.StartEntity(EntityUid entity)
-        {
-            base.StartEntity(entity);
         }
 
         /// <inheritdoc />
@@ -71,18 +83,40 @@ namespace Robust.Client.GameObjects
             if (uid == null || uid == EntityUid.Invalid)
                 return;
 
-            if (IsClientSide(uid.Value))
+            // Some UIs get disposed after entity manager has shut down and already deleted all entities.
+            if (!Started || ShuttingDown)
+                return;
+
+            // Already detached to nullspace by a predicted deletion, nothing left to queue.
+            if (_predictedDetachedEntities.Contains(uid.Value))
+                return;
+
+            // Networked entities are handled by DeleteEntity when the queue gets processed, which predicts the
+            // deletion by detaching them.
+            base.QueueDeleteEntity(uid);
+
+            // Rollback must also cancel predicted deletions before the queue is processed.
+            if (MetaQuery.TryGetComponent(uid.Value, out var meta) && !meta.NetEntity.IsClientSide())
+                DirtyEntity(uid.Value, meta);
+        }
+
+        /// <inheritdoc />
+        public override void DeleteEntity(EntityUid uid, MetaDataComponent meta, TransformComponent xform)
+        {
+            // There's 3 scenarios:
+            // 1. We're applying server state, so the deletion is authoritative and actually happens.
+            // 2. Client-side entity, which we can just delete.
+            // 3. Networked entity, which we predict by detaching to nullspace and letting state handling restore it.
+            if (!_gameTiming.ApplyingState && !meta.NetEntity.IsClientSide())
             {
-                base.QueueDeleteEntity(uid);
+                if (meta.EntityLifeStage < EntityLifeStage.Terminating)
+                    PredictedDetachNetworkedEntity(uid, xform, meta);
+
                 return;
             }
 
-            if (ShuttingDown)
-                return;
-
-            // Client-side entity deletion is not supported and will cause errors.
-            if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
-                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid.Value)}. Trace: {Environment.StackTrace}");
+            ClearPredictedDeletion(uid);
+            base.DeleteEntity(uid, meta, xform);
         }
 
         /// <inheritdoc />
@@ -94,9 +128,31 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null)
         {
-            //  Client only dirties during prediction
+            // Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.Dirty(ent, meta);
+        }
+
+        public override void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyField(uid, comp, fieldName, metadata);
+        }
+
+        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyFields(uid, comp, meta, fields);
         }
 
         /// <inheritdoc />
@@ -128,7 +184,10 @@ namespace Robust.Client.GameObjects
             var sequence = _stateMan.SystemMessageDispatched(msg);
             EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
-            DebugTools.Assert(!_stateMan.IsPredictionEnabled || _gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
+            if (!_stateMan.IsPredictionEnabled && _client.RunLevel != ClientRunLevel.SinglePlayerGame)
+                return;
+
+            DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel == ClientRunLevel.SinglePlayerGame);
 
             var eventArgs = new EntitySessionEventArgs(session!);
             EventBus.RaiseEvent(EventSource.Local, msg);
@@ -171,7 +230,9 @@ namespace Robust.Client.GameObjects
 
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entityNetHistogram?.NewTimer())
             {
                 while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.LastRealTick)
                 {
@@ -182,6 +243,15 @@ namespace Robust.Client.GameObjects
             }
 
             base.TickUpdate(frameTime, noPredictions, histogram);
+        }
+
+        private void UpdateTickHistogram(Histogram? histogram)
+        {
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
+
+            _tickUpdateHistogram = histogram;
+            _entityNetHistogram = histogram?.WithLabels("EntityNet");
         }
 
         /// <inheritdoc />
@@ -259,5 +329,31 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+
+        internal bool IsPredictedDetached(EntityUid uid)
+        {
+            return _predictedDetachedEntities.Contains(uid);
+        }
+
+        internal void ClearPredictedDeletion(EntityUid uid)
+        {
+            _predictedDetachedEntities.Remove(uid);
+            QueuedDeletionsSet.Remove(uid);
+        }
+
+        private void PredictedDetachNetworkedEntity(EntityUid uid, TransformComponent xform, MetaDataComponent meta)
+        {
+            if (!_predictedDetachedEntities.Add(uid))
+                return;
+
+            // base call bypasses IGameTiming.InPrediction check. Predicted queue deletes are processed after prediction,
+            // but reset still needs to see the detached entity as dirty and restore it from the last server state.
+            base.Dirty(uid, xform, meta);
+            _xforms.DetachEntity(uid, xform, meta, null);
+            meta.Flags |= MetaDataFlags.Detached;
+        }
+
+        public override bool IsQueuedForDeletion(EntityUid uid)
+            => QueuedDeletionsSet.Contains(uid) || _predictedDetachedEntities.Contains(uid);
     }
 }

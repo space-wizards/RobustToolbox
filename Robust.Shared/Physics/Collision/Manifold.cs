@@ -25,6 +25,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision;
 
@@ -146,7 +147,7 @@ public struct Manifold : IEquatable<Manifold>, IApproxEquatable<Manifold>
     /// <summary>
     ///     Points of contact, can only be 0 -> 2.
     /// </summary>
-    internal ManifoldPoint[] Points;
+    internal FixedArray2<ManifoldPoint> Points;
 
     public ManifoldType Type;
 
@@ -157,9 +158,12 @@ public struct Manifold : IEquatable<Manifold>, IApproxEquatable<Manifold>
               LocalNormal.Equals(other.LocalNormal) &&
               LocalPoint.Equals(other.LocalPoint))) return false;
 
+        var points = Points.AsSpan;
+        var otherPoints = other.Points.AsSpan;
+
         for (var i = 0; i < PointCount; i++)
         {
-            if (!Points[i].Equals(other.Points[i])) return false;
+            if (!points[i].Equals(otherPoints[i])) return false;
         }
 
         return true;
@@ -172,9 +176,12 @@ public struct Manifold : IEquatable<Manifold>, IApproxEquatable<Manifold>
               LocalNormal.EqualsApprox(other.LocalNormal) &&
               LocalPoint.EqualsApprox(other.LocalPoint))) return false;
 
+        var points = Points.AsSpan;
+        var otherPoints = other.Points.AsSpan;
+
         for (var i = 0; i < PointCount; i++)
         {
-            if (!Points[i].EqualsApprox(other.Points[i])) return false;
+            if (!points[i].EqualsApprox(otherPoints[i])) return false;
         }
 
         return true;
@@ -187,12 +194,25 @@ public struct Manifold : IEquatable<Manifold>, IApproxEquatable<Manifold>
               LocalNormal.EqualsApprox(other.LocalNormal, tolerance) &&
               LocalPoint.EqualsApprox(other.LocalPoint, tolerance))) return false;
 
+        var points = Points.AsSpan;
+        var otherPoints = other.Points.AsSpan;
+
         for (var i = 0; i < PointCount; i++)
         {
-            if (!Points[i].EqualsApprox(other.Points[i], tolerance)) return false;
+            if (!points[i].EqualsApprox(otherPoints[i], tolerance)) return false;
         }
 
         return true;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Manifold manifold && Equals(manifold);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(LocalNormal, LocalPoint, PointCount, Points, (int)Type);
     }
 }
 

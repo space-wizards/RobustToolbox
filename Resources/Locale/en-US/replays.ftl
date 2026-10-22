@@ -9,6 +9,9 @@ cmd-replay-pause-help = replay_pause
 cmd-replay-toggle-desc = Resume or pause replay playback.
 cmd-replay-toggle-help = replay_toggle
 
+cmd-replay-toggle-screenshot-mode-desc = Toggles screenshot mode for replays, hiding the replay control widget.
+cmd-replay-toggle-screenshot-mode-help = replay_toggle_screenshot_mode
+
 cmd-replay-stop-desc = Stop and unload a replay.
 cmd-replay-stop-help = replay_stop
 
@@ -29,6 +32,8 @@ cmd-replay-error-args = Wrong number of arguments.
 cmd-replay-error-no-replay = Not currently playing a replay.
 cmd-replay-error-already-loaded = A replay is already loaded.
 cmd-replay-error-run-level = You cannot load a replay while connected to a server.
+
+cmd-replay-toggleui-desc = Toggles the replay control UI.
 
 # Recording commands
 

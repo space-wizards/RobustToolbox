@@ -22,7 +22,7 @@ public abstract partial class SharedMapSystem
         if (!_mapQuery.Resolve(map, ref map.Comp))
             return false;
 
-        return map.Comp.MapPaused;
+        return map.Comp.MapPaused || !map.Comp.MapInitialized;
     }
 
     public void SetPaused(MapId mapId, bool paused)
@@ -49,7 +49,7 @@ public abstract partial class SharedMapSystem
         RecursiveSetPaused(map, paused);
     }
 
-    private void RecursiveSetPaused(EntityUid entity, bool paused)
+    internal void RecursiveSetPaused(EntityUid entity, bool paused)
     {
         _meta.SetEntityPaused(entity, paused);
         foreach (var child in Transform(entity)._children)

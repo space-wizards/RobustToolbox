@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Random;
 
@@ -7,14 +8,17 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     This manages tile definitions for grid tiles.
     /// </summary>
+    [NotContentImplementable]
     public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
         Tile GetVariantTile(string name, IRobustRandom random);
 
+        [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
         Tile GetVariantTile(string name, System.Random random);
 
         Tile GetVariantTile(ITileDefinition tileDef, IRobustRandom random);
 
+        [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
         Tile GetVariantTile(ITileDefinition tileDef, System.Random random);
 
         /// <summary>
@@ -67,15 +71,5 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="tileDef">THe definition to register.</param>
         void Register(ITileDefinition tileDef);
-
-        /// <summary>
-        ///     Register a tile alias with this manager.
-        ///     The tile need not exist yet - the alias's creation will be deferred until it exists.
-        ///     Tile aliases do not have IDs of their own and do not show up in enumeration.
-        ///     Their main utility is for easier map migration.
-        /// </summary>
-        /// <param name="src">The source tile (i.e. name of the alias).</param>
-        /// <param name="dst">The destination tile (i.e. the actual concrete tile).</param>
-        void AssignAlias(string src, string dst);
     }
 }

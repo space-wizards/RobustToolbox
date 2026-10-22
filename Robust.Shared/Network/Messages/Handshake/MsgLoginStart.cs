@@ -16,7 +16,6 @@ namespace Robust.Shared.Network.Messages.Handshake
         public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public string UserName;
-        public ImmutableArray<byte> HWId;
         public bool CanAuth;
         public bool NeedPubKey;
         public bool Encrypt;
@@ -24,8 +23,6 @@ namespace Robust.Shared.Network.Messages.Handshake
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             UserName = buffer.ReadString();
-            var length = buffer.ReadByte();
-            HWId = ImmutableArray.Create(buffer.ReadBytes(length));
             CanAuth = buffer.ReadBoolean();
             NeedPubKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
@@ -34,8 +31,6 @@ namespace Robust.Shared.Network.Messages.Handshake
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(UserName);
-            buffer.Write((byte) HWId.Length);
-            buffer.Write(HWId.AsSpan());
             buffer.Write(CanAuth);
             buffer.Write(NeedPubKey);
             buffer.Write(Encrypt);

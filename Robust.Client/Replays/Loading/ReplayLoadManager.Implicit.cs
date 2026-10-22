@@ -37,7 +37,7 @@ public sealed partial class ReplayLoadManager
         _implicitData[prototype] = (list, set);
 
         var entCount = _entMan.EntityCount;
-        var uid = _entMan.SpawnEntity(prototype, MapCoordinates.Nullspace);
+        var uid = _entMan.Spawn(prototype);
 
         foreach (var (netId, component) in _entMan.GetNetComponents(uid))
         {
@@ -45,7 +45,7 @@ public sealed partial class ReplayLoadManager
                 continue;
 
             var state = _entMan.GetComponentState(_entMan.EventBus, component, null, GameTick.Zero);
-            DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+            DebugTools.Assert(state is not IComponentDeltaState);
             list.Add(new ComponentChange(netId, state, GameTick.Zero));
             set.Add(netId);
         }
@@ -61,7 +61,7 @@ public sealed partial class ReplayLoadManager
         {
             if (comp.NetID == _metaId)
             {
-                var state = (MetaDataComponentState) comp.State;
+                var state = (MetaDataComponentState) comp.State!;
                 return state.PrototypeId;
             }
         }

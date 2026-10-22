@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Robust.Shared.Audio;
@@ -13,6 +14,10 @@ namespace Robust.Client.Audio;
 /// </summary>
 internal sealed class HeadlessAudioManager : IAudioInternal
 {
+
+    private readonly IReadOnlyList<string> _emptyDevices = Array.Empty<string>();
+    private int _audioBuffer;
+
     /// <inheritdoc />
     public void InitializePostWindowing()
     {
@@ -29,9 +34,24 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
+    public void FrameUpdate(float frameTime)
+    {
+    }
+
+    /// <inheritdoc />
     public IAudioSource CreateAudioSource(AudioStream stream)
     {
         return DummyAudioSource.Instance;
+    }
+
+    public IReadOnlyList<string> GetAudioDevices()
+    {
+        return _emptyDevices;
+    }
+
+    public string? GetDefaultAudioDevice()
+    {
+        return null;
     }
 
     /// <inheritdoc />
@@ -58,10 +78,25 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     /// <inheritdoc />
     public void SetMasterGain(float newGain)
     {
+        BaseGain = Math.Max(newGain, 0f);
     }
+
+    public float BaseGain { get; private set; }
+
+    public float FadeGain { get; private set; } = 1f;
 
     /// <inheritdoc />
     public void SetAttenuation(Attenuation attenuation)
+    {
+    }
+
+    /// <inheritdoc />
+    public void SetDopplerFactor(float factor)
+    {
+    }
+
+    /// <inheritdoc />
+    public void Remove(AudioStream stream)
     {
     }
 
@@ -101,11 +136,11 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
     {
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
-        return new AudioStream(null, length, channels, name);
+        return new AudioStream(this, _audioBuffer++, null, length, channels, name);
     }
 
-    private static AudioStream AudioStreamFromMetadata(AudioMetadata metadata, string? name)
+    private AudioStream AudioStreamFromMetadata(AudioMetadata metadata, string? name)
     {
-        return new AudioStream(null, metadata.Length, metadata.ChannelCount, name, metadata.Title, metadata.Artist);
+        return new AudioStream(this, _audioBuffer++, null, metadata.Length, metadata.ChannelCount, name, metadata.Title, metadata.Artist);
     }
 }

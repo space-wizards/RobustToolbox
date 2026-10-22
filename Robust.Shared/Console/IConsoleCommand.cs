@@ -1,13 +1,17 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Robust.Shared.Toolshed;
 
 namespace Robust.Shared.Console
 {
     /// <summary>
-    /// Basic interface to handle console commands. Any class implementing this will be
-    /// registered with the console system through reflection.
+    ///     Basic interface to handle console commands. Any class implementing this will be
+    ///     registered with the console system through reflection.
     /// </summary>
+    /// <remarks>
+    ///     For server commands, it is much preferred to use <see cref="ToolshedCommand"/>.
+    /// </remarks>
     [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public interface IConsoleCommand
     {
@@ -17,6 +21,9 @@ namespace Robust.Shared.Console
         /// <value>
         /// A string as identifier for this command.
         /// </value>
+        /// <remarks>
+        /// Commands starting with '_' are treated as "hidden". They will not be shown in listings or completions.
+        /// </remarks>
         string Command { get; }
 
         /// <summary>
@@ -83,4 +90,11 @@ namespace Robust.Shared.Console
             return ValueTask.FromResult(GetCompletion(shell, args));
         }
     }
+
+    /// <summary>
+    /// Special marker interface used to indicate "entity" commands.
+    /// See <see cref="LocalizedEntityCommands"/> for an overview.
+    /// </summary>
+    /// <seealso cref="EntityConsoleHost"/>
+    internal interface IEntityConsoleCommand : IConsoleCommand;
 }

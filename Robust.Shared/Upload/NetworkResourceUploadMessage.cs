@@ -6,10 +6,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Upload;
 
+[Obsolete("The engine no longer uses this message")]
 public sealed class NetworkResourceUploadMessage : NetMessage
 {
-    public override NetDeliveryMethod DeliveryMethod => NetDeliveryMethod.ReliableUnordered;
-    public override MsgGroups MsgGroup => MsgGroups.Command;
+    public override MsgGroups MsgGroup => MsgGroups.String;
 
     public byte[] Data { get; set; } = Array.Empty<byte>();
     public ResPath RelativePath { get; set; } = ResPath.Self;

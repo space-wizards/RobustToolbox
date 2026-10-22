@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
@@ -10,18 +8,20 @@ public sealed class IterateCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T>? Iterate<T>(
-            [CommandInvocationContext] IInvocationContext ctx,
+            IInvocationContext ctx,
             [PipedArgument] T value,
-            [CommandArgument] Block<T, T> block,
-            [CommandArgument] ValueRef<int> times
+            Block<T, T> block,
+            int times
         )
     {
-        var iCap = times.Evaluate(ctx);
-
-        for (var i = 0; i < iCap; i++)
+        for (var i = 0; i < times; i++)
         {
             if (block.Invoke(value, ctx) is not { } v)
                 break;
+
+            if (ctx.HasErrors)
+                break;
+
             value = v;
             yield return value;
         }

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Instances;
@@ -36,7 +37,7 @@ namespace Robust.Client.ViewVariables.Traits
 
         public override async void Refresh()
         {
-            _memberList.DisposeAllChildren();
+            List<Control> replacementControls = [];
 
             if (Instance.Object != null)
             {
@@ -47,11 +48,11 @@ namespace Robust.Client.ViewVariables.Traits
                     CreateMemberGroupHeader(
                         ref first,
                         PrettyPrint.PrintUserFacingTypeShort(group.Key, 2),
-                        _memberList);
+                        replacementControls);
 
                     foreach (var control in group)
                     {
-                        _memberList.AddChild(control);
+                        replacementControls.Add(control);
                     }
                 }
             }
@@ -66,7 +67,7 @@ namespace Robust.Client.ViewVariables.Traits
                 var first = true;
                 foreach (var (groupName, groupMembers) in blob.MemberGroups)
                 {
-                    CreateMemberGroupHeader(ref first, groupName, _memberList);
+                    CreateMemberGroupHeader(ref first, groupName, replacementControls);
 
                     foreach (var propertyData in groupMembers)
                     {
@@ -82,21 +83,27 @@ namespace Robust.Client.ViewVariables.Traits
                                 selectorChain, o, r);
                         };
 
-                        _memberList.AddChild(propertyEdit);
+                        replacementControls.Add(propertyEdit);
                     }
                 }
             }
+
+            _memberList.DisposeAllChildren();
+            foreach (var item in replacementControls)
+            {
+                _memberList.AddChild(item);
+            }
         }
 
-        internal static void CreateMemberGroupHeader(ref bool first, string groupName, Control container)
+        internal static void CreateMemberGroupHeader(ref bool first, string groupName, ICollection<Control> container)
         {
             if (!first)
             {
-                container.AddChild(new Control {MinSize = new Vector2(0, 16)});
+                container.Add(new Control {MinSize = new Vector2(0, 16)});
             }
 
             first = false;
-            container.AddChild(new Label {Text = groupName, FontColorOverride = Color.DarkGray});
+            container.Add(new Label {Text = groupName, FontColorOverride = Color.DarkGray});
         }
     }
 }

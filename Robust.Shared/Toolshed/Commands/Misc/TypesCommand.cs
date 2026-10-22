@@ -7,7 +7,7 @@ namespace Robust.Shared.Toolshed.Commands.Misc;
 internal sealed class TypesCommand : ToolshedCommand
 {
     [CommandImplementation("consumers")]
-    public void Consumers([CommandInvocationContext] IInvocationContext ctx, [PipedArgument] object? input)
+    public void Consumers(IInvocationContext ctx, [PipedArgument] object? input)
     {
         var t = input is Type ? (Type)input : input!.GetType();
 
@@ -23,7 +23,7 @@ internal sealed class TypesCommand : ToolshedCommand
     }
 
     [CommandImplementation("tree")]
-    public IEnumerable<Type> Tree([CommandInvocationContext] IInvocationContext ctx, [PipedArgument] object? input)
+    public IEnumerable<Type> Tree(IInvocationContext ctx, [PipedArgument] object? input)
     {
         var t = input is Type ? (Type)input : input!.GetType();
         return Toolshed.AllSteppedTypes(t);

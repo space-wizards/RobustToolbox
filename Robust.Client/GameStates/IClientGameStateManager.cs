@@ -12,6 +12,7 @@ namespace Robust.Client.GameStates
     /// <summary>
     ///     Engine service that provides processing and management of game states.
     /// </summary>
+    [NotContentImplementable]
     public interface IClientGameStateManager
     {
         /// <summary>
@@ -33,9 +34,6 @@ namespace Robust.Client.GameStates
         ///     Number of applicable game states currently in the state buffer.
         /// </summary>
         int GetApplicableStateCount();
-
-        [Obsolete("use GetApplicableStateCount()")]
-        int CurrentBufferSize => GetApplicableStateCount();
 
         /// <summary>
         ///     Total number of game states currently in the state buffer.
@@ -85,6 +83,8 @@ namespace Robust.Client.GameStates
         /// </summary>
         IEnumerable<NetEntity> ApplyGameState(GameState curState, GameState? nextState);
 
+        void MergeImplicitData();
+
         /// <summary>
         ///     Resets any entities that have changed while predicting future ticks.
         /// </summary>
@@ -113,7 +113,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// Returns the full collection of cached game states that are used to reset predicted entities.
         /// </summary>
-        Dictionary<NetEntity, Dictionary<ushort, IComponentState>> GetFullRep();
+        Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> GetFullRep();
 
         /// <summary>
         /// This will perform some setup in order to reset the game to an earlier state. To fully reset the state
@@ -152,7 +152,7 @@ namespace Robust.Client.GameStates
         /// Queue a collection of entities that are to be detached to null-space & marked as PVS-detached.
         /// This store and modify the list given to it.
         /// </summary>
-        void QueuePvsDetach(List<NetEntity> entities, GameTick tick);
+        void QueuePvsDetach(List<NetEntity> entities, GameTick tick, List<NetEntity>? chunkEntities = null);
 
         /// <summary>
         /// Immediately detach several entities.

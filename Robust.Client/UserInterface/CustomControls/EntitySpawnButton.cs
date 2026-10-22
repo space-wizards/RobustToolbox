@@ -12,7 +12,7 @@ public sealed class EntitySpawnButton : Control
     public EntityPrototype Prototype { get; set; } = default!;
     public Button ActualButton { get; private set; }
     public Label EntityLabel { get; private set; }
-    public LayeredTextureRect EntityTextureRects { get; private set; }
+    public EntityPrototypeView EntityTextureRects {get; private set; }
     public int Index { get; set; }
 
     public EntitySpawnButton()
@@ -27,13 +27,12 @@ public sealed class EntitySpawnButton : Control
             Orientation = BoxContainer.LayoutOrientation.Horizontal,
             Children =
             {
-                (EntityTextureRects = new LayeredTextureRect
+                (EntityTextureRects = new EntityPrototypeView
                 {
-                    MinSize = new Vector2(32, 32),
+                    SetSize = new Vector2(32, 32),
                     HorizontalAlignment = HAlignment.Center,
                     VerticalAlignment = VAlignment.Center,
-                    Stretch = TextureRect.StretchMode.KeepAspectCentered,
-                    CanShrink = true
+                    Stretch = SpriteView.StretchMode.Fill
                 }),
                 (EntityLabel = new Label
                 {

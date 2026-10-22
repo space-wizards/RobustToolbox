@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -25,10 +26,33 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
             = new();
 
+        private const int PostShaderRenderTargetPoolMax = 16;
+        private const int PostShaderRenderTargetMinSize = 32;
+        private const int PostShaderRenderTargetBytesPerPixel = 8;
+
+        private static readonly RenderTargetFormatParameters PostShaderRenderTargetFormat =
+            new(RenderTargetColorFormat.Rgba8Srgb, true);
+
+        private readonly List<RenderTexture> _postShaderRenderTargetPool = new();
+
         // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
         // It is used for SRGB emulation.
         // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
         private LoadedRenderTarget _currentBoundRenderTarget;
+
+
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
+        {
+            var lightMapColorFormat = _hasGLFloatFramebuffers
+                ? RTCF.R11FG11FB10F
+                : RTCF.Rgba8;
+            var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
+
+            return CreateRenderTarget(size,
+                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: depthStencil),
+                lightMapSampleParameters,
+                name: name);
+        }
 
         IRenderTexture IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string? name)
@@ -195,6 +219,7 @@ namespace Robust.Client.Graphics.Clyde
             var pressure = estPixSize * size.X * size.Y;
 
             var handle = AllocRid();
+            var renderTarget = new RenderTexture(size, textureObject, this, handle);
             var data = new LoadedRenderTarget
             {
                 IsWindow = false,
@@ -204,11 +229,13 @@ namespace Robust.Client.Graphics.Clyde
                 Size = size,
                 TextureHandle = textureObject.TextureId,
                 MemoryPressure = pressure,
-                ColorFormat = format.ColorFormat
+                ColorFormat = format.ColorFormat,
+                SampleParameters = sampleParameters,
+                Instance = new WeakReference<RenderTargetBase>(renderTarget),
+                Name = name,
             };
 
             //GC.AddMemoryPressure(pressure);
-            var renderTarget = new RenderTexture(size, textureObject, this, handle);
             _renderTargets.Add(handle, data);
             return renderTarget;
         }
@@ -251,9 +278,15 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private LoadedRenderTarget RtToLoaded(RenderTargetBase rt)
+        private LoadedRenderTarget RtToLoaded(IRenderTarget rt)
         {
-            return _renderTargets[rt.Handle];
+            switch (rt)
+            {
+                case RenderTargetBase based:
+                    return _renderTargets[based.Handle];
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -280,10 +313,103 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class LoadedRenderTarget
+        private RenderTexture? RentPostShaderRenderTarget(Vector2i minSize)
+        {
+            if (minSize.X <= 0 || minSize.Y <= 0)
+                return null;
+
+            var bucket = BucketPostShaderRenderTargetSize(minSize);
+
+            var bestIdx = -1;
+            long bestArea = long.MaxValue;
+
+            for (var i = 0; i < _postShaderRenderTargetPool.Count; i++)
+            {
+                var rt = _postShaderRenderTargetPool[i];
+                if (rt.Size.X < bucket.X || rt.Size.Y < bucket.Y)
+                    continue;
+
+                var area = (long) rt.Size.X * rt.Size.Y;
+                if (area >= bestArea)
+                    continue;
+
+                bestArea = area;
+                bestIdx = i;
+            }
+
+            if (bestIdx >= 0)
+            {
+                var rented = _postShaderRenderTargetPool[bestIdx];
+                _postShaderRenderTargetPool.RemoveAt(bestIdx);
+                return rented;
+            }
+
+            return CreateRenderTarget(bucket, PostShaderRenderTargetFormat, name: "post-shader-pool");
+        }
+
+        private void ReturnPostShaderRenderTarget(RenderTexture rt)
+        {
+            var maxSize = Math.Max(0, _cfg.GetCVar(CVars.DisplayPostShaderRenderTargetPoolMaxSize));
+            if (_postShaderRenderTargetPool.Count >= PostShaderRenderTargetPoolMax ||
+                EstimatePostShaderRenderTargetSize(rt.Size) > maxSize)
+            {
+                rt.DisposeDeferred();
+                return;
+            }
+
+            _postShaderRenderTargetPool.Add(rt);
+        }
+
+        private void ClearPostShaderRenderTargetPool()
+        {
+            foreach (var rt in _postShaderRenderTargetPool)
+                rt.DisposeDeferred();
+
+            _postShaderRenderTargetPool.Clear();
+            FlushRenderTargetDispose();
+        }
+
+        private static long EstimatePostShaderRenderTargetSize(Vector2i size)
+        {
+            return (long) size.X * size.Y * PostShaderRenderTargetBytesPerPixel;
+        }
+
+        private static Vector2i BucketPostShaderRenderTargetSize(Vector2i size)
+        {
+            return new(NextPowerOfTwo(size.X), NextPowerOfTwo(size.Y));
+        }
+
+        private static int NextPowerOfTwo(int value)
+        {
+            var v = Math.Max(value, PostShaderRenderTargetMinSize);
+            if ((v & (v - 1)) == 0)
+                return v;
+
+            v--;
+            v |= v >> 1;
+            v |= v >> 2;
+            v |= v >> 4;
+            v |= v >> 8;
+            v |= v >> 16;
+            return v + 1;
+        }
+
+        public IEnumerable<(RenderTargetBase, LoadedRenderTarget)> GetLoadedRenderTextures()
+        {
+            foreach (var loaded in _renderTargets.Values)
+            {
+                if (!loaded.Instance.TryGetTarget(out var instance))
+                    continue;
+
+                yield return (instance, loaded);
+            }
+        }
+
+        internal sealed class LoadedRenderTarget
         {
             public bool IsWindow;
             public WindowId WindowId;
+            public string? Name;
 
             public Vector2i Size;
             public bool IsSrgb;
@@ -302,9 +428,13 @@ namespace Robust.Client.Graphics.Clyde
             // Renderbuffer handle
             public GLHandle DepthStencilHandle;
             public long MemoryPressure;
+
+            public TextureSampleParameters? SampleParameters;
+
+            public required WeakReference<RenderTargetBase> Instance;
         }
 
-        private abstract class RenderTargetBase : IRenderTarget
+        internal abstract class RenderTargetBase : IRenderTarget
         {
             protected readonly Clyde Clyde;
             private bool _disposed;
@@ -366,7 +496,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class RenderTexture : RenderTargetBase, IRenderTexture
+        internal sealed class RenderTexture : RenderTargetBase, IRenderTexture
         {
             public RenderTexture(Vector2i size, ClydeTexture texture, Clyde clyde, ClydeHandle handle)
                 : base(clyde, handle)

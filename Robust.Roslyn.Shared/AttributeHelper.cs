@@ -14,7 +14,7 @@ public static class AttributeHelper
             if (attribute.AttributeClass == null)
                 continue;
 
-            if (TypeSymbolHelper.ShittyTypeMatch(attribute.AttributeClass, attributeMetadataName))
+            if (attribute.AttributeClass.ShittyTypeMatch(attributeMetadataName))
             {
                 matchedAttribute = attribute;
                 return true;
@@ -23,6 +23,11 @@ public static class AttributeHelper
 
         matchedAttribute = null;
         return false;
+    }
+
+    public static bool HasAttribute(ISymbol symbol, string attributeMetadataName)
+    {
+        return HasAttribute(symbol, attributeMetadataName, out _);
     }
 
     public static bool GetNamedArgumentBool(AttributeData data, string name, bool defaultValue)
@@ -42,5 +47,23 @@ public static class AttributeHelper
         }
 
         return defaultValue;
+    }
+
+    public static bool HasAttribute(
+        ISymbol symbol,
+        ITypeSymbol attribute,
+        [NotNullWhen(true)] out AttributeData? matchedAttribute)
+    {
+        matchedAttribute = null;
+        foreach (var typeAttribute in symbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(typeAttribute.AttributeClass, attribute))
+            {
+                matchedAttribute = typeAttribute;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

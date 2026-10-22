@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -9,8 +8,9 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.IO;
 using System.Linq;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Threading.Channels;
 using Robust.Shared;
 using Robust.Shared.Replays;
 using static Robust.Shared.Replays.ReplayConstants;
@@ -19,158 +19,191 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager
 {
-    private struct DecompressedFile(MemoryStream stream, int fileSize)
-    {
-        // Store the filesize seperately so we can use streams that are "too large" allowing reuse of MemoryStreams between files
-        public readonly int FileSize = fileSize;
-        public readonly MemoryStream Stream = stream;
-    }
-
-    [SuppressMessage("ReSharper", "UseAwaitUsing")]
     public async Task<ReplayData> LoadReplayAsync(IReplayFileReader fileReader, LoadReplayJob? job, LoadReplayCallback callback)
     {
-        using var _ = fileReader;
+        // NOTE: fileReader is NOT disposed here. Ownership is transferred to the BufferedReplayDataProvider
+        // below, which keeps reading data blocks lazily during playback and disposes the reader when the
+        // replay is unloaded (ReplayPlaybackManager.StopReplay -> ReplayData.Dispose).
 
         if (_client.RunLevel == ClientRunLevel.Initialize)
             _client.StartSinglePlayer();
         else if (_client.RunLevel != ClientRunLevel.SinglePlayerGame)
             throw new Exception($"Invalid runlevel: {_client.RunLevel}.");
 
-        // Ensure we are showing no progress while we load state0 (after that checkpoint code updates progress)
-        await callback(0, 1, LoadingState.ReadingFiles, false);
-
         _timing.Paused = true;
-        List<GameState> states = new();
-        List<ReplayMessage> messages = new();
 
         var metaData = LoadMetadata(fileReader);
 
         var totalData = fileReader.AllFiles.Count(x => x.Filename.StartsWith(DataFilePrefix));
 
-        // Only allow the file reader to get _checkpointInterval ticks ahead of the checkpoint creation thread.
-        // This improves memory locality because it means the checkpoint logic is always reading recently written data.
-        // If the reader gets too far ahead, data relevant to the checkpoint system will get flushed out of cache.
-        var checkpointChannel = Channel.CreateBounded<ReplayTickData>(_checkpointInterval);
-
-        // Files are opened and pre-processed in the background, using these streams
-        // Decompressed files in a memory stream ready for reading:
-        var decompressedFileChannel = Channel.CreateBounded<DecompressedFile>(2);
-        // Used memory channels ready to be reused without reallocating them. If there are several already, we just
-        //  drop the one being written - no point having too many.
-        var reuseFileChannel = Channel.CreateBounded<MemoryStream>(
-            new BoundedChannelOptions(4)
-            {
-                FullMode = BoundedChannelFullMode.DropWrite
-            });
-
+        // Init messages are consumed at the very start of checkpoint generation, so load them up front.
         var initData = LoadInitFile(fileReader);
 
-        // The Decompression task reads files from the replay and creates decompressed MemoryStreams for the next task
-        // Old memory streams are passed back here for reuse.
+        // Index of which data file backs which range of tick indices, so the provider can re-read blocks
+        // lazily during playback instead of keeping everything resident.
+        var blocks = new List<BufferedReplayDataProvider.BlockMeta>();
+        var stats = new HistoryStreamStats();
+
+        // Keep both background stages bounded so loading never retains the entire replay history.
+        using var cancellation = new CancellationTokenSource();
+        var token = cancellation.Token;
+        var checkpointChannel = Channel.CreateBounded<ReplayTickData>(Math.Max(1, _checkpointInterval));
+        var decompressedFiles = Channel.CreateBounded<(ResPath File, MemoryStream Stream)>(2);
+        var reusableStreams = Channel.CreateBounded<MemoryStream>(new BoundedChannelOptions(4)
+        {
+            FullMode = BoundedChannelFullMode.DropWrite
+        });
+
         var decompressTask = Task.Run(async () =>
         {
-            var i = 0;
-            var intBuf = new byte[4];
-            var name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
-
-            while (fileReader.Exists(name))
+            Exception? error = null;
+            try
             {
-                using var fileStream = fileReader.Open(name);
-                using var decompressStream = new ZStdDecompressStream(fileStream, false);
-
-                fileStream.ReadExactly(intBuf);
-                var uncompressedSize = BitConverter.ToInt32(intBuf);
-
-                MemoryStream? decompressedStream = null;
-                reuseFileChannel.Reader.TryRead(out decompressedStream);
-                if (decompressedStream == null || decompressedStream.Length < uncompressedSize)
+                var i = 0;
+                var intBuf = new byte[4];
+                var name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
+                while (fileReader.Exists(name))
                 {
-                    // Double required size to increase chance of reuse by next slightly larger file.
-                    decompressedStream = new MemoryStream(uncompressedSize * 2);
+                    token.ThrowIfCancellationRequested();
+                    using var fileStream = fileReader.Open(name);
+                    fileStream.ReadExactly(intBuf);
+                    var uncompressedSize = BitConverter.ToInt32(intBuf);
+                    using var decompressStream = new ZStdDecompressStream(fileStream, false);
+                    if (!reusableStreams.Reader.TryRead(out var stream))
+                        stream = new MemoryStream(uncompressedSize);
+                    stream.SetLength(0);
+                    decompressStream.CopyTo(stream);
+                    DebugTools.Assert(uncompressedSize == stream.Length);
+                    stream.Position = 0;
+                    await decompressedFiles.Writer.WriteAsync((name, stream), token);
+                    name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
                 }
 
-                // Set position to 0 ready to decompress data into it
-                decompressedStream.Position = 0;
-                decompressStream.CopyTo(decompressedStream, uncompressedSize);
-
-                // Prepare for a read from the start of it
-                decompressedStream.Position = 0;
-                await decompressedFileChannel.Writer.WriteAsync(new DecompressedFile(decompressedStream,
-                    uncompressedSize));
-
-                name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
+                if (i - 1 != totalData)
+                    throw new Exception("Could not read expected amount of data files from replay");
             }
-            // Could happen if there's gaps in the numbers of the data.
-            if (i - 1 != totalData)
-                throw new Exception("Could not read expected amount of data files from replay");
-
-            decompressedFileChannel.Writer.Complete();
+            catch (Exception e)
+            {
+                error = e;
+                throw;
+            }
+            finally
+            {
+                decompressedFiles.Writer.TryComplete(error);
+            }
         });
 
-        // The deserializeTask processes decompressed file streams from decompressTask and deserializes their contents
-        // into replay ticks consumed by GenerateCheckpointsAsync
-        // Once a memory stream is fully read, we send it back to decompressTask to reuse the allocation.
         var deserializeTask = Task.Run(async () =>
         {
-            // Keep a local file counter to track progress
-            int i = 0;
-            await foreach (var decompressed in decompressedFileChannel.Reader.ReadAllAsync())
+            Exception? error = null;
+            try
             {
-                DebugTools.Assert(decompressed.FileSize <= decompressed.Stream.Length);
-
-                while (decompressed.Stream.Position < decompressed.FileSize)
+                var progress = 0;
+                await foreach (var (file, stream) in decompressedFiles.Reader.ReadAllAsync(token))
                 {
-                    _serializer.DeserializeDirect(decompressed.Stream, out GameState state);
-                    _serializer.DeserializeDirect(decompressed.Stream, out ReplayMessage msg);
-                    states.Add(state);
-                    messages.Add(msg);
-                    // Send this tick to be processed for checkpoints (this might block until checkpoint creation catches up)
-                    await checkpointChannel.Writer.WriteAsync(new ReplayTickData(states.Count - 1, state, msg, i, totalData));
+                    var blockStart = stats.TickCount;
+                    while (stream.Position < stream.Length)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        _serializer.DeserializeDirect(stream, out GameState state);
+                        _serializer.DeserializeDirect(stream, out ReplayMessage msg);
+                        if (stats.TickCount == 0)
+                            stats.FirstTick = state.ToSequence;
+                        stats.LastTick = state.ToSequence;
+                        var stateId = stats.TickCount++;
+                        await checkpointChannel.Writer.WriteAsync(
+                            new ReplayTickData(stateId, state, msg, progress + 1, totalData), token);
+                    }
+
+                    var blockCount = stats.TickCount - blockStart;
+                    if (blockCount > 0)
+                        blocks.Add(new BufferedReplayDataProvider.BlockMeta(file, blockStart, blockCount));
+                    reusableStreams.Writer.TryWrite(stream);
+                    progress++;
                 }
-
-                // Send the memory stream back for reuse
-                await reuseFileChannel.Writer.WriteAsync(decompressed.Stream);
-                i += 1;
             }
-
-            // Done creating replay data to process in the background
-            checkpointChannel.Writer.Complete();
+            catch (Exception e)
+            {
+                error = e;
+                throw;
+            }
+            finally
+            {
+                checkpointChannel.Writer.TryComplete(error);
+            }
         });
 
-        // Wait for checkpoints to complete
-        var (checkpoints, serverTime) = await GenerateCheckpointsAsync(
-                initData,
-                metaData.CVars,
-                checkpointChannel.Reader,
-                callback,
-                job);
-
-        // Ensure book-keeping for our background tasks has a chance to complete.
-        //  Note - decompressTask and deserializeTask need to be awaited AFTER GenerateCheckpointsAsync because they
-        //         will internally pause if GenerateCheckpointsAsync is not keeping up.
-        if (job != null)
+        CheckpointState[] checkpoints;
+        TimeSpan[] serverTime;
+        Exception? checkpointError = null;
+        try
         {
-            await job.WaitAsyncTask(decompressTask);
-            await job.WaitAsyncTask(deserializeTask);
+            (checkpoints, serverTime) = await GenerateCheckpointsAsync(
+                initData, metaData.CVars, checkpointChannel.Reader, totalData, callback, job);
         }
-        else
+        catch (Exception e)
         {
-            await decompressTask;
-            await deserializeTask;
+            checkpointError = e;
+            throw;
+        }
+        finally
+        {
+            // Unblock either producer if checkpoint generation fails while a channel is full.
+            cancellation.Cancel();
+            var producers = Task.WhenAll(decompressTask, deserializeTask);
+            try
+            {
+                if (job != null)
+                    await job.WaitAsyncTask(producers);
+                else
+                    await producers;
+            }
+            catch when (checkpointError != null)
+            {
+                // Preserve the checkpoint failure rather than replacing it with producer cancellation.
+            }
         }
 
         _timing.Paused = false;
+
+        if (stats.TickCount == 0)
+            throw new Exception("Replay contains no game states");
+
+        var provider = new BufferedReplayDataProvider(
+            fileReader,
+            _serializer,
+            blocks.ToArray(),
+            stats.TickCount,
+            _loadedBlockWindow,
+            _sawmill);
+
+        // The streaming pass churns a lot of transient per-block data, some of which gets promoted to
+        // Gen2/LOH before dying. Compact once so playback starts with a tight heap. One-off cost.
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+
+        _sawmill.Info($"[BUFFER] Streamed load done. Managed heap now {GC.GetTotalMemory(false) / 1024.0 / 1024.0:N0} MB " +
+                      $"({blocks.Count} data blocks indexed, window={_loadedBlockWindow}, checkpoints={checkpoints.Length}). " +
+                      $"Remaining growth during playback is the live entity world, not replay history.");
+
         return new ReplayData(
-            states,
-            messages,
+            provider,
             serverTime,
-            states[0].ToSequence,
+            stats.FirstTick,
+            stats.LastTick,
             metaData.StartTime,
             metaData.Duration,
             checkpoints,
             initData,
             metaData.ClientSide,
             metaData.YamlData);
+    }
+
+    // Written by the deserialization worker and consumed after both workers have completed.
+    private sealed class HistoryStreamStats
+    {
+        public GameTick FirstTick;
+        public GameTick LastTick;
+        public int TickCount;
     }
 
     private ReplayMessage? LoadInitFile(
@@ -238,9 +271,7 @@ public sealed partial class ReplayLoadManager
         }
 
         using var stringFile = fileReader.Open(FileStrings);
-        var stringData = new byte[stringFile.Length];
-        stringFile.ReadExactly(stringData);
-        _serializer.SetStringSerializerPackage(stringHash, stringData);
+        _serializer.SetStringSerializerPackage(stringHash, stringFile.CopyToArray());
 
         using var cvarsFile = fileReader.Open(FileCvars);
         // Note, this does not invoke the received-initial-cvars event. But at least currently, that doesn't matter

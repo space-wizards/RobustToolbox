@@ -25,43 +25,45 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics.Dynamics
+namespace Robust.Shared.Physics.Dynamics;
+
+public sealed class FixtureProxy
 {
-    public sealed class FixtureProxy
+    public EntityUid Entity;
+    public PhysicsComponent Body { get; internal set; }
+
+    public TransformComponent Xform { get; internal set; }
+
+/// <summary>
+    ///     Grid-based AABB of this proxy.
+    /// </summary>
+    [ViewVariables]
+    public Box2 AABB;
+
+    [ViewVariables]
+    public int ChildIndex;
+
+    public string FixtureId;
+
+    /// <summary>
+    ///     Our parent fixture
+    /// </summary>
+    public Fixture Fixture;
+
+    /// <summary>
+    ///     ID of this proxy in the broadphase dynamictree.
+    /// </summary>
+    [ViewVariables]
+    public DynamicTree.Proxy ProxyId = DynamicTree.Proxy.Free;
+
+    internal FixtureProxy(EntityUid uid, PhysicsComponent body, TransformComponent xform, Box2 aabb, string fixtureId, Fixture fixture, int childIndex)
     {
-        public EntityUid Entity;
-        public PhysicsComponent Body;
-
-        /// <summary>
-        ///     Grid-based AABB of this proxy.
-        /// </summary>
-        [ViewVariables]
-        public Box2 AABB;
-
-        [ViewVariables]
-        public int ChildIndex;
-
-        public string FixtureId;
-
-        /// <summary>
-        ///     Our parent fixture
-        /// </summary>
-        public Fixture Fixture;
-
-        /// <summary>
-        ///     ID of this proxy in the broadphase dynamictree.
-        /// </summary>
-        [ViewVariables]
-        public DynamicTree.Proxy ProxyId = DynamicTree.Proxy.Free;
-
-        public FixtureProxy(EntityUid uid, PhysicsComponent body, Box2 aabb, string fixtureId, Fixture fixture, int childIndex)
-        {
-            Entity = uid;
-            Body = body;
-            AABB = aabb;
-            FixtureId = fixtureId;
-            Fixture = fixture;
-            ChildIndex = childIndex;
-        }
+        Entity = uid;
+        Body = body;
+        Xform = xform;
+        AABB = aabb;
+        FixtureId = fixtureId;
+        Fixture = fixture;
+        ChildIndex = childIndex;
     }
 }

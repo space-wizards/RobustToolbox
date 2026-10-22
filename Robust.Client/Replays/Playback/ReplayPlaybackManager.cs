@@ -26,22 +26,22 @@ namespace Robust.Client.Replays.Playback;
 
 internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
 {
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IMidiManager _midi = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IAudioInternal _clydeAudio = default!;
-    [Dependency] private readonly IClientGameTiming _timing = default!;
-    [Dependency] private readonly IClientNetManager _netMan = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly IGameController _controller = default!;
-    [Dependency] private readonly IClientEntityManager _cEntManager = default!;
-    [Dependency] private readonly ClientEntityManager _entMan = default!;
-    [Dependency] private readonly IConfigurationManager _confMan = default!;
-    [Dependency] private readonly NetworkResourceManager _netResMan = default!;
-    [Dependency] private readonly IClientGameStateManager _gameState = default!;
-    [Dependency] private readonly IClientNetConfigurationManager _netConf = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IMidiManager _midi = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IAudioInternal _clydeAudio = default!;
+    [Dependency] private IClientGameTiming _timing = default!;
+    [Dependency] private IClientNetManager _netMan = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private IGameController _controller = default!;
+    [Dependency] private IClientEntityManager _cEntManager = default!;
+    [Dependency] private ClientEntityManager _entMan = default!;
+    [Dependency] private IConfigurationManager _confMan = default!;
+    [Dependency] private NetworkResourceManager _netResMan = default!;
+    [Dependency] private IClientGameStateManager _gameState = default!;
+    [Dependency] private IClientNetConfigurationManager _netConf = default!;
 
     public event Action<MappingDataNode, List<object>>? ReplayPlaybackStarted;
     public event Action? ReplayPlaybackStopped;
@@ -52,6 +52,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     public ReplayData? Replay { get; private set; }
     public NetUserId? Recorder => Replay?.Recorder;
     private int _checkpointMinInterval;
+    private int _replayMaxScrubTime;
     private int _visualEventThreshold;
     public uint? AutoPauseCountdown { get; set; }
     public int? ScrubbingTarget { get; set; }
@@ -94,6 +95,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         _sawmill = _logMan.GetSawmill("replay");
         _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
         _confMan.OnValueChanged(CVars.CheckpointMinInterval, (value) => _checkpointMinInterval = value, true);
+        _confMan.OnValueChanged(CVars.ReplayMaxScrubTime, (value) => _replayMaxScrubTime = value, true);
         _confMan.OnValueChanged(CVars.ReplaySkipThreshold, (value) => _visualEventThreshold = value, true);
         _client.RunLevelChanged += OnRunLevelChanged;
     }
@@ -129,6 +131,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         if (Replay == null)
             return;
 
+        var replay = Replay;
         _playing = false;
         Replay.CurrentIndex = -1;
         Replay = null;
@@ -138,6 +141,9 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         // Unload any uploaded prototypes & resources.
         _netResMan.ClearResources();
         _protoMan.Reset();
+
+        // Release the windowed data provider and the underlying replay file handle.
+        replay.Dispose();
 
         ReplayPlaybackStopped?.Invoke();
     }

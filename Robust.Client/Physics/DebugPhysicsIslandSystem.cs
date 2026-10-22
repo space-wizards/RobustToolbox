@@ -14,9 +14,9 @@ using TerraFX.Interop.DirectX;
 
 namespace Robust.Client.Physics
 {
-    internal sealed class PhysicsIslandCommand : LocalizedCommands
+    internal sealed partial class PhysicsIslandCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private IEntitySystemManager _entitySystemManager = default!;
 
         public override string Command => "showislands";
 
@@ -33,12 +33,12 @@ namespace Robust.Client.Physics
         }
     }
 
-    internal sealed class DebugPhysicsIslandSystem : EntitySystem
+    internal sealed partial class DebugPhysicsIslandSystem : EntitySystem
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
 
         public DebugPhysicsIslandMode Mode { get; set; } = DebugPhysicsIslandMode.None;
 
@@ -47,7 +47,7 @@ namespace Robust.Client.Physics
          * This will draw above every body involved in a particular island solve.
          */
 
-        public readonly Queue<(TimeSpan Time, List<PhysicsComponent> Bodies)> IslandSolve = new();
+        public readonly Queue<(TimeSpan Time, List<Entity<PhysicsComponent, TransformComponent>> Bodies)> IslandSolve = new();
         public const float SolveDuration = 0.1f;
 
         public override void Initialize()

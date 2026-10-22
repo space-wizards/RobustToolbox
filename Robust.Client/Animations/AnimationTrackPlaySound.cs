@@ -40,11 +40,7 @@ namespace Robust.Client.Animations
                 var keyFrame = KeyFrames[keyFrameIndex];
 
                 var audioParams = keyFrame.AudioParamsFunc.Invoke();
-                var audio = new SoundPathSpecifier(keyFrame.Resource)
-                {
-                    Params = audioParams
-                };
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AudioSystem>().PlayEntity(audio, Filter.Local(), entity, true);
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AudioSystem>().PlayEntity(keyFrame.Specifier, Filter.Local(), entity, true, audioParams);
             }
 
             return (keyFrameIndex, playingTime);
@@ -55,7 +51,7 @@ namespace Robust.Client.Animations
             /// <summary>
             ///     The RSI state to play when this keyframe gets triggered.
             /// </summary>
-            public readonly string Resource;
+            public readonly ResolvedSoundSpecifier Specifier;
 
             /// <summary>
             ///     A function that returns the audio parameter to be used.
@@ -69,9 +65,9 @@ namespace Robust.Client.Animations
             /// </summary>
             public readonly float KeyTime;
 
-            public KeyFrame(string resource, float keyTime, Func<AudioParams>? audioParams = null)
+            public KeyFrame(ResolvedSoundSpecifier specifier, float keyTime, Func<AudioParams>? audioParams = null)
             {
-                Resource = resource;
+                Specifier = specifier;
                 KeyTime = keyTime;
                 AudioParamsFunc = audioParams ?? (() => AudioParams.Default);
             }

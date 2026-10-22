@@ -21,6 +21,7 @@
 */
 
 using System.Numerics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
@@ -39,13 +40,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public int IndexB;
 
         // Use 2 as its the max number of manifold points.
-        public VelocityConstraintPoint[] Points;
+        public FixedArray2<VelocityConstraintPoint> Points;
 
         public Vector2 Normal;
 
-        public System.Numerics.Vector4 NormalMass;
+        public Vector4 NormalMass;
 
-        public System.Numerics.Vector4 K;
+        public Vector4 K;
 
         public float InvMassA;
         public float InvMassB;

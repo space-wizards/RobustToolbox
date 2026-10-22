@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -22,6 +23,9 @@ namespace Robust.Shared.Collections;
 /// public APIs probably shouldn't expose it unless you know what you're doing.
 /// </para>
 /// <para>
+/// If you use this as an IList then make sure it's passed as a generic to avoid boxing.
+/// </para>
+/// <para>
 /// This implementation does not complain if you modify it during iteration. Be careful!
 /// </para>
 /// <para>
@@ -33,7 +37,7 @@ namespace Robust.Shared.Collections;
 /// </para>
 /// </remarks>
 /// <typeparam name="T">The type of item to store in the list.</typeparam>
-public struct ValueList<T> : IEnumerable<T>
+public struct ValueList<T> : IList<T>
 {
     private const int DefaultCapacity = 4;
 
@@ -141,6 +145,7 @@ public struct ValueList<T> : IEnumerable<T>
     }
 
     public int Count { get; private set; }
+    public readonly bool IsReadOnly => false;
 
     // Sets or Gets the element at the given index.
     public readonly ref T this[int index]
@@ -279,6 +284,22 @@ public struct ValueList<T> : IEnumerable<T>
         return IndexOf(item) >= 0;
     }
 
+    public readonly void CopyTo(T[] array, int arrayIndex)
+    {
+        ArgumentNullException.ThrowIfNull(array);
+
+        if (arrayIndex < 0)
+            throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+
+        if (array.Length - arrayIndex < Count)
+            throw new ArgumentException("Destination array is not long enough.");
+
+        if (Count == 0)
+            return;
+
+        Array.Copy(_items!, 0, array, arrayIndex, Count);
+    }
+
     /// <summary>
     /// Ensures that the capacity of this list is at least the specified <paramref name="capacity"/>.
     /// If the current capacity of the list is less than specified <paramref name="capacity"/>,
@@ -396,13 +417,16 @@ public struct ValueList<T> : IEnumerable<T>
             throw new ArgumentOutOfRangeException();
         }
 
-        if (Count == _items!.Length) Grow(Count + 1);
+        if (Count == Capacity)
+            Grow(Count + 1);
+
+        var items = _items!;
         if (index < Count)
         {
-            Array.Copy(_items, index, _items, index + 1, Count - index);
+            Array.Copy(items, index, items, index + 1, Count - index);
         }
 
-        _items[index] = item;
+        items[index] = item;
         Count++;
     }
 
@@ -503,6 +527,24 @@ public struct ValueList<T> : IEnumerable<T>
             _items![Count] = default!;
     }
 
+    T IList<T>.this[int index]
+    {
+        readonly get
+        {
+            if ((uint) index >= (uint) Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            return _items![index];
+        }
+        set
+        {
+            if ((uint) index >= (uint) Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            _items![index] = value;
+        }
+    }
+
     public void Sort() => Span.Sort();
     public void Sort(IComparer<T>? comparer) => Span.Sort(comparer);
     public void Sort(Comparison<T> comparison) => Span.Sort(comparison);
@@ -590,6 +632,12 @@ public struct ValueList<T> : IEnumerable<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddRange(Span<T> span)
     {
+        AddRange((ReadOnlySpan<T>) span);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddRange(ReadOnlySpan<T> span)
+    {
         var spanCount = span.Length;
         EnsureCapacity(Count + spanCount);
         var target = new Span<T>(_items, Count, spanCount);
@@ -617,5 +665,78 @@ public struct ValueList<T> : IEnumerable<T>
         {
             Add(result);
         }
+    }
+
+    /// <summary>
+    /// Push a value onto the end of this list. This is equivalent to <see cref="Add"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is added to provide completeness with other stack-like functions.
+    /// </remarks>
+    /// <param name="item">The item to add to the list.</param>
+    public void Push(T item)
+    {
+        Add(item);
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the list is empty.</exception>
+    public T Pop()
+    {
+        if (!TryPop(out var value))
+            throw new InvalidOperationException("List is empty");
+
+        return value;
+    }
+
+    /// <summary>
+    /// Return the value at the end of the list, but do not remove it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the list is empty.</exception>
+    public T Peek()
+    {
+        if (!TryPeek(out var value))
+            throw new InvalidOperationException("List is empty");
+
+        return value;
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list, only if the list is not empty.
+    /// </summary>
+    /// <returns>True if the list was not empty and an item was removed.</returns>
+    public bool TryPop([MaybeNullWhen(false)] out T value)
+    {
+        if (Count == 0)
+        {
+            value = default;
+            return false;
+        }
+
+        var index = --Count;
+        value = _items![index];
+
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            _items[index] = default!;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list, only if the list is not empty.
+    /// </summary>
+    /// <returns>True if the list was not empty and an item was removed.</returns>
+    public bool TryPeek([MaybeNullWhen(false)] out T value)
+    {
+        if (Count == 0)
+        {
+            value = default;
+            return false;
+        }
+
+        value = _items![Count - 1];
+        return true;
     }
 }

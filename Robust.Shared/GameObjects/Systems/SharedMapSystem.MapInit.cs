@@ -34,13 +34,6 @@ public abstract partial class SharedMapSystem
         return map.Comp.MapInitialized;
     }
 
-    private void OnMapInit(EntityUid uid, MapComponent component, MapInitEvent args)
-    {
-        DebugTools.Assert(!component.MapInitialized);
-        component.MapInitialized = true;
-        EntityManager.Dirty(uid, component);
-    }
-
     public void InitializeMap(MapId mapId, bool unpause = true)
     {
         if(!Maps.TryGetValue(mapId, out var uid))
@@ -63,7 +56,7 @@ public abstract partial class SharedMapSystem
             SetPaused(map, false);
     }
 
-    private void RecursiveMapInit(EntityUid entity)
+    internal void RecursiveMapInit(EntityUid entity)
     {
         var toInitialize = new List<EntityUid> {entity};
         for (var i = 0; i < toInitialize.Count; i++)

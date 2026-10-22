@@ -135,6 +135,13 @@ def check_rsi(rsi: str, schema: Draft7Validator):
             add_error(rsi, f"{state_name}: sprite sheet of {size[0]}x{size[1]} is too small, metadata defines {frame_count} frames, but it can only fit {max_sheet_frames} at most")
             continue
 
+    # Check if state name exists
+    for state in meta_json["states"]:
+        state_name: str = state["name"]
+        if state_name == "":
+            add_error(rsi, f"state name cannot be an empty string.")
+            return
+
     # We're good!
     return
 

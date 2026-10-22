@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Audio;
@@ -26,6 +26,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _enableAllKeybinds;
         private ButtonGroup? _group;
         private bool _toggleMode;
+        private bool _muteSounds;
 
         /// <summary>
         ///     Specifies the group this button belongs to.
@@ -115,7 +116,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 _pressed = value;
 
-                if (Group != null)
+                if (Group != null && _pressed)
                 {
                     UnsetOtherGroupButtons();
                 }
@@ -135,7 +136,8 @@ namespace Robust.Client.UserInterface.Controls
             if (Pressed != value)
                 return;
 
-            UserInterfaceManager.ClickSound();
+            if (!MuteSounds)
+                UserInterfaceManager.ClickSound();
         }
 
         /// <summary>
@@ -197,6 +199,16 @@ namespace Robust.Client.UserInterface.Controls
                     return DrawModeEnum.Normal;
                 }
             }
+        }
+
+        /// <summary>
+        ///     If <c>true</c>, this button will not emit sounds when the mouse is pressed or hovered over.
+        /// </summary>
+        [ViewVariables]
+        public bool MuteSounds
+        {
+            get => _muteSounds;
+            set => _muteSounds = value;
         }
 
         /// <summary>
@@ -298,14 +310,18 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     else
                     {
-                        UserInterfaceManager.ClickSound();
+                        if (!MuteSounds)
+                            UserInterfaceManager.ClickSound();
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);
                     if (args.Function == EngineKeyFunctions.UIClick && ToggleMode)
                     {
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
-                        UnsetOtherGroupButtons();
+                        if (_pressed)
+                        {
+                            UnsetOtherGroupButtons();
+                        }
                     }
                 }
             }
@@ -353,7 +369,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseEntered();
 
-            if (!Disabled)
+            if (!Disabled && !MuteSounds)
             {
                 UserInterfaceManager.HoverSound();
             }
@@ -378,9 +394,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void ExitedTree()
         {
-            base.Dispose(disposing);
+            base.ExitedTree();
 
             Group = null;
         }

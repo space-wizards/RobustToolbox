@@ -26,7 +26,8 @@ public sealed class DefaultSQLConfig : IConfig
 
     public IEnumerable<IExporter> GetExporters()
     {
-        yield return SQLExporter.Default;
+        //yield return SQLExporter.Default;
+        yield break;
     }
 
     public IEnumerable<IColumnProvider> GetColumnProviders() => DefaultConfig.Instance.GetColumnProviders();
@@ -58,5 +59,6 @@ public sealed class DefaultSQLConfig : IConfig
     public CultureInfo CultureInfo => DefaultConfig.Instance.CultureInfo!;
     public ConfigOptions Options => DefaultConfig.Instance.Options;
     public TimeSpan BuildTimeout => DefaultConfig.Instance.BuildTimeout;
+    public WakeLockType WakeLock => DefaultConfig.Instance.WakeLock;
     public IReadOnlyList<Conclusion> ConfigAnalysisConclusion => DefaultConfig.Instance.ConfigAnalysisConclusion;
 }

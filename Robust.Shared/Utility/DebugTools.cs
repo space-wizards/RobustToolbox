@@ -220,14 +220,18 @@ namespace Robust.Shared.Utility
         ///     <paramref name="arg" /> is <see langword="null" />.
         /// </summary>
         /// <param name="arg">Condition that must be true.</param>
+        /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void AssertNotNull([AssertionCondition(AssertionConditionType.IS_NOT_NULL)]
-            object? arg)
+        public static void AssertNotNull(
+            [AssertionCondition(AssertionConditionType.IS_NOT_NULL)]
+            [System.Diagnostics.CodeAnalysis.NotNull]
+            object? arg,
+            string? message = null)
         {
             if (arg == null)
             {
-                throw new DebugAssertException();
+                throw new DebugAssertException(message?? "value cannot be null");
             }
         }
 
@@ -236,14 +240,16 @@ namespace Robust.Shared.Utility
         ///     <paramref name="arg" /> is not <see langword="null" />.
         /// </summary>
         /// <param name="arg">Condition that must be true.</param>
+        /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
         public static void AssertNull([AssertionCondition(AssertionConditionType.IS_NULL)]
-            object? arg)
+            object? arg,
+            string? message = null)
         {
             if (arg != null)
             {
-                throw new DebugAssertException();
+                throw new DebugAssertException(message ?? "value should be null");
             }
         }
 
@@ -290,7 +296,7 @@ namespace Robust.Shared.Utility
         {
         }
 
-        public DebugAssertException(string message) : base(message)
+        public DebugAssertException(string? message) : base(message)
         {
         }
     }

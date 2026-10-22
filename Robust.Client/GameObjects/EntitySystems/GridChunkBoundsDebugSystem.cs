@@ -4,7 +4,6 @@ using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -13,11 +12,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class GridChunkBoundsDebugSystem : EntitySystem
+    public sealed partial class GridChunkBoundsDebugSystem : EntitySystem
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] private TransformSystem _transform = default!;
+        [Dependency] private SharedMapSystem _map = default!;
 
         private GridChunkBoundsOverlay? _overlay;
 
@@ -35,8 +34,8 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert(_overlay == null);
                     _overlay = new GridChunkBoundsOverlay(
                         EntityManager,
-                        _eyeManager,
-                        _mapManager);
+                        _transform,
+                        _map);
 
                     _overlayManager.AddOverlay(_overlay);
                 }
@@ -54,18 +53,18 @@ namespace Robust.Client.GameObjects
     internal sealed class GridChunkBoundsOverlay : Overlay
     {
         private readonly IEntityManager _entityManager;
-        private readonly IEyeManager _eyeManager;
-        private readonly IMapManager _mapManager;
+        private readonly SharedTransformSystem _transformSystem;
+        private readonly SharedMapSystem _mapSystem;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
         private List<Entity<MapGridComponent>> _grids = new();
 
-        public GridChunkBoundsOverlay(IEntityManager entManager, IEyeManager eyeManager, IMapManager mapManager)
+        public GridChunkBoundsOverlay(IEntityManager entManager, SharedTransformSystem transformSystem, SharedMapSystem mapSystem)
         {
             _entityManager = entManager;
-            _eyeManager = eyeManager;
-            _mapManager = mapManager;
+            _transformSystem = transformSystem;
+            _mapSystem = mapSystem;
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -74,20 +73,23 @@ namespace Robust.Client.GameObjects
             var viewport = args.WorldBounds;
             var worldHandle = args.WorldHandle;
 
+            var fixturesQuery = _entityManager.GetEntityQuery<FixturesComponent>();
             _grids.Clear();
-            _mapManager.FindGridsIntersecting(currentMap, viewport, ref _grids);
+            _mapSystem.FindGridsIntersecting(currentMap, viewport, ref _grids);
             foreach (var grid in _grids)
             {
-                var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid).WorldMatrix;
+                var worldMatrix = _transformSystem.GetWorldMatrix(grid);
                 worldHandle.SetTransform(worldMatrix);
                 var transform = new Transform(Vector2.Zero, Angle.Zero);
+                var fixtures = fixturesQuery.Comp(grid.Owner);
 
-                var chunkEnumerator = grid.Comp.GetMapChunks(viewport);
+                var chunkEnumerator = _mapSystem.GetMapChunks(grid.Owner, grid.Comp, viewport);
 
                 while (chunkEnumerator.MoveNext(out var chunk))
                 {
-                    foreach (var fixture in chunk.Fixtures.Values)
+                    foreach (var id in chunk.Fixtures)
                     {
+                        var fixture = fixtures.Fixtures[id];
                         var poly = (PolygonShape) fixture.Shape;
 
                         var verts = new Vector2[poly.VertexCount];
@@ -108,8 +110,6 @@ namespace Robust.Client.GameObjects
                     }
                 }
             }
-
-            worldHandle.SetTransform(Matrix3.Identity);
         }
     }
 }

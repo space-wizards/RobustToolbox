@@ -11,6 +11,7 @@ using Robust.Client.UserInterface.Themes;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -73,6 +74,8 @@ namespace Robust.Client.UserInterface
         //{
         //    _nameScope = nameScope;
         //}
+
+        public virtual ISawmill Log => UserInterfaceManager.ControlSawmill;
 
         public UITheme Theme { get; internal set; }
 
@@ -212,9 +215,18 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Called when this control's visibility in the control tree changed.
+        /// </summary>
+        protected virtual void VisibilityChanged(bool newVisible)
+        {
+        }
+
         private void _propagateVisibilityChanged(bool newVisible)
         {
+            VisibilityChanged(newVisible);
             OnVisibilityChanged?.Invoke(this);
+
             if (!VisibleInTree)
             {
                 UserInterfaceManagerInternal.ControlHidden(this);
@@ -372,8 +384,6 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public event EventHandler? OnShowTooltip;
 
-
-
         /// <summary>
         /// If this control is currently showing a tooltip provided via TooltipSupplier,
         /// returns that tooltip. Do not move this control within the tree, it should remain in PopupRoot.
@@ -522,7 +532,7 @@ namespace Robust.Client.UserInterface
         public Control()
         {
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
-            StyleClasses = new StyleClassCollection(this);
+            _styleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
             Theme = UserInterfaceManagerInternal.CurrentTheme;
             XamlChildren = Children;
@@ -540,7 +550,7 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        internal virtual void DrawInternal(IRenderHandle renderHandle)
+        protected internal virtual void Draw(IRenderHandle renderHandle)
         {
             Draw(renderHandle.DrawingHandleScreen);
         }
@@ -567,7 +577,7 @@ namespace Robust.Client.UserInterface
             public Vector2i Position;
             public Color Modulate;
             public UIBox2i? ScissorBox;
-            public ref Matrix3 CoordinateTransform;
+            public ref Matrix3x2 CoordinateTransform;
         }
 
         protected void RenderControl(ref ControlRenderArguments args, int childIndex, Vector2i position)
@@ -593,6 +603,7 @@ namespace Robust.Client.UserInterface
         ///     Dispose this control, its own scene control, and all its children.
         ///     Basically the big delete button.
         /// </summary>
+        [Obsolete("Controls should only be removed from UI tree instead of being disposed")]
         public void Dispose()
         {
             if (Disposed)
@@ -604,6 +615,7 @@ namespace Robust.Client.UserInterface
             Disposed = true;
         }
 
+        [Obsolete("Controls should only be removed from UI tree instead of being disposed")]
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing)
@@ -622,6 +634,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Dispose all children, but leave this one intact.
         /// </summary>
+        [Obsolete("Use RemoveAllChildren")]
         public void DisposeAllChildren()
         {
             // Cache because the children modify the dictionary.
@@ -751,7 +764,23 @@ namespace Robust.Client.UserInterface
                 throw new InvalidOperationException("The provided control is not a direct child of this control.");
             }
 
-            _orderedChildren.Remove(child);
+            var childIndex = _orderedChildren.IndexOf(child);
+            RemoveChild(childIndex);
+        }
+
+        /// <summary>
+        ///     Removes the child at a specific index from this control.
+        /// </summary>
+        /// <param name="childIndex">The index of the child to remove.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if the provided child index is out of range
+        /// </exception>
+        public void RemoveChild(int childIndex)
+        {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
+            var child = _orderedChildren[childIndex];
+            _orderedChildren.RemoveAt(childIndex);
 
             child.Parent = null;
 
@@ -967,6 +996,9 @@ namespace Robust.Client.UserInterface
 
         internal int DoFrameUpdateRecursive(FrameEventArgs args)
         {
+            if (!Visible)
+                return 0;
+
             var total = 1;
             FrameUpdate(args);
 
@@ -1019,7 +1051,7 @@ namespace Robust.Client.UserInterface
             Ignore = 2,
         }
 
-        public sealed class OrderedChildCollection : ICollection<Control>, IReadOnlyCollection<Control>
+        public sealed class OrderedChildCollection : ICollection<Control>, IReadOnlyList<Control>
         {
             private readonly Control Owner;
 
@@ -1071,6 +1103,7 @@ namespace Robust.Client.UserInterface
 
             int ICollection<Control>.Count => Owner.ChildCount;
             int IReadOnlyCollection<Control>.Count => Owner.ChildCount;
+            public Control this[int index] => Owner._orderedChildren[index];
 
             public bool IsReadOnly => false;
 

@@ -11,8 +11,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -62,7 +60,16 @@ namespace Robust.Client.Graphics.Clyde
         // This matrix is applied to most normal geometry coming in.
         // Some is applied while the batch is being created (e.g. simple texture draw calls).
         // For DrawPrimitives OTOH the model matrix is passed along with the render command so is applied in the shader.
-        private Matrix3 _currentMatrixModel = Matrix3.Identity;
+        private Matrix3x2 _currentMatrixModel = Matrix3x2.Identity;
+        private Vector2 _currentMatrixModelTranslation;
+        private ModelTransformType _currentMatrixModelTransformType = ModelTransformType.Identity;
+
+        private enum ModelTransformType : byte
+        {
+            Identity,
+            Translation,
+            General,
+        }
 
         // Buffers and data for the batching system. Written into during (queue) and processed during (submit).
         private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchQuads * 4];
@@ -82,17 +89,72 @@ namespace Robust.Client.Graphics.Clyde
 
         private ClydeShaderInstance _queuedShaderInstance = default!;
 
+        private static readonly Vector4 DefaultScreenUvRect = new(0, 0, 1, 1);
+        private Vector4 _queuedScreenUvRect = DefaultScreenUvRect;
+
         // Current projection & view matrices that are being used ot render.
         // This gets updated to keep track during (queue) and (misc), but not during (submit).
-        private Matrix3 _currentMatrixProj;
-        private Matrix3 _currentMatrixView;
+        private Matrix3x2 _currentMatrixProj;
+        private Matrix3x2 _currentMatrixView;
 
         // (queue) and (misc), current state of the scissor test. Null if disabled.
         private UIBox2i? _currentScissorState;
 
-        // Some simple flags that basically just tracks the current state of glEnable(GL_STENCIL/GL_SCISSOR_TEST)
-        private bool _isScissoring;
-        private bool _isStencilling;
+        /// <summary>
+        /// Tracks enabled GL capabilities for renderer state.
+        /// </summary>
+        private GLCaps _glCaps = GLCaps.None;
+
+        private bool IsStencilling
+        {
+            get => (_glCaps & GLCaps.Stencilling) == GLCaps.Stencilling;
+            set
+            {
+                if (value == IsStencilling)
+                    return;
+
+                if (value)
+                {
+                    _glCaps |= GLCaps.Stencilling;
+                    GL.Enable(EnableCap.StencilTest);
+                }
+                else
+                {
+                    _glCaps &= ~GLCaps.Stencilling;
+                    GL.Disable(EnableCap.StencilTest);
+                }
+
+                CheckGlError();
+            }
+        }
+
+        private bool IsBlending
+        {
+            get => (_glCaps & GLCaps.Blending) == GLCaps.Blending;
+            set
+            {
+                if (value == IsBlending)
+                    return;
+
+                if (value)
+                {
+                    _glCaps |= GLCaps.Blending;
+                    GL.Enable(EnableCap.Blend);
+                }
+                else
+                {
+                    _glCaps &= ~GLCaps.Blending;
+                    GL.Disable(EnableCap.Blend);
+                }
+
+                CheckGlError();
+            }
+        }
+
+        private bool IsScissoring
+        {
+            get => _currentScissorState != null;
+        }
 
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
 
@@ -110,25 +172,25 @@ namespace Robust.Client.Graphics.Clyde
             UniformConstantsUBO.Reallocate(constants);
         }
 
-        private void CalcScreenMatrices(in Vector2i screenSize, out Matrix3 proj, out Matrix3 view)
+        private void CalcScreenMatrices(in Vector2i screenSize, out Matrix3x2 proj, out Matrix3x2 view)
         {
-            proj = Matrix3.Identity;
-            proj.R0C0 = 2f / screenSize.X;
-            proj.R1C1 = -2f / screenSize.Y;
-            proj.R0C2 = -1;
-            proj.R1C2 = 1;
+            proj = Matrix3x2.Identity;
+            proj.M11 = 2f / screenSize.X;
+            proj.M22 = -2f / screenSize.Y;
+            proj.M31 = -1;
+            proj.M32 = 1;
 
             if (_currentRenderTarget.FlipY)
             {
-                proj.R1C1 *= -1;
-                proj.R1C2 *= -1;
+                proj.M22 *= -1;
+                proj.M32 *= -1;
             }
 
-            view = Matrix3.Identity;
+            view = Matrix3x2.Identity;
         }
 
         private void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye,
-            out Matrix3 proj, out Matrix3 view)
+            out Matrix3x2 proj, out Matrix3x2 view)
         {
             eye.GetViewMatrix(out view, renderScale);
 
@@ -136,20 +198,20 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CalcWorldProjMatrix(in Vector2i screenSize, out Matrix3 proj)
+        private void CalcWorldProjMatrix(in Vector2i screenSize, out Matrix3x2 proj)
         {
-            proj = Matrix3.Identity;
-            proj.R0C0 = EyeManager.PixelsPerMeter * 2f / screenSize.X;
-            proj.R1C1 = EyeManager.PixelsPerMeter * 2f / screenSize.Y;
+            proj = Matrix3x2.Identity;
+            proj.M11 = EyeManager.PixelsPerMeter * 2f / screenSize.X;
+            proj.M22 = EyeManager.PixelsPerMeter * 2f / screenSize.Y;
 
             if (_currentRenderTarget.FlipY)
             {
-                proj.R1C1 *= -1;
-                proj.R1C2 *= -1;
+                proj.M22 *= -1;
+                proj.M32 *= -1;
             }
         }
 
-        private void SetProjViewBuffer(in Matrix3 proj, in Matrix3 view)
+        private void SetProjViewBuffer(in Matrix3x2 proj, in Matrix3x2 view)
         {
             // TODO: Fix perf here.
             // This immediately causes a glBufferData() call every time this is changed.
@@ -160,7 +222,7 @@ namespace Robust.Client.Graphics.Clyde
             ProjViewUBO.Reallocate(combined);
         }
 
-        private void SetProjViewFull(in Matrix3 proj, in Matrix3 view)
+        private void SetProjViewFull(in Matrix3x2 proj, in Matrix3x2 view)
         {
             _currentMatrixProj = proj;
             _currentMatrixView = view;
@@ -246,6 +308,7 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniIScreenUvRect, command.ScreenUvRect);
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
@@ -285,21 +348,21 @@ namespace Robust.Client.Graphics.Clyde
             };
         }
 
-        private void _drawQuad(Vector2 a, Vector2 b, in Matrix3 modelMatrix, GLShaderProgram program)
+        private void _drawQuad(Vector2 a, Vector2 b, in Matrix3x2 modelMatrix, GLShaderProgram program)
         {
             DrawQuadWithVao(QuadVAO, a, b, modelMatrix, program);
         }
 
-        private void DrawQuadWithVao(GLHandle vao, Vector2 a, Vector2 b, in Matrix3 modelMatrix,
+        private void DrawQuadWithVao(GLHandle vao, Vector2 a, Vector2 b, in Matrix3x2 modelMatrix,
             GLShaderProgram program)
         {
             BindVertexArray(vao.Handle);
             CheckGlError();
 
-            var rectTransform = Matrix3.Identity;
-            (rectTransform.R0C0, rectTransform.R1C1) = b - a;
-            (rectTransform.R0C2, rectTransform.R1C2) = a;
-            rectTransform.Multiply(modelMatrix);
+            var rectTransform = Matrix3x2.Identity;
+            (rectTransform.M11, rectTransform.M22) = b - a;
+            (rectTransform.M31, rectTransform.M32) = a;
+            rectTransform = rectTransform * modelMatrix;
             program.SetUniformMaybe(UniIModelMatrix, rectTransform);
 
             _debugStats.LastGLDrawCalls += 1;
@@ -315,8 +378,9 @@ namespace Robust.Client.Graphics.Clyde
             FlushBatchQueue();
 
             // Reset renderer state.
-            _currentMatrixModel = Matrix3.Identity;
+            DrawSetModelTransform(Matrix3x2.Identity);
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
             SetScissorFull(null);
         }
 
@@ -364,16 +428,17 @@ namespace Robust.Client.Graphics.Clyde
 
         private void SetScissorImmediate(bool enable, in UIBox2i box)
         {
-            var oldIsScissoring = _isScissoring;
-            _isScissoring = enable;
-            if (_isScissoring)
+            if (enable)
             {
-                if (!oldIsScissoring)
-                {
-                    GL.Enable(EnableCap.ScissorTest);
-                    CheckGlError();
-                }
+                GL.Enable(EnableCap.ScissorTest);
+            }
+            else
+            {
+                GL.Disable(EnableCap.ScissorTest);
+            }
 
+            if (enable)
+            {
                 // Don't forget to flip it, these coordinates have bottom left as origin.
                 // TODO: Broken when rendering to non-screen render targets.
 
@@ -385,11 +450,6 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
                 }
-                CheckGlError();
-            }
-            else if (oldIsScissoring)
-            {
-                GL.Disable(EnableCap.ScissorTest);
                 CheckGlError();
             }
         }
@@ -420,29 +480,17 @@ namespace Robust.Client.Graphics.Clyde
             var program = shader.Program;
 
             program.Use();
+            IsStencilling = instance.Stencil.Enabled;
 
             // Handle stencil parameters.
             if (instance.Stencil.Enabled)
             {
-                if (!_isStencilling)
-                {
-                    GL.Enable(EnableCap.StencilTest);
-                    CheckGlError();
-                    _isStencilling = true;
-                }
-
                 GL.StencilMask(instance.Stencil.WriteMask);
                 CheckGlError();
                 GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
                 CheckGlError();
                 GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
                 CheckGlError();
-            }
-            else if (_isStencilling)
-            {
-                GL.Disable(EnableCap.StencilTest);
-                CheckGlError();
-                _isStencilling = false;
             }
 
             if (instance.Parameters.Count == 0)
@@ -487,6 +535,9 @@ namespace Robust.Client.Graphics.Clyde
                     case Color color:
                         program.SetUniform(name, color);
                         break;
+                    case Color[] colorArr:
+                        program.SetUniform(name, colorArr);
+                        break;
                     case int i:
                         program.SetUniform(name, i);
                         break;
@@ -496,10 +547,13 @@ namespace Robust.Client.Graphics.Clyde
                     case bool b:
                         program.SetUniform(name, b ? 1 : 0);
                         break;
-                    case Matrix3 matrix3:
+                    case bool[] bArr:
+                        program.SetUniform(name, bArr);
+                        break;
+                    case Matrix3x2 matrix3:
                         program.SetUniform(name, matrix3);
                         break;
-                    case Matrix4 matrix4:
+                    case Matrix4x4 matrix4:
                         program.SetUniform(name, matrix4);
                         break;
                     case ClydeTexture clydeTexture:
@@ -532,17 +586,24 @@ namespace Robust.Client.Graphics.Clyde
             return ref command;
         }
 
-        private void DrawSetModelTransform(in Matrix3 matrix)
+        private void DrawSetModelTransform(in Matrix3x2 matrix)
         {
             _currentMatrixModel = matrix;
+            _currentMatrixModelTranslation = new Vector2(matrix.M31, matrix.M32);
+            _currentMatrixModelTransformType = matrix.M11 == 1f && matrix.M12 == 0f &&
+                                               matrix.M21 == 0f && matrix.M22 == 1f
+                ? _currentMatrixModelTranslation == Vector2.Zero
+                    ? ModelTransformType.Identity
+                    : ModelTransformType.Translation
+                : ModelTransformType.General;
         }
 
-        private Matrix3 DrawGetModelTransform()
+        private Matrix3x2 DrawGetModelTransform()
         {
             return _currentMatrixModel;
         }
 
-        private void DrawSetProjViewTransform(in Matrix3 proj, in Matrix3 view)
+        private void DrawSetProjViewTransform(in Matrix3x2 proj, in Matrix3x2 view)
         {
             BreakBatch();
 
@@ -571,21 +632,266 @@ namespace Robust.Client.Graphics.Clyde
             EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
             EnsureBatchState(texture, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
-            bl = _currentMatrixModel.Transform(bl);
-            br = _currentMatrixModel.Transform(br);
-            tr = _currentMatrixModel.Transform(tr);
+            if (_currentMatrixModelTransformType == ModelTransformType.Translation)
+            {
+                bl += _currentMatrixModelTranslation;
+                br += _currentMatrixModelTranslation;
+                tr += _currentMatrixModelTranslation;
+            }
+            else if (_currentMatrixModelTransformType == ModelTransformType.General)
+            {
+                // TODO RENDERING
+                // It's probably better to do this on the GPU.
+                bl = Vector2.Transform(bl, _currentMatrixModel);
+                br = Vector2.Transform(br, _currentMatrixModel);
+                tr = Vector2.Transform(tr, _currentMatrixModel);
+            }
+
             tl = tr + bl - br;
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, new Vector2(0, 0), modulate);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, new Vector2(1, 0), modulate);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, new Vector2(1, 1), modulate);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, new Vector2(0, 1), modulate);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, modulate);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, modulate);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, modulate);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, modulate);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
             _debugStats.LastClydeDrawCalls += 1;
+        }
+
+        private void DrawTextureBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            Color modulate,
+            in Box2 texCoords)
+        {
+            DrawTextureBatch(texture, rects, modulate, in texCoords, true);
+        }
+
+        private void DrawTextureBatchUnmodulated(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            in Box2 texCoords)
+        {
+            DrawTextureBatch(texture, rects, Color.White, in texCoords, false);
+        }
+
+        private void DrawTextureBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            Color modulate,
+            in Box2 texCoords,
+            bool applyModulation)
+        {
+            if (rects.Length == 0)
+                return;
+
+            // Avoids calling EnsureBatchSpaceAvailable / EnsureBatchState for each individual quad.
+            var primitiveType = GetQuadBatchPrimitiveType();
+            var indexCount = GetQuadBatchIndexCount();
+            var rectIndex = 0;
+            var modelMatrix = _currentMatrixModel;
+            var modelTransformType = _currentMatrixModelTransformType;
+            var modelTranslation = _currentMatrixModelTranslation;
+
+            while (rectIndex < rects.Length)
+            {
+                var availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                EnsureBatchState(texture, true, primitiveType, _queuedShader);
+
+                availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                var count = Math.Min(availableQuads, rects.Length - rectIndex);
+
+                for (var i = 0; i < count; i++)
+                {
+                    ref readonly var rect = ref rects[rectIndex + i];
+                    var color = rect.Modulate ?? Color.White;
+
+                    if (applyModulation)
+                        color *= modulate;
+
+                    var quad = rect.Quad;
+                    var box = quad.Box;
+                    Vector2 bl;
+                    Vector2 br;
+                    Vector2 tl;
+                    Vector2 tr;
+                    if (modelTransformType != ModelTransformType.General && quad.Rotation == Angle.Zero)
+                    {
+                        bl = box.BottomLeft;
+                        br = box.BottomRight;
+                        tl = box.TopLeft;
+                        tr = box.TopRight;
+
+                        if (modelTransformType == ModelTransformType.Translation)
+                        {
+                            bl += modelTranslation;
+                            br += modelTranslation;
+                            tl += modelTranslation;
+                            tr += modelTranslation;
+                        }
+                    }
+                    else
+                    {
+                        var transform = quad.Transform;
+                        if (modelTransformType == ModelTransformType.Translation)
+                        {
+                            transform.M31 += modelTranslation.X;
+                            transform.M32 += modelTranslation.Y;
+                        }
+                        else if (modelTransformType == ModelTransformType.General)
+                        {
+                            transform *= modelMatrix;
+                        }
+
+                        bl = Vector2.Transform(box.BottomLeft, transform);
+                        br = Vector2.Transform(box.BottomRight, transform);
+                        tr = Vector2.Transform(box.TopRight, transform);
+                        tl = tr + bl - br;
+                    }
+
+                    var vIdx = BatchVertexIndex;
+                    BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, color);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, color);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, color);
+                    BatchVertexIndex += 4;
+                    QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
+                }
+
+                rectIndex += count;
+                _debugStats.LastClydeDrawCalls += count;
+            }
+        }
+
+        private void DrawRectBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            Color modulate,
+            in Box2 texCoords)
+        {
+            DrawRectBatch(texture, rects, modulate, in texCoords, true);
+        }
+
+        private void DrawRectBatchUnmodulated(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            in Box2 texCoords)
+        {
+            DrawRectBatch(texture, rects, Color.White, in texCoords, false);
+        }
+
+        private void DrawRectBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            Color modulate,
+            in Box2 texCoords,
+            bool applyModulation)
+        {
+            if (rects.Length == 0)
+                return;
+
+            var primitiveType = GetQuadBatchPrimitiveType();
+            var indexCount = GetQuadBatchIndexCount();
+            var rectIndex = 0;
+            var modelMatrix = _currentMatrixModel;
+            var modelTransformType = _currentMatrixModelTransformType;
+            var modelTranslation = _currentMatrixModelTranslation;
+
+            while (rectIndex < rects.Length)
+            {
+                var availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                EnsureBatchState(texture, true, primitiveType, _queuedShader);
+
+                availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                var count = Math.Min(availableQuads, rects.Length - rectIndex);
+
+                for (var i = 0; i < count; i++)
+                {
+                    ref readonly var rect = ref rects[rectIndex + i];
+                    var color = rect.Color;
+
+                    if (applyModulation)
+                        color *= modulate;
+
+                    var box = rect.Rect;
+
+                    Vector2 bl;
+                    Vector2 br;
+                    Vector2 tl;
+                    Vector2 tr;
+                    if (modelTransformType == ModelTransformType.Translation)
+                    {
+                        bl = box.BottomLeft + modelTranslation;
+                        br = box.BottomRight + modelTranslation;
+                        tl = box.TopLeft + modelTranslation;
+                        tr = box.TopRight + modelTranslation;
+                    }
+                    else if (modelTransformType == ModelTransformType.General)
+                    {
+                        bl = Vector2.Transform(box.BottomLeft, modelMatrix);
+                        br = Vector2.Transform(box.BottomRight, modelMatrix);
+                        tr = Vector2.Transform(box.TopRight, modelMatrix);
+                        tl = tr + bl - br;
+                    }
+                    else
+                    {
+                        bl = box.BottomLeft;
+                        br = box.BottomRight;
+                        tl = box.TopLeft;
+                        tr = box.TopRight;
+                    }
+
+                    var vIdx = BatchVertexIndex;
+                    BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, color);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, color);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, color);
+                    BatchVertexIndex += 4;
+                    QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
+                }
+
+                rectIndex += count;
+                _debugStats.LastClydeDrawCalls += count;
+            }
+        }
+
+        private int GetAvailableBatchQuads(int indexCount)
+        {
+            // The vertex size is so comically high you're probably never hitting it.
+            var availableVertices = Math.Max(0, BatchVertexData.Length - BatchVertexIndex - 1);
+            var availableIndices = Math.Max(0, BatchIndexData.Length - BatchIndexIndex);
+            return Math.Min(availableVertices / 4, availableIndices / indexCount);
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
@@ -676,8 +982,16 @@ namespace Robust.Client.Graphics.Clyde
             EnsureBatchSpaceAvailable(2, 0);
             EnsureBatchState(_stockTextureWhite.TextureId, false, BatchPrimitiveType.LineList, _queuedShader);
 
-            a = _currentMatrixModel.Transform(a);
-            b = _currentMatrixModel.Transform(b);
+            if (_currentMatrixModelTransformType == ModelTransformType.Translation)
+            {
+                a += _currentMatrixModelTranslation;
+                b += _currentMatrixModelTranslation;
+            }
+            else if (_currentMatrixModelTransformType == ModelTransformType.General)
+            {
+                a = Vector2.Transform(a, _currentMatrixModel);
+                b = Vector2.Transform(b, _currentMatrixModel);
+            }
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
@@ -714,6 +1028,15 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawUseShader(ClydeShaderInstance instance)
         {
             _queuedShaderInstance = instance;
+        }
+
+        private void DrawSetScreenUvRect(in Vector4 screenUvRect)
+        {
+            if (_queuedScreenUvRect == screenUvRect)
+                return;
+
+            BreakBatch();
+            _queuedScreenUvRect = screenUvRect;
         }
 
         private void DrawClear(Color color, int stencil, ClearBufferMask mask)
@@ -760,7 +1083,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (metaData.TextureId == textureId &&
                     indexed == metaData.Indexed &&
                     metaData.PrimitiveType == primitiveType &&
-                    metaData.ShaderInstance == shaderInstance)
+                    metaData.ShaderInstance == shaderInstance &&
+                    metaData.ScreenUvRect == _queuedScreenUvRect)
                 {
                     // Data matches, don't have to do anything.
                     return;
@@ -772,7 +1096,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, indexed, primitiveType,
-                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
+                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance, _queuedScreenUvRect);
 
             /*
             if (textureId != default)
@@ -805,9 +1129,10 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
             command.DrawBatch.TextureId = metaData.TextureId;
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
+            command.DrawBatch.ScreenUvRect = metaData.ScreenUvRect;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
-            command.DrawBatch.ModelMatrix = Matrix3.Identity;
+            command.DrawBatch.ModelMatrix = Matrix3x2.Identity;
 
             _debugStats.LastBatches += 1;
         }
@@ -856,17 +1181,36 @@ namespace Robust.Client.Graphics.Clyde
 
         private FullStoredRendererState PushRenderStateFull()
         {
-            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentRenderTarget);
+            return new FullStoredRendererState(
+                _currentMatrixProj,
+                _currentMatrixView,
+                _currentBoundRenderTarget,
+                _currentRenderTarget,
+                _queuedShaderInstance,
+                _queuedScreenUvRect,
+                _currentScissorState,
+                _glCaps);
         }
 
         private void PopRenderStateFull(in FullStoredRendererState state)
         {
             SetProjViewFull(state.ProjMatrix, state.ViewMatrix);
-            BindRenderTargetFull(state.RenderTarget);
+            BindRenderTargetImmediate(state.BoundRenderTarget);
 
-            var (width, height) = state.RenderTarget.Size;
+            _queuedShaderInstance = state.QueuedShaderInstance;
+            _queuedScreenUvRect = state.ScreenUvRect;
+            _currentRenderTarget = state.RenderTarget;
+            var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
-            CheckGlError();
+
+            IsStencilling = (state.GLCaps & GLCaps.Stencilling) == GLCaps.Stencilling;
+            IsBlending = (state.GLCaps & GLCaps.Blending) == GLCaps.Blending;
+
+            SetScissorFull(state.ScissorState);
+
+            GL.ClearStencil(0xFF);
+            GL.StencilMask(0xFF);
+            GL.Clear(ClearBufferMask.StencilBufferBit);
         }
 
         private void SetViewportImmediate(Box2i box)
@@ -882,11 +1226,12 @@ namespace Robust.Client.Graphics.Clyde
             _queuedRenderCommands.Clear();
             _currentViewport = null;
             _lightingReady = false;
-            _currentMatrixModel = Matrix3.Identity;
+            DrawSetModelTransform(Matrix3x2.Identity);
             SetScissorFull(null);
             BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
@@ -910,6 +1255,9 @@ namespace Robust.Client.Graphics.Clyde
                         break;
                     case ShaderBlendMode.Normal:
                         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                        break;
+                    case ShaderBlendMode.Premultiplied:
+                        GL.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
                         break;
                 }
         }
@@ -960,14 +1308,16 @@ namespace Robust.Client.Graphics.Clyde
             public bool Indexed;
             public BatchPrimitiveType PrimitiveType;
 
+            public Vector4 ScreenUvRect;
+
             // TODO: this makes the render commands so much more large please remove.
-            public Matrix3 ModelMatrix;
+            public Matrix3x2 ModelMatrix;
         }
 
         private struct RenderCommandProjViewMatrix
         {
-            public Matrix3 ProjMatrix;
-            public Matrix3 ViewMatrix;
+            public Matrix3x2 ProjMatrix;
+            public Matrix3x2 ViewMatrix;
         }
 
         private struct RenderCommandScissor
@@ -1031,15 +1381,17 @@ namespace Robust.Client.Graphics.Clyde
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
             public BatchMetaData(ClydeHandle textureId, bool indexed, BatchPrimitiveType primitiveType,
-                int startIndex, ClydeHandle shaderInstance)
+                int startIndex, ClydeHandle shaderInstance, Vector4 screenUvRect)
             {
                 TextureId = textureId;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;
                 ShaderInstance = shaderInstance;
+                ScreenUvRect = screenUvRect;
             }
         }
 
@@ -1056,17 +1408,49 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly struct FullStoredRendererState
         {
-            public readonly Matrix3 ProjMatrix;
-            public readonly Matrix3 ViewMatrix;
+            public readonly Matrix3x2 ProjMatrix;
+            public readonly Matrix3x2 ViewMatrix;
+            public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
+            public readonly ClydeShaderInstance QueuedShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
-            public FullStoredRendererState(in Matrix3 projMatrix, in Matrix3 viewMatrix,
-                LoadedRenderTarget renderTarget)
+            public readonly UIBox2i? ScissorState;
+
+            public readonly GLCaps GLCaps;
+
+            public FullStoredRendererState(
+                in Matrix3x2 projMatrix,
+                in Matrix3x2 viewMatrix,
+                LoadedRenderTarget boundRenderTarget,
+                LoadedRenderTarget renderTarget,
+                ClydeShaderInstance queuedShaderInstance,
+                Vector4 screenUvRect,
+                UIBox2i? scissorState,
+                GLCaps glcaps
+                )
             {
                 ProjMatrix = projMatrix;
                 ViewMatrix = viewMatrix;
+                BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
+                QueuedShaderInstance = queuedShaderInstance;
+                ScreenUvRect = screenUvRect;
+
+                ScissorState = scissorState;
+                GLCaps = glcaps;
             }
+        }
+
+        [Flags]
+        private enum GLCaps : ushort
+        {
+            // If you add flags here make sure to update PopRenderState!
+            None = 0,
+
+            Blending = 1 << 0,
+
+            Stencilling = 1 << 2,
         }
     }
 }

@@ -17,18 +17,21 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Console
 {
     /// <inheritdoc />
-    public abstract class ConsoleHost : IConsoleHost
+    public abstract partial class ConsoleHost : IConsoleHost
     {
         protected const string SawmillName = "con";
 
-        [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] protected readonly INetManager NetManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
+        [Dependency] protected ILogManager LogManager = default!;
+        [Dependency] private IReflectionManager ReflectionManager = default!;
+        [Dependency] protected INetManager NetManager = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] protected ILocalizationManager LocalizationManager = default!;
 
         [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> RegisteredCommands = new();
+        [ViewVariables] private readonly HashSet<string> _autoRegisteredCommands = [];
+
+        private bool _isInRegistrationRegion;
 
         private readonly CommandBuffer _commandBuffer = new CommandBuffer();
 
@@ -61,6 +64,11 @@ namespace Robust.Shared.Console
             // search for all client commands in all assemblies, and register them
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
+                // This sucks but I can't come up with anything better
+                // that won't just be 10x worse complexity for no gain.
+                if (type.IsAssignableTo(typeof(IEntityConsoleCommand)))
+                    continue;
+
                 var instance = (IConsoleCommand)_typeFactory.CreateInstanceUnchecked(type, true);
                 if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
                 {
@@ -69,11 +77,34 @@ namespace Robust.Shared.Console
                 }
 
                 RegisteredCommands[instance.Command] = instance;
+                _autoRegisteredCommands.Add(instance.Command);
             }
+        }
+
+        public bool IsCommandHidden(IConsoleCommand command)
+        {
+            return command.Command.StartsWith('_');
         }
 
         protected virtual void UpdateAvailableCommands()
         {
+        }
+
+        public void BeginRegistrationRegion()
+        {
+            if (_isInRegistrationRegion)
+                throw new InvalidOperationException("Cannot enter registration region twice!");
+
+            _isInRegistrationRegion = true;
+        }
+
+        public void EndRegistrationRegion()
+        {
+            if (!_isInRegistrationRegion)
+                throw new InvalidOperationException("Was not in registration region.");
+
+            _isInRegistrationRegion = false;
+            UpdateAvailableCommands();
         }
 
         #region RegisterCommand
@@ -88,8 +119,7 @@ namespace Robust.Shared.Console
                 throw new InvalidOperationException($"Command already registered: {command}");
 
             var newCmd = new RegisteredCommand(command, description, help, callback, requireServerOrSingleplayer);
-            RegisteredCommands.Add(command, newCmd);
-            UpdateAvailableCommands();
+            RegisterCommand(newCmd);
         }
 
         public void RegisterCommand(
@@ -104,8 +134,7 @@ namespace Robust.Shared.Console
                 throw new InvalidOperationException($"Command already registered: {command}");
 
             var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
-            RegisteredCommands.Add(command, newCmd);
-            UpdateAvailableCommands();
+            RegisterCommand(newCmd);
         }
 
         public void RegisterCommand(
@@ -120,8 +149,7 @@ namespace Robust.Shared.Console
                 throw new InvalidOperationException($"Command already registered: {command}");
 
             var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
-            RegisteredCommands.Add(command, newCmd);
-            UpdateAvailableCommands();
+            RegisterCommand(newCmd);
         }
 
         public void RegisterCommand(string command, ConCommandCallback callback,
@@ -153,6 +181,15 @@ namespace Robust.Shared.Console
             var help = LocalizationManager.TryGetString($"cmd-{command}-help", out var val) ? val : "";
             RegisterCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
         }
+
+        public void RegisterCommand(IConsoleCommand command)
+        {
+            RegisteredCommands.Add(command.Command, command);
+
+            if (!_isInRegistrationRegion)
+                UpdateAvailableCommands();
+        }
+
         #endregion
 
         /// <inheritdoc />
@@ -161,12 +198,14 @@ namespace Robust.Shared.Console
             if (!RegisteredCommands.TryGetValue(command, out var cmd))
                 throw new KeyNotFoundException($"Command {command} is not registered.");
 
-            if (cmd is not RegisteredCommand)
+            if (_autoRegisteredCommands.Contains(command))
                 throw new InvalidOperationException(
                     "You cannot unregister commands that have been registered automatically.");
 
             RegisteredCommands.Remove(command);
-            UpdateAvailableCommands();
+
+            if (!_isInRegistrationRegion)
+                UpdateAvailableCommands();
         }
 
         //TODO: Pull up

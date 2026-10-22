@@ -6,6 +6,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Manages the sending and receiving of network messages between the server and client(s).
     /// </summary>
+    [NotContentImplementable]
     public interface IEntityNetworkManager
     {
         /// <summary>

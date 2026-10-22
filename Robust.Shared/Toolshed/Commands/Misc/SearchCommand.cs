@@ -11,7 +11,7 @@ namespace Robust.Shared.Toolshed.Commands.Misc;
 public sealed class SearchCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<FormattedMessage> Search<T>([PipedArgument] IEnumerable<T> input, [CommandArgument] string term)
+    public IEnumerable<FormattedMessage> Search<T>([PipedArgument] IEnumerable<T> input, string term)
     {
         var list = input.Select(x => Toolshed.PrettyPrintType(x, out _)).ToList();
         return list.Where(x => x.Contains(term, StringComparison.InvariantCultureIgnoreCase)).Select(x =>

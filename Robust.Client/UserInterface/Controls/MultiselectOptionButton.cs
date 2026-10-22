@@ -5,6 +5,7 @@ using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
@@ -57,6 +58,20 @@ namespace Robust.Client.UserInterface.Controls
         {
             get => _label.Text;
             set => _label.Text = value;
+        }
+
+        // Compatibility shim for old XAML behaviour that assumed setting
+        // classes would concatenate with the StyleClassButton instead of overwriting
+        // all of them
+        [ViewVariables]
+        new public StyleClassCollection StyleClasses
+        {
+            get => base.StyleClasses;
+            set
+            {
+                base.StyleClasses = value;
+                base.StyleClasses.Add(StyleClassButton);
+            }
         }
 
         public MultiselectOptionButton()
@@ -121,11 +136,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (show)
             {
+                if (Root == null)
+                    throw new InvalidOperationException("No UI root! We can't pop up!");
+
                 var globalPos = GlobalPosition;
                 _popupVBox.Measure(Vector2Helpers.Infinity);
                 var (minX, minY) = _popupVBox.DesiredSize;
                 var box = UIBox2.FromDimensions(globalPos, new Vector2(Math.Max(minX, Width), minY));
-                UserInterfaceManager.ModalRoot.AddChild(_popup);
+                Root.ModalRoot.AddChild(_popup);
                 _popup.Open(box);
             }
             else
@@ -136,7 +154,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void OnPopupHide()
         {
-            UserInterfaceManager.ModalRoot.RemoveChild(_popup);
+            _popup.Orphan();
         }
 
 

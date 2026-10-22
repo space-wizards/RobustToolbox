@@ -14,12 +14,15 @@ namespace Robust.Shared.Network.Messages.Handshake
 
         public Guid UserId;
         public byte[] SealedData;
+        public byte[] LegacyHwid;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             UserId = buffer.ReadGuid();
             var keyLength = buffer.ReadVariableInt32();
             SealedData = buffer.ReadBytes(keyLength);
+            var legacyHwidLength = buffer.ReadVariableInt32();
+            LegacyHwid = buffer.ReadBytes(legacyHwidLength);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -27,6 +30,8 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.Write(UserId);
             buffer.WriteVariableInt32(SealedData.Length);
             buffer.Write(SealedData);
+            buffer.WriteVariableInt32(LegacyHwid.Length);
+            buffer.Write(LegacyHwid);
         }
     }
 }

@@ -15,13 +15,13 @@ namespace Robust.Shared.Map.Components
         [DataField]
         public bool LightingEnabled { get; set; } = true;
 
-        [ViewVariables(VVAccess.ReadOnly)]
+        [ViewVariables(VVAccess.ReadOnly), Access(typeof(SharedMapSystem), Other = AccessPermissions.ReadExecute)]
         public MapId MapId { get; internal set; } = MapId.Nullspace;
 
-        [DataField, Access(typeof(SharedMapSystem), typeof(MapManager))]
+        [DataField, Access(typeof(SharedMapSystem))]
         public bool MapPaused;
 
-        [DataField, Access(typeof(SharedMapSystem), typeof(MapManager))]
+        [DataField, Access(typeof(SharedMapSystem))]
         public bool MapInitialized;
     }
 

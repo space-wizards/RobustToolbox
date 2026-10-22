@@ -14,10 +14,10 @@ internal sealed class HelpCommand : LocalizedCommands
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         // Not a toolshed command since it doesn't support optional arguments
-        ExecuteStatic(shell, argStr, args);
+        ExecuteStatic(shell, argStr, args, Loc);
     }
 
-    public static void ExecuteStatic(IConsoleShell shell, string argStr, string[] args)
+    public static void ExecuteStatic(IConsoleShell shell, string argStr, string[] args, ILocalizationManager loc)
     {
         switch (args.Length)
         {
@@ -40,34 +40,34 @@ For help with old console commands, run [color={Gold}]oldhelp[/color].
                 var commandName = args[0];
                 if (!shell.ConsoleHost.AvailableCommands.TryGetValue(commandName, out var cmd))
                 {
-                    shell.WriteError(Loc.GetString("cmd-help-unknown", ("command", commandName)));
+                    shell.WriteError(loc.GetString("cmd-help-unknown", ("command", commandName)));
                     return;
                 }
 
-                shell.WriteLine(Loc.GetString("cmd-help-top", ("command", cmd.Command),
+                shell.WriteLine(loc.GetString("cmd-help-top", ("command", cmd.Command),
                     ("description", cmd.Description)));
                 shell.WriteLine(cmd.Help);
                 break;
 
             default:
-                shell.WriteError(Loc.GetString("cmd-help-invalid-args"));
+                shell.WriteError(loc.GetString("cmd-help-invalid-args"));
                 break;
         }
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
-        return GetCompletionStatic(shell, args);
+        return GetCompletionStatic(shell, args, Loc);
     }
 
-    public static CompletionResult GetCompletionStatic(IConsoleShell shell, string[] args)
+    public static CompletionResult GetCompletionStatic(IConsoleShell shell, string[] args, ILocalizationManager loc)
     {
         if (args.Length == 1)
         {
             var host = shell.ConsoleHost;
             return CompletionResult.FromHintOptions(
                 host.AvailableCommands.Values.OrderBy(c => c.Command).Select(c => new CompletionOption(c.Command, c.Description)).ToArray(),
-                Loc.GetString("cmd-help-arg-cmdname"));
+                loc.GetString("cmd-help-arg-cmdname"));
         }
 
         return CompletionResult.Empty;

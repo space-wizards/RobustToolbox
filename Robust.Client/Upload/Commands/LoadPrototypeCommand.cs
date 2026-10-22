@@ -22,7 +22,7 @@ public sealed class LoadPrototypeCommand : IConsoleCommand
         var dialogManager = IoCManager.Resolve<IFileDialogManager>();
         var loadManager = IoCManager.Resolve<IGamePrototypeLoadManager>();
 
-        var stream = await dialogManager.OpenFile();
+        var stream = await dialogManager.OpenFile(access: FileAccess.Read);
         if (stream is null)
             return;
 

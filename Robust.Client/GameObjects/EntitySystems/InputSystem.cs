@@ -18,15 +18,15 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public sealed class InputSystem : SharedInputSystem, IPostInjectInit
+    public sealed partial class InputSystem : SharedInputSystem, IPostInjectInit
     {
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IClientGameStateManager _stateManager = default!;
-        [Dependency] private readonly IConsoleHost _conHost = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IClientGameStateManager _stateManager = default!;
+        [Dependency] private IConsoleHost _conHost = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         private ISawmill _sawmillInputContext = default!;
 
@@ -52,12 +52,12 @@ namespace Robust.Client.GameObjects
         /// old input that was saved or buffered until further processing could be done</param>
         public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, IFullInputCmdMessage message, bool replay = false)
         {
-            #if DEBUG
+#if DEBUG
 
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(function);
             DebugTools.Assert(funcId == message.InputFunctionId, "Function ID in message does not match function.");
 
-            #endif
+#endif
 
             if (!replay)
             {
@@ -82,18 +82,35 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            // send it off to the server
-            var clientMsg = (ClientFullInputCmdMessage)message;
-            var fullMsg = new FullInputCmdMessage(
-                clientMsg.Tick,
-                clientMsg.SubTick,
-                (int)clientMsg.InputSequence,
-                clientMsg.InputFunctionId,
-                clientMsg.State,
-                GetNetCoordinates(clientMsg.Coordinates),
-                clientMsg.ScreenCoordinates)
+            var clientMsg = message switch
             {
-                Uid = GetNetEntity(clientMsg.Uid)
+                ClientFullInputCmdMessage clientInput => clientInput,
+                FullInputCmdMessage fullInput => new ClientFullInputCmdMessage(
+                    fullInput.Tick,
+                    fullInput.SubTick,
+                    fullInput.InputFunctionId,
+                    GetCoordinates(fullInput.Coordinates),
+                    fullInput.ScreenCoordinates,
+                    fullInput.State,
+                    GetEntity(fullInput.Uid)),
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var fullMsg = message switch
+            {
+                FullInputCmdMessage fullInput => fullInput,
+                ClientFullInputCmdMessage client => new FullInputCmdMessage(
+                    client.Tick,
+                    client.SubTick,
+                    client.InputFunctionId,
+                    clientMsg.State,
+                    GetNetCoordinates(client.Coordinates),
+                    clientMsg.ScreenCoordinates,
+                    GetNetEntity(clientMsg.Uid)
+                    ),
+
+                _ => throw new ArgumentOutOfRangeException()
             };
 
             DispatchInputCommand(clientMsg, fullMsg);
@@ -131,7 +148,7 @@ namespace Robust.Client.GameObjects
 
             _conHost.RegisterCommand("incmd",
                 "Inserts an input command into the simulation",
-                "incmd <KeyFunction> <d|u KeyState> <wxPos> <wyPos>",
+                "incmd <KeyFunction> <KeyState> [wxPos] [wyPos]",
                 GenerateInputCommand);
         }
 
@@ -147,17 +164,47 @@ namespace Robust.Client.GameObjects
             if (_playerManager.LocalEntity is not { } pent)
                 return;
 
-            BoundKeyFunction keyFunction = new BoundKeyFunction(args[0]);
-            BoundKeyState state = args[1] == "u" ? BoundKeyState.Up: BoundKeyState.Down;
+            if (args.Length is not (2 or 4))
+            {
+                shell.WriteLine(Loc.GetString($"cmd-invalid-arg-number-error"));
+                return;
+            }
 
-            var pxform = Transform(pent);
-            var wPos = pxform.WorldPosition + new Vector2(float.Parse(args[2]), float.Parse(args[3]));
-            var coords = EntityCoordinates.FromMap(pent, new MapCoordinates(wPos, pxform.MapID), _transform, EntityManager);
+            var keyFunction = new BoundKeyFunction(args[0]);
+            if (!Enum.TryParse<BoundKeyState>(args[1], out var state))
+            {
+                shell.WriteLine(Loc.GetString("cmd-parse-failure-enum", ("arg", args[1]), ("enum", nameof(BoundKeyState))));
+                return;
+            }
 
+            var wOffset = Vector2.Zero;
+            if (args.Length == 4)
+            {
+                if (!float.TryParse(args[2], out var wX))
+                {
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
+                    return;
+                }
+
+                if (!float.TryParse(args[3], out var wY))
+                {
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
+                    return;
+                }
+
+                wOffset = new Vector2(wX, wY);
+            }
+
+            var coords = _transform.ToCoordinates(pent, _transform.GetMapCoordinates(pent).Offset(wOffset));
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
-            var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
-                GetNetCoordinates(coords), new ScreenCoordinates(0, 0, default), NetEntity.Invalid);
+            var message = new ClientFullInputCmdMessage(_timing.CurTick,
+                _timing.TickFraction,
+                funcId,
+                coords,
+                new ScreenCoordinates(0, 0, default),
+                state,
+                EntityUid.Invalid);
 
             HandleInputCommand(_playerManager.LocalSession, keyFunction, message);
         }
@@ -176,12 +223,12 @@ namespace Robust.Client.GameObjects
 
         private void SetEntityContextActive(IInputManager inputMan, EntityUid entity)
         {
-            if(entity == default || !EntityManager.EntityExists(entity))
+            if (entity == default || !Exists(entity))
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!EntityManager.TryGetComponent(entity, out InputComponent? inputComp))
+            if (!TryComp(entity, out InputComponent? inputComp))
             {
-                _sawmillInputContext.Debug($"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Debug($"AttachedEnt has no InputComponent: entId={entity}, entProto={Comp<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
@@ -192,7 +239,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                _sawmillInputContext.Error($"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Error($"Unknown context: entId={entity}, entProto={Comp<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }

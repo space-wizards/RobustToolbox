@@ -2,6 +2,7 @@
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -97,11 +98,16 @@ internal partial class UserInterfaceManager
             }, true);
         }
 
+        internal static float CalculateUIScale(float osScale, IConfigurationManager cfg)
+        {
+            var cfgScale = cfg.GetCVar(CVars.DisplayUIScale);
+            return cfgScale == 0 ? osScale : cfgScale;
+        }
+
         private float CalculateAutoScale(WindowRoot root)
         {
             //Grab the OS UIScale or the value set through CVAR debug
-            var osScale = _configurationManager.GetCVar(CVars.DisplayUIScale);
-            osScale = osScale == 0f ? root.Window.ContentScale.X : osScale;
+            var osScale = CalculateUIScale(root.Window.ContentScale.X, _configurationManager);
 
             var windowSize = root.Window.RenderTarget.Size;
             //Only run autoscale if it is enabled, otherwise default to just use OS UIScale
@@ -123,7 +129,12 @@ internal partial class UserInterfaceManager
 
         private void UpdateUIScale(WindowRoot root)
         {
-            root.UIScaleSet = CalculateAutoScale(root);
+            var newScale = CalculateAutoScale(root);
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (newScale == root.UIScaleSet)
+                return;
+
+            root.UIScaleSet = newScale;
             _propagateUIScaleChanged(root);
             root.InvalidateMeasure();
         }
@@ -142,7 +153,21 @@ internal partial class UserInterfaceManager
         {
             if (!_windowsToRoot.TryGetValue(windowResizedEventArgs.Window.Id, out var root))
                 return;
-            UpdateUIScale(root);
+
+            root.UIScaleUpdateNeeded = true;
             root.InvalidateMeasure();
+        }
+
+        private void CheckRootUIScaleUpdate(WindowRoot root)
+        {
+            if (!root.UIScaleUpdateNeeded)
+                return;
+
+            using (_prof.Group("UIScaleUpdate"))
+            {
+                UpdateUIScale(root);
+            }
+
+            root.UIScaleUpdateNeeded = false;
         }
 }

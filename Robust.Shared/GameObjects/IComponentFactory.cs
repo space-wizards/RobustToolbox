@@ -49,6 +49,7 @@ namespace Robust.Shared.GameObjects
     /// </remarks>
     /// <seealso cref="IComponentRegistration" />
     /// <seealso cref="IComponent" />
+    [NotContentImplementable]
     public interface IComponentFactory
     {
         event Action<ComponentRegistration[]> ComponentsAdded;
@@ -77,6 +78,22 @@ namespace Robust.Shared.GameObjects
         /// <returns>The availability of the component.</returns>
         ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false);
 
+        public void RegisterNetworkedFields<T>(params string[] fields) where T : IComponent;
+
+        public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields);
+
+        /// <summary>
+        /// Slow-path for Type -> CompIdx mapping without generics.
+        /// </summary>
+        [Pure]
+        CompIdx GetIndex(Type type);
+
+        /// <summary>
+        /// Slow-path to get the component index for a specified type.
+        /// </summary>
+        [Pure]
+        int GetArrayIndex(Type type);
+
         /// <summary>
         /// Registers a component class with the factory.
         /// </summary>
@@ -99,6 +116,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="postfix">If provided, will only ignore components ending with the postfix.</param>
         void IgnoreMissingComponents(string postfix = "");
+
+        IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry);
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.
@@ -175,6 +194,19 @@ namespace Robust.Shared.GameObjects
         string GetComponentName(ushort netID);
 
         /// <summary>
+        /// Get a wrapped <see cref="CompName"/> for a given component type.
+        /// </summary>
+        [Pure]
+        CompName CompName<T>() where T : IComponent, new();
+
+        /// <summary>
+        /// Get a wrapped <see cref="CompName"/> for a component's <see cref="Type"/>.
+        /// Throws for non-component types.
+        /// </summary>
+        [Pure]
+        CompName CompName(Type type);
+
+        /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
         /// </summary>
         /// <param name="componentName">The name of the component.</param>
@@ -230,6 +262,12 @@ namespace Robust.Shared.GameObjects
         ///     Returns true if the given component name has been registered as ignored.
         /// </summary>
         bool IsIgnored(string componentName);
+
+        /// <summary>
+        /// Returns true if a given name has a component registration associated with it.
+        /// This check is always case sensitive.
+        /// </summary>
+        bool HasRegistration(string componentName);
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.

@@ -12,6 +12,9 @@ namespace Robust.Client.UserInterface.Controls
         private bool _vScrollEnabled = true;
         private bool _hScrollEnabled = true;
 
+        private bool? _vScrollBarHidden = null;
+        private bool? _hScrollBarHidden = null;
+
         private bool _vScrollVisible;
         private bool _hScrollVisible;
 
@@ -27,6 +30,30 @@ namespace Robust.Client.UserInterface.Controls
 
         public int ScrollSpeedX { get; set; } = 50;
         public int ScrollSpeedY { get; set; } = 50;
+
+        public float VScroll
+        {
+            get => _vScrollBar.Value;
+            set => _vScrollBar.Value = value;
+        }
+
+        public float VScrollTarget
+        {
+            get => _vScrollBar.ValueTarget;
+            set => _vScrollBar.ValueTarget = value;
+        }
+
+        public float HScroll
+        {
+            get => _hScrollBar.Value;
+            set => _hScrollBar.Value = value;
+        }
+
+        public float HScrollTarget
+        {
+            get => _hScrollBar.ValueTarget;
+            set => _hScrollBar.ValueTarget = value;
+        }
 
         private bool _reserveScrollbarSpace;
         public bool ReserveScrollbarSpace
@@ -93,6 +120,54 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// <para>
+        ///     Prevents the vertical scrollbar from being visible when <see langword="true"/>, and allows it to be visible when <see langword="false"/>.
+        ///     When <see langword="null"/>, falls back to the value of the style property instead.
+        /// </para>
+        /// <para>
+        ///    This is an override for the <see langword="bool"/> style property of the same name. Said style property mirrors the behavior of this property, and defaults to <see langword="false"/>.
+        /// </para>
+        /// </summary>
+        /// <seealso cref="VScrollEnabled"/>
+        /// <seealso cref="HScrollBarHidden"/>
+        public bool? VScrollBarHidden
+        {
+            get => _vScrollBarHidden;
+            set
+            {
+                _vScrollBarHidden = value;
+                InvalidateArrange();
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        ///     Prevents the horizontal scrollbar from being visible when <see langword="true"/>, and allows it to be visible when <see langword="false"/>.
+        ///     When <see langword="null"/>, falls back to the value of the style property instead.
+        /// </para>
+        /// <para>
+        ///    This is an override for the <see langword="bool"/> style property of the same name. Said style property mirrors the behavior of this property, and defaults to <see langword="false"/>.
+        /// </para>
+        /// </summary>
+        /// <seealso cref="HScrollEnabled"/>
+        /// <seealso cref="VScrollBarHidden"/>
+        public bool? HScrollBarHidden
+        {
+            get => _hScrollBarHidden;
+            set
+            {
+                _hScrollBarHidden = value;
+                InvalidateArrange();
+            }
+        }
+
+        private bool StyleVScrollBarHidden =>
+            _vScrollBarHidden ?? TryGetStyleProperty<bool>(nameof(VScrollBarHidden), out var v) && v;
+
+        private bool StyleHScrollBarHidden =>
+            _hScrollBarHidden ?? TryGetStyleProperty<bool>(nameof(HScrollBarHidden), out var v) && v;
+
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_vScrollEnabled)
@@ -140,6 +215,21 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
+            // We need to measure our children again, to ensure they're aware of
+            // our real, final arrangement. It's a violation of invariants
+            // to measure a large space then try to draw them in something smaller.
+            //
+            // We only call our override, not Measure, to avoid infinite loops.
+            // We don't need to update ourselves after all.
+            //
+            // Atop that, we shouldn't remeasure if we ReturnMeasure, because then
+            // we do actually use all of our space and no invariants are getting
+            // broken unless our parent is themselves violating invariants.
+            // So measuring again using the final size may result in us
+            // mysteriously completely rearranging when we're not expected to.
+            if (!ReturnMeasure)
+                MeasureOverride(finalSize);
+
             var maxChildMinSize = Vector2.Zero;
 
             foreach (var child in Children)
@@ -175,7 +265,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sWidth < cWidth && _hScrollEnabled && !MathHelper.CloseTo(sWidth, cWidth, 1e-3))
                 {
-                    _hScrollBar.Visible = _hScrollVisible = true;
+                    _hScrollBar.Visible = _hScrollVisible = !StyleHScrollBarHidden;
                     _hScrollBar.Page = sWidth;
                     _hScrollBar.MaxValue = cWidth;
                 }
@@ -186,7 +276,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sHeight < cHeight && _vScrollEnabled && !MathHelper.CloseTo(sHeight, cHeight, 1e-3))
                 {
-                    _vScrollBar.Visible = _vScrollVisible = true;
+                    _vScrollBar.Visible = _vScrollVisible = !StyleVScrollBarHidden;
                     _vScrollBar.Page = sHeight;
                     _vScrollBar.MaxValue = cHeight;
                 }
@@ -289,15 +379,13 @@ namespace Robust.Client.UserInterface.Controls
 
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
-            if (!_hScrollVisible)
-            {
+            // reset the values if everything fits, this is usually the case when the scrollbar is hidden
+            // when we intentionally hide the scrollbars this is not the case, so leave it as-is then
+            if (!_hScrollVisible && _hScrollBarHidden != true)
                 h = 0;
-            }
 
-            if (!_vScrollVisible)
-            {
+            if (!_vScrollVisible && _vScrollBarHidden != true)
                 v = 0;
-            }
 
             return new Vector2(h, v);
         }

@@ -6,10 +6,13 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
+    [NotContentImplementable]
     public partial interface IUserInterfaceManager
     {
         void InitializeTesting();
@@ -64,7 +67,7 @@ namespace Robust.Client.UserInterface
 
         IDebugMonitors DebugMonitors { get; }
 
-        void Popup(string contents, string title = "Alert!");
+        void Popup(string contents, string? title = null, bool clipboardButton = true);
 
         Control? MouseGetControl(ScreenCoordinates coordinates);
 
@@ -146,6 +149,32 @@ namespace Robust.Client.UserInterface
         /// but not necessarily a new or existing control is rearranged.
         /// </summary>
         void UpdateHovered();
+
+        /// <summary>
+        /// Render a control and all of its children.
+        /// </summary>
+        void RenderControl(in Control.ControlRenderArguments args, Control control);
+
+        /// <summary>
+        /// Render a control and all of its children.
+        /// </summary>
+        void RenderControl(IRenderHandle handle, Control control, Vector2i position);
+
+        /// <summary>
+        /// Sawmill for use by controls.
+        /// </summary>
+        /// <remarks>
+        /// Exists so that control don't have to inject dependencies or otherwise obtain an <see cref="ILogManager"/> instance just to log errors.
+        /// </remarks>
+        ISawmill ControlSawmill { get; }
+
+        /// <summary>
+        /// Get the UI root responsible for the current mouse position.
+        /// </summary>
+        /// <remarks>
+        /// This is useful to open popups or similar on the current active window.
+        /// </remarks>
+        UIRoot GetRootForMouse();
     }
 
     public readonly struct PostDrawUIRootEventArgs

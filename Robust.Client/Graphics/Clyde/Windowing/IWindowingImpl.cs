@@ -39,8 +39,12 @@ namespace Robust.Client.Graphics.Clyde
             void WindowDestroy(WindowReg reg);
             void WindowSetTitle(WindowReg window, string title);
             void WindowSetMonitor(WindowReg window, IClydeMonitor monitor);
+            IClydeMonitor? WindowGetMonitor(WindowReg window);
+            void WindowSetSize(WindowReg window, Vector2i size);
             void WindowSetVisible(WindowReg window, bool visible);
+            void WindowSetRelativeMouseMode(WindowReg window, bool enabled);
             void WindowRequestAttention(WindowReg window);
+            void WindowSetProgress(WindowReg reg, WindowProgressState state, float value);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);
@@ -65,9 +69,9 @@ namespace Robust.Client.Graphics.Clyde
             void RunOnWindowThread(Action a);
 
             // IME
-            void TextInputSetRect(UIBox2i rect);
-            void TextInputStart();
-            void TextInputStop();
+            void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor);
+            void TextInputStart(WindowReg reg);
+            void TextInputStop(WindowReg reg);
             string GetDescription();
         }
     }

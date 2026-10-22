@@ -81,11 +81,13 @@ namespace Robust.Client.WebView.Headless
 
         private sealed class WebViewControlImplDummy : DummyBase, IWebViewControlImpl
         {
-            public void EnteredTree()
+            public bool IsOpen => false;
+
+            public void StartBrowser()
             {
             }
 
-            public void ExitedTree()
+            public void CloseBrowser()
             {
             }
 

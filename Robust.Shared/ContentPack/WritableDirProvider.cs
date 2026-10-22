@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -9,17 +10,22 @@ namespace Robust.Shared.ContentPack
     /// <inheritdoc />
     internal sealed class WritableDirProvider : IWritableDirProvider
     {
-        /// <inheritdoc />
+        private readonly bool _hideRootDir;
+
         public string RootDir { get; }
+
+        string? IWritableDirProvider.RootDir => _hideRootDir ? null : RootDir;
 
         /// <summary>
         /// Constructs an instance of <see cref="WritableDirProvider"/>.
         /// </summary>
         /// <param name="rootDir">Root file system directory to allow writing.</param>
-        public WritableDirProvider(DirectoryInfo rootDir)
+        /// <param name="hideRootDir">If true, <see cref="IWritableDirProvider.RootDir"/> is reported as null.</param>
+        public WritableDirProvider(DirectoryInfo rootDir, bool hideRootDir)
         {
             // FullName does not have a trailing separator, and we MUST have a separator.
             RootDir = rootDir.FullName + Path.DirectorySeparatorChar.ToString();
+            _hideRootDir = hideRootDir;
         }
 
         #region File Access
@@ -118,7 +124,7 @@ namespace Robust.Shared.ContentPack
                 throw new FileNotFoundException();
 
             var dirInfo = new DirectoryInfo(GetFullPath(path));
-            return new WritableDirProvider(dirInfo);
+            return new WritableDirProvider(dirInfo, _hideRootDir);
         }
 
         /// <inheritdoc />
@@ -135,11 +141,37 @@ namespace Robust.Shared.ContentPack
                 path = path.Directory;
 
             var fullPath = GetFullPath(path);
-            Process.Start(new ProcessStartInfo
+            if (OperatingSystem.IsWindows())
             {
-                UseShellExecute = true,
-                FileName = fullPath,
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = $"{Environment.GetEnvironmentVariable("SystemRoot")}\\explorer.exe",
+                    Arguments = ".",
+                    WorkingDirectory = fullPath,
+                });
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "open",
+                    Arguments = ".",
+                    WorkingDirectory = fullPath,
+                });
+            }
+            else if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "xdg-open",
+                    Arguments = ".",
+                    WorkingDirectory = fullPath,
+                });
+            }
+            else
+            {
+                throw new NotSupportedException("Opening OS windows not supported on this OS");
+            }
         }
 
         #endregion
@@ -153,20 +185,7 @@ namespace Robust.Shared.ContentPack
 
             path = path.Clean();
 
-            return GetFullPath(RootDir, path);
-        }
-
-        private static string GetFullPath(string root, ResPath path)
-        {
-            var relPath = path.ToRelativeSystemPath();
-            if (relPath.Contains("\\..") || relPath.Contains("/.."))
-            {
-                // Hard cap on any exploit smuggling a .. in there.
-                // Since that could allow leaving sandbox.
-                throw new InvalidOperationException($"This branch should never be reached. Path: {path}");
-            }
-
-            return Path.GetFullPath(Path.Combine(root, relPath));
+            return PathHelpers.SafeGetResourcePath(RootDir, path);
         }
     }
 }

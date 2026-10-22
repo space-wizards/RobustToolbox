@@ -16,6 +16,9 @@ public abstract class ContainerAttemptEventBase : CancellableEntityEventArgs
     }
 }
 
+/// <summary>
+/// Raised directed on the container when attempting to insert an entity.
+/// </summary>
 public sealed class ContainerIsInsertingAttemptEvent : ContainerAttemptEventBase
 {
     /// <summary>
@@ -23,7 +26,7 @@ public sealed class ContainerIsInsertingAttemptEvent : ContainerAttemptEventBase
     /// I.e., could the entity be inserted if the container doesn't contain anything else?
     /// </summary>
     public bool AssumeEmpty { get; set; }
-    
+
     public ContainerIsInsertingAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty)
         : base(container, entityUid)
     {
@@ -31,6 +34,9 @@ public sealed class ContainerIsInsertingAttemptEvent : ContainerAttemptEventBase
     }
 }
 
+/// <summary>
+/// Raised directed on the entity being inserted into the container.
+/// </summary>
 public sealed class ContainerGettingInsertedAttemptEvent : ContainerAttemptEventBase
 {
     /// <summary>
@@ -46,6 +52,9 @@ public sealed class ContainerGettingInsertedAttemptEvent : ContainerAttemptEvent
     }
 }
 
+/// <summary>
+/// Raised directed on the container when attempting to remove an entity.
+/// </summary>
 public sealed class ContainerIsRemovingAttemptEvent : ContainerAttemptEventBase
 {
     public ContainerIsRemovingAttemptEvent(BaseContainer container, EntityUid entityUid) : base(container, entityUid)
@@ -53,6 +62,9 @@ public sealed class ContainerIsRemovingAttemptEvent : ContainerAttemptEventBase
     }
 }
 
+/// <summary>
+/// Raised directed on the entity being removed from the container.
+/// </summary>
 public sealed class ContainerGettingRemovedAttemptEvent : ContainerAttemptEventBase
 {
     public ContainerGettingRemovedAttemptEvent(BaseContainer container, EntityUid entityUid) : base(container, entityUid)

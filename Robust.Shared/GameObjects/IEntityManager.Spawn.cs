@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Containers;
@@ -9,19 +10,21 @@ namespace Robust.Shared.GameObjects;
 
 public partial interface IEntityManager
 {
-    // This method will soon be marked as obsolete.
+    [Obsolete($"Call {nameof(SpawnEntitiesAttachedTo)} directly.")]
     EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
         => SpawnEntitiesAttachedTo(coordinates, protoNames);
 
-    // This method will soon be marked as obsolete.
+    [Obsolete($"Call {nameof(SpawnAttachedTo)} directly or switch to {nameof(SpawnAtPosition)}.")]
     EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
-    // This method will soon be marked as obsolete.
+    [Obsolete($"Call {nameof(Spawn)} directly.")]
     EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
     EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);
+    EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames);
+    EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params EntProtoId[] protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params string?[] protoNames);
 
@@ -38,7 +41,7 @@ public partial interface IEntityManager
     /// <summary>
     /// Spawns an entity and then parents it to the entity that the given entity coordinates are relative to.
     /// </summary>
-    EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
+    EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default);
 
     /// <summary>
     /// Resolves the given entity coordinates into world coordinates and spawns an entity at that location. The

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -28,24 +30,23 @@ namespace Robust.Shared.GameObjects
     public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : IComponent;
 
     /// <inheritdoc />
-    [Virtual]
     public abstract partial class EntityManager : IEntityManager
     {
         #region Dependencies
 
-        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [IoC.Dependency] protected readonly ILogManager LogManager = default!;
-        [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
-        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-        [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
-        [IoC.Dependency] private readonly ProfManager _prof = default!;
-        [IoC.Dependency] private readonly INetManager _netMan = default!;
-        [IoC.Dependency] private readonly IReflectionManager _reflection = default!;
+        [IoC.Dependency] protected IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] protected ILogManager LogManager = default!;
+        [IoC.Dependency] private IEntitySystemManager _entitySystemManager = default!;
+        [IoC.Dependency] private IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private ISerializationManager _serManager = default!;
+        [IoC.Dependency] private ProfManager _prof = default!;
+        [IoC.Dependency] private INetManager _netMan = default!;
+        [IoC.Dependency] private IReflectionManager _reflection = default!;
+        [IoC.Dependency] private EntityConsoleHost _entityConsoleHost = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
-        private SharedTransformSystem _xforms = default!;
+        protected SharedTransformSystem _xforms = default!;
         private SharedContainerSystem _containers = default!;
 
         public EntityQuery<MetaDataComponent> MetaQuery;
@@ -71,25 +72,39 @@ namespace Robust.Shared.GameObjects
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
 
-        private EntityDiffContext _context = new();
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entitySystemsHistogram;
+        private Histogram.Child? _entityEventBusHistogram;
+        private Histogram.Child? _queuedDeletionHistogram;
+        private Histogram.Child? _componentCullHistogram;
+
+        private EntityDiffContext _context;
 
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
         protected readonly HashSet<EntityUid> Entities = new();
 
-        private EntityEventBus _eventBus = null!;
+        internal EntityEventBus EventBusInternal = null!;
 
         protected int NextEntityUid = (int) EntityUid.FirstUid;
 
         protected int NextNetworkId = (int) NetEntity.First;
 
         /// <inheritdoc />
-        public IEventBus EventBus => _eventBus;
+        public IEventBus EventBus => EventBusInternal;
 
         public event Action<Entity<MetaDataComponent>>? EntityAdded;
         public event Action<Entity<MetaDataComponent>>? EntityInitialized;
         public event Action<Entity<MetaDataComponent>>? EntityDeleted;
+
+        /// <summary>
+        /// Internal termination event handlers. This is mainly for exception tolerance, we want to ensure that PVS,
+        /// and other important engine systems can get updated before some content code throws an exception.
+        /// </summary>
+        internal event TerminatingEventHandler? BeforeEntityTerminating;
+        public delegate void TerminatingEventHandler(ref EntityTerminatingEvent ev);
+
         public event Action? BeforeEntityFlush;
         public event Action? AfterEntityFlush;
 
@@ -107,7 +122,7 @@ namespace Robust.Shared.GameObjects
         private SharedMapSystem _mapSystem = default!;
 
         private ISawmill _sawmill = default!;
-        private ISawmill _resolveSawmill = default!;
+        internal ISawmill ResolveSawmill = default!;
 
         public bool Started { get; protected set; }
 
@@ -115,11 +130,16 @@ namespace Robust.Shared.GameObjects
 
         public bool Initialized { get; protected set; }
 
+#if DEBUG
+        private int _mainThreadId;
+#endif
+
         /// <summary>
         /// Constructs a new instance of <see cref="EntityManager"/>.
         /// </summary>
         public EntityManager()
         {
+            _context = new(_serManager);
         }
 
         public virtual void Initialize()
@@ -127,14 +147,18 @@ namespace Robust.Shared.GameObjects
             if (Initialized)
                 throw new InvalidOperationException("Initialize() called multiple times");
 
-            _eventBus = new EntityEventBus(this, _reflection);
+            EventBusInternal = new EntityEventBus(this, _reflection);
 
             InitializeComponents();
             _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
             _xformReg = _componentFactory.GetRegistration(typeof(TransformComponent));
             _xformName = _xformReg.Name;
             _sawmill = LogManager.GetSawmill("entity");
-            _resolveSawmill = LogManager.GetSawmill("resolve");
+            ResolveSawmill = LogManager.GetSawmill("resolve");
+
+#if DEBUG
+            _mainThreadId = Environment.CurrentManagedThreadId;
+#endif
 
             Initialized = true;
         }
@@ -142,7 +166,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns true if the entity's data (apart from transform) is default.
         /// </summary>
-        public bool IsDefault(EntityUid uid)
+        public bool IsDefault(EntityUid uid, ICollection<string>? ignoredComps = null)
         {
             if (!MetaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
@@ -156,12 +180,11 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var protoData = PrototypeManager.GetPrototypeData(prototype);
             var comps = _entCompIndex[uid];
+            var hasIgnoredComps = ignoredComps is { Count: > 0 };
 
             // Fast check if the component counts match.
-            // Note that transform and metadata are not included in the prototype data.
-            if (protoData.Count + 2 != comps.Count)
+            if (prototype.Components.Count + 2 != comps.Count)
                 return false;
 
             foreach (var component in comps)
@@ -170,28 +193,20 @@ namespace Robust.Shared.GameObjects
                     return false;
 
                 var compType = component.GetType();
-                var compName = _componentFactory.GetComponentName(compType);
-                if (compName == _xformName || compName == _metaReg.Name)
+
+                if (compType == _xformReg.Type || compType == _metaReg.Type)
+                    continue;
+
+                var compReg = _componentFactory.GetRegistration(compType);
+
+                if (hasIgnoredComps && ignoredComps!.Contains(compReg.Name))
                     continue;
 
                 // If the component isn't on the prototype then it's custom.
-                if (!protoData.TryGetValue(compName, out var protoMapping))
+                if (!prototype.Components.TryGetValue(compReg.Name, out var protoEntry))
                     return false;
 
-                MappingDataNode compMapping;
-                try
-                {
-                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: _context);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
-                    return false;
-                }
-
-                var diff = compMapping.Except(protoMapping);
-
-                if (diff != null && diff.Children.Count != 0)
+                if (!_serManager.DataFieldEquals(compReg.Type, component, protoEntry.Component, _context))
                     return false;
             }
 
@@ -208,7 +223,7 @@ namespace Robust.Shared.GameObjects
             // TODO: Probably better to call this on its own given it's so infrequent.
             _entitySystemManager.Initialize();
             Started = true;
-            _eventBus.LockSubscriptions();
+            EventBusInternal.LockSubscriptions();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
             _containers = System<SharedContainerSystem>();
@@ -216,17 +231,19 @@ namespace Robust.Shared.GameObjects
             TransformQuery = GetEntityQuery<TransformComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _actorQuery = GetEntityQuery<ActorComponent>();
+            _entityConsoleHost.Startup();
         }
 
         public virtual void Shutdown()
         {
             ShuttingDown = true;
             FlushEntities();
-            _eventBus.ClearSubscriptions();
+            EventBusInternal.ClearSubscriptions();
             _entitySystemManager.Shutdown();
             ClearComponents();
             ShuttingDown = false;
             Started = false;
+            _entityConsoleHost.Shutdown();
         }
 
         public virtual void Cleanup()
@@ -235,8 +252,8 @@ namespace Robust.Shared.GameObjects
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
-            _eventBus.Dispose();
-            _eventBus = null!;
+            EventBusInternal.Dispose();
+            EventBusInternal = null!;
             ClearComponents();
 
             ShuttingDown = false;
@@ -246,34 +263,57 @@ namespace Robust.Shared.GameObjects
 
         public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntitySystems").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entitySystemsHistogram?.NewTimer())
             using (_prof.Group("Systems"))
             {
                 _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
-            using (histogram?.WithLabels("EntityEventBus").NewTimer())
+            using (_entityEventBusHistogram?.NewTimer())
             using (_prof.Group("Events"))
             {
-                _eventBus.ProcessEventQueue();
+                EventBusInternal.ProcessEventQueue();
             }
 
-            using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            using (_queuedDeletionHistogram?.NewTimer())
             using (_prof.Group("QueueDel"))
             {
-                while (QueuedDeletions.TryDequeue(out var uid))
-                {
-                    DeleteEntity(uid);
-                }
-
-                QueuedDeletionsSet.Clear();
+                ProcessQueueudDeletions();
             }
 
-            using (histogram?.WithLabels("ComponentCull").NewTimer())
+            using (_componentCullHistogram?.NewTimer())
             using (_prof.Group("ComponentCull"))
             {
                 CullRemovedComponents();
             }
+        }
+
+        private void UpdateTickHistogram(Histogram? histogram)
+        {
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
+
+            _tickUpdateHistogram = histogram;
+            _entitySystemsHistogram = histogram?.WithLabels("EntitySystems");
+            _entityEventBusHistogram = histogram?.WithLabels("EntityEventBus");
+            _queuedDeletionHistogram = histogram?.WithLabels("QueuedDeletion");
+            _componentCullHistogram = histogram?.WithLabels("ComponentCull");
+        }
+
+        internal void ProcessQueueudDeletions()
+        {
+            while (QueuedDeletions.TryDequeue(out var uid))
+            {
+                // The deletion may have been canceled since it was queued.
+                if (!QueuedDeletionsSet.Remove(uid))
+                    continue;
+
+                DeleteEntity(uid);
+            }
+
+            QueuedDeletionsSet.Clear();
         }
 
         public virtual void FrameUpdate(float frameTime)
@@ -290,16 +330,23 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
             return CreateEntity(prototypeName, out _, overrides);
         }
 
+        public EntityUid CreateEntityUninitialized(string? prototypeName, out MetaDataComponent meta, ComponentRegistry? overrides = null)
+        {
+            return CreateEntity(prototypeName, out meta, overrides);
+        }
+
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
-            _xforms.SetCoordinates(newEntity, TransformQuery.GetComponent(newEntity), coordinates, unanchor: false);
+
+            var xformComp = TransformQuery.GetComponent(newEntity);
+            _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: rotation, unanchor: false);
             return newEntity;
         }
 
@@ -312,19 +359,22 @@ namespace Robust.Shared.GameObjects
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
-                transform.Anchored = false;
+                _xforms.SetAnchored((newEntity, transform), false);
                 return newEntity;
             }
 
-            var mapEnt = _mapManager.GetMapEntityId(coordinates.MapId);
+            var mapEnt = _mapSystem.GetMap(coordinates.MapId);
             if (!TryGetComponent(mapEnt, out TransformComponent? mapXform))
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
             EntityCoordinates coords;
-            if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid))
+            if (_mapSystem.TryFindGridAt(coordinates, out var gridUid, out var grid)
+                && MetaQuery.TryGetComponentInternal(gridUid, out var meta)
+                && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
-                _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
+                var relativeRotation = rotation - _xforms.GetWorldRotation(gridUid);
+                _xforms.SetCoordinates(newEntity, transform, coords, relativeRotation, unanchor: false);
             }
             else
             {
@@ -340,6 +390,21 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities() => Entities;
+
+        #region Dirtying
+
+        private bool DirtyComponent(IComponent component, bool isUnclassifiedChange = true)
+        {
+            var newChange = component.LastModifiedTick != CurrentTick;
+            component.LastModifiedTick = CurrentTick;
+
+            if (isUnclassifiedChange && component is IComponentDelta delta)
+            {
+                delta.LastUnclassifiedDirty = CurrentTick;
+            }
+
+            return newChange;
+        }
 
         /// <inheritdoc />
         public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
@@ -360,43 +425,45 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("use override with an EntityUid or Entity<T>")]
-        public void Dirty(IComponent component, MetaDataComponent? meta = null)
-        {
-            Dirty(component.Owner, component, meta);
-        }
-
-        /// <inheritdoc />
         public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DirtyInternal(uid, component, meta);
+        }
+
+        internal void DirtyInternal(
+            EntityUid uid,
+            IComponent component,
+            MetaDataComponent? meta = null,
+            bool isUnclassifiedChange = true)
+        {
+            DebugTools.Assert(component.Networked,
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
             DebugTools.AssertOwner(uid, component);
 
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
-            if (component.LastModifiedTick == CurrentTick)
-                return;
-
-            DirtyEntity(uid, meta);
-            component.LastModifiedTick = CurrentTick;
+            if (DirtyComponent(component, isUnclassifiedChange))
+                DirtyEntity(uid, meta);
         }
 
         /// <inheritdoc />
         public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
         {
-            DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DirtyInternal(ent, meta);
+        }
+
+        internal void DirtyInternal<T>(Entity<T> ent, MetaDataComponent? meta = null, bool isUnclassifiedChange = true)
+            where T : IComponent
+        {
+            DebugTools.Assert(ent.Comp.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
 
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            if (ent.Comp.LastModifiedTick == CurrentTick)
-                return;
-
-            DirtyEntity(ent, meta);
-            ent.Comp.LastModifiedTick = CurrentTick;
+            if (DirtyComponent(ent.Comp, isUnclassifiedChange))
+                DirtyEntity(ent, meta);
         }
 
         /// <inheritdoc />
@@ -404,16 +471,16 @@ namespace Robust.Shared.GameObjects
             where T1 : IComponent
             where T2 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
         }
 
         /// <inheritdoc />
@@ -422,19 +489,19 @@ namespace Robust.Shared.GameObjects
             where T2 : IComponent
             where T3 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
-            ent.Comp3.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
+            DirtyComponent(ent.Comp3);
         }
 
         /// <inheritdoc />
@@ -444,22 +511,39 @@ namespace Robust.Shared.GameObjects
             where T3 : IComponent
             where T4 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
-            DebugTools.Assert(ent.Comp4.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp4.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp4.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
-            ent.Comp3.LastModifiedTick = CurrentTick;
-            ent.Comp4.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
+            DirtyComponent(ent.Comp3);
+            DirtyComponent(ent.Comp4);
+        }
+
+        #endregion
+
+        public bool TryQueueDeleteEntity(EntityUid? uid)
+        {
+            if (uid == null)
+                return false;
+
+            if (Deleted(uid.Value))
+                return false;
+
+            if (IsQueuedForDeletion(uid.Value))
+                return false;
+
+            QueueDeleteEntity(uid);
+            return true;
         }
 
         /// <summary>
@@ -484,11 +568,23 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
-        public void DeleteEntity(EntityUid e, MetaDataComponent meta, TransformComponent xform)
+        public void DeleteEntity(EntityUid e, MetaDataComponent meta)
+        {
+            DeleteEntity(e, meta, TransformQuery.GetComponent(e));
+        }
+
+        /// <summary>
+        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
+        /// On the client this predicts the deletion: a networked entity is detached to nullspace and then either
+        /// restored or actually deleted by state handling.
+        /// </summary>
+        public virtual void DeleteEntity(EntityUid e, MetaDataComponent meta, TransformComponent xform)
         {
             // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
             if (!Started)
                 return;
+
+            ThreadCheck();
 
             if (meta.EntityLifeStage >= EntityLifeStage.Deleted)
                 return;
@@ -508,7 +604,28 @@ namespace Robust.Shared.GameObjects
 
             TransformComponent? parentXform = null;
             if (xform.ParentUid.IsValid())
-                TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+            {
+                if (xform.LifeStage < ComponentLifeStage.Initialized)
+                {
+                    // Entity is being deleted before initialization ever finished.
+                    // The entity will not yet have been added to the parent's transform component.
+                    // This is seemingly pretty error prone ATM, and I'm not even sure if it should be supported?
+
+                    // Just in case it HAS somehow been added, make sure we remove it.
+                    if (TransformQuery.TryComp(xform.ParentUid, out parentXform) && parentXform._children.Remove(e))
+                        DebugTools.Assert($"Child entity {ToPrettyString(e)} was added to the parent's child set prior to being initialized?");
+
+                    parentXform = null;
+                    xform._parent = EntityUid.Invalid;
+                    xform._anchored = false;
+                }
+                else
+                {
+                    // Use resolve for automatic error logging.
+                    // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+                    TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+                }
+            }
 
             // Then actually delete them
             RecursiveDeleteEntity(e, meta, xform, parentXform);
@@ -524,11 +641,15 @@ namespace Robust.Shared.GameObjects
             try
             {
                 var ev = new EntityTerminatingEvent((uid, metadata));
-                EventBus.RaiseLocalEvent(uid, ref ev, true);
+                BeforeEntityTerminating?.Invoke(ref ev);
+                EventBusInternal.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
             {
                 _sawmill.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
             }
 
             foreach (var child in xform._children)
@@ -571,6 +692,9 @@ namespace Robust.Shared.GameObjects
                 catch(Exception e)
                 {
                     _sawmill.Error($"Caught exception while trying to recursively delete child entity '{ToPrettyString(child)}' of '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                 }
             }
 
@@ -584,11 +708,14 @@ namespace Robust.Shared.GameObjects
                 {
                     try
                     {
-                        LifeShutdown(component);
+                        LifeShutdown(uid, component, _componentFactory.GetIndex(component.GetType()));
                     }
                     catch (Exception e)
                     {
                         _sawmill.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                        throw;
+#endif
                     }
                 }
             }
@@ -604,9 +731,12 @@ namespace Robust.Shared.GameObjects
             catch (Exception e)
             {
                 _sawmill.Error($"Caught exception while invoking event {nameof(EntityDeleted)} on '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
             }
 
-            _eventBus.OnEntityDeleted(uid);
+            EventBusInternal.OnEntityDeleted(uid);
             Entities.Remove(uid);
             // Need to get the ID above before MetadataComponent shutdown but only remove it after everything else is done.
             NetEntityLookup.Remove(metadata.NetEntity);
@@ -624,7 +754,47 @@ namespace Robust.Shared.GameObjects
             EntityQueueDeleted?.Invoke(uid.Value);
         }
 
-        public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
+        public virtual bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
+
+        /// <inheritdoc />
+        [Obsolete("Use DeleteEntity")]
+        public void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+            => DeleteEntity(ent.Owner);
+
+        /// <inheritdoc />
+        [Obsolete("Use DeleteEntity")]
+        public void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+            => DeleteEntity(ent?.Owner);
+
+        /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
+            => QueueDeleteEntity(ent.Owner);
+
+        /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?>? ent)
+            => QueueDeleteEntity(ent?.Owner);
+
+        /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+            => QueueDeleteEntity(ent.Owner);
+
+        /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+            => QueueDeleteEntity(ent?.Owner);
+
+        /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
+        public void PredictedQueueDeleteEntity(EntityUid uid)
+            => QueueDeleteEntity(uid);
+
+        /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
+        public void PredictedQueueDeleteEntity(EntityUid? uid)
+            => QueueDeleteEntity(uid);
 
         public bool EntityExists(EntityUid uid)
         {
@@ -660,7 +830,38 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public virtual void FlushEntities()
         {
+            _sawmill.Info($"Flushing entities. Entity count: {Entities.Count}");
             BeforeEntityFlush?.Invoke();
+            FlushEntitiesInternal();
+
+            if (Entities.Count != 0)
+            {
+                _sawmill.Error($"Failed to flush all entities. Entity count: {Entities.Count}");
+                // Dump entity info, but avoid dumping ~50k errors if for whatever reason we failed to delete almost all entities.
+                // Using 512 as the limit, in case the problem entities are related to player counts on high-pop servers.
+                if (Entities.Count < 512)
+                {
+                    foreach (var uid in Entities)
+                    {
+                        _sawmill.Error($"Entity exists after flush: {ToPrettyString(uid)}");
+                    }
+                }
+            }
+
+#if EXCEPTION_TOLERANCE
+            // Attempt to flush entities a second time, just in case something somehow caused an entity to be spawned
+            // while flushing entities
+            FlushEntitiesInternal();
+#endif
+
+            if (Entities.Count != 0)
+                throw new Exception($"Failed to flush all entities. Entity count: {Entities.Count}");
+
+            AfterEntityFlush?.Invoke();
+        }
+
+        private void FlushEntitiesInternal()
+        {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
 
@@ -706,17 +907,12 @@ namespace Robust.Shared.GameObjects
 #endif
                 }
             }
-
-            if (Entities.Count != 0)
-                _sawmill.Error("Entities were spawned while flushing entities.");
-
-            AfterEntityFlush?.Invoke();
         }
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(
+        protected internal EntityUid AllocEntity(
             EntityPrototype? prototype,
             out MetaDataComponent metadata)
         {
@@ -726,11 +922,16 @@ namespace Robust.Shared.GameObjects
             return entity;
         }
 
+        /// <inheritdoc cref="AllocEntity(Robust.Shared.Prototypes.EntityPrototype?,out Robust.Shared.GameObjects.MetaDataComponent)"/>
+        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _);
+
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
         private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
+            ThreadCheck();
+
             var uid = GenerateEntityUid();
 
 #if DEBUG
@@ -753,7 +954,7 @@ namespace Robust.Shared.GameObjects
 
             // we want this called before adding components
             EntityAdded?.Invoke((uid, metadata));
-            _eventBus.OnEntityAdded(uid);
+            EventBusInternal.OnEntityAdded(uid);
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
@@ -803,21 +1004,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
-        {
-            EntityPrototype.LoadEntity((entity, MetaQuery.GetComponent(entity)), ComponentFactory, this, _serManager, context);
-        }
-
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
-        {
-            var meta = MetaQuery.GetComponent(entity);
-            DebugTools.Assert(meta.EntityPrototype == prototype);
-            EntityPrototype.LoadEntity((entity, meta), ComponentFactory, this, _serManager, context);
-        }
-
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
-            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            var doMapInit = _mapSystem.IsInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
             InitializeAndStartEntity(entity, doMapInit);
         }
 
@@ -843,15 +1032,35 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
+            // Ideally, entities only ever get initialized once their parent has already been initialized.
+            // Note that this doesn't guarantee that an uninitialized entity will never have initialized children.
+            // In particular, for the client this might happen when applying a new game state that re-parents an
+            // existing entity to a newly created entity. The new entity only gets initialiuzed & started at the end,
+            // after the old/existing entity was already moved to the new parent.
+            DebugTools.Assert(TransformQuery.GetComponent(entity).ParentUid is not { Valid: true } parent
+                || MetaQuery.GetComponent(parent).EntityLifeStage >= EntityLifeStage.Initialized);
+
             DebugTools.AssertOwner(entity, meta);
             meta ??= GetComponent<MetaDataComponent>(entity);
+#pragma warning disable CS0618 // Type or member is obsolete
             InitializeComponents(entity, meta);
+#pragma warning restore CS0618 // Type or member is obsolete
             EntityInitialized?.Invoke((entity, meta));
         }
 
         public void StartEntity(EntityUid entity)
         {
+            // Ideally, entities only ever get initialized once their parent has already been initialized.
+            // Note that this doesn't guarantee that an uninitialized entity will never have initialized children.
+            // In particular, for the client this might happen when applying a new game state that re-parents an
+            // existing entity to a newly created entity. The new entity only gets initialiuzed & started at the end,
+            // after the old/existing entity was already moved to the new parent.
+            DebugTools.Assert(TransformQuery.GetComponent(entity).ParentUid is not { Valid: true } parent
+                              || MetaQuery.GetComponent(parent).EntityLifeStage >= EntityLifeStage.Initialized);
+
+#pragma warning disable CS0618 // Type or member is obsolete
             StartComponents(entity);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         public void RunMapInit(EntityUid entity, MetaDataComponent meta)
@@ -862,7 +1071,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
             SetLifeStage(meta, EntityLifeStage.MapInitialized);
 
-            EventBus.RaiseLocalEvent(entity, MapInitEventInstance);
+            EventBusInternal.RaiseLocalEvent(entity, MapInitEventInstance);
         }
 
         /// <inheritdoc />
@@ -932,6 +1141,16 @@ namespace Robust.Shared.GameObjects
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>
         /// </summary>
         protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
+
+        [Conditional("DEBUG")]
+        protected void ThreadCheck()
+        {
+#if DEBUG
+            DebugTools.Assert(
+                Environment.CurrentManagedThreadId == _mainThreadId,
+                "Environment.CurrentManagedThreadId == _mainThreadId");
+#endif
+        }
     }
 
     public enum EntityMessageType : byte

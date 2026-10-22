@@ -20,8 +20,8 @@ namespace Robust.Server.Audio;
 
 public sealed partial class AudioSystem : SharedAudioSystem
 {
-    [Dependency] private readonly PvsOverrideSystem _pvs = default!;
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
+    [Dependency] private PvsOverrideSystem _pvs = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
 
     private readonly Dictionary<string, TimeSpan> _cachedAudioLengths = new();
 
@@ -42,6 +42,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source = new DummyAudioSource();
     }
 
+    public override void SetGridAudio(Entity<AudioComponent>? entity)
+    {
+        if (entity == null)
+            return;
+
+        base.SetGridAudio(entity);
+
+        // Need to global override so everyone can hear it.
+        _pvs.AddGlobalOverride(entity.Value.Owner);
+    }
+
     public override void SetMapAudio(Entity<AudioComponent>? audio)
     {
         if (audio == null)
@@ -55,118 +66,123 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
     {
-        var count = filter.Count;
+        DebugTools.Assert(component.IncludedEntities == null);
+        component.IncludedEntities = new();
 
-        if (count == 0)
+        if (filter.Count == 0)
             return;
 
         _pvs.AddSessionOverrides(uid, filter);
-
-        var ents = new HashSet<EntityUid>(count);
-
         foreach (var session in filter.Recipients)
         {
-            var ent = session.AttachedEntity;
-
-            if (ent == null)
-                continue;
-
-            ents.Add(ent.Value);
+            if (session.AttachedEntity is {} ent)
+                component.IncludedEntities.Add(ent);
         }
-
-        DebugTools.Assert(component.IncludedEntities == null);
-        component.IncludedEntities = ents;
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(ResolvedSoundSpecifier? specifier, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        var entity = Spawn("Audio", MapCoordinates.Nullspace);
-        var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, audio, playerFilter);
-        audio.Global = true;
-        return (entity, audio);
+        if (specifier is null)
+            return null;
+
+        var entity = SetupAudio(specifier, audioParams);
+        AddAudioFilter(entity, entity.Comp, playerFilter);
+        entity.Comp.Global = true;
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(ResolvedSoundSpecifier? specifier, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (specifier is null)
             return null;
 
         if (TerminatingOrDeleted(uid))
-        {
-            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
             return null;
-        }
 
-        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
-        var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, audio, playerFilter);
+        var entity = SetupAudio(specifier, audioParams);
+        // Move it after setting it up
+        XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
 
-        return (entity, audio);
+        // TODO AUDIO
+        // Add methods that allow for custom audio range.
+        // Some methods try to reduce the audio range, resulting in a custom filter which then unnecessarily has to
+        // use PVS overrides. PlayEntity with a reduced range shouldn't need PVS overrides at all.
+        AddAudioFilter(entity, entity.Comp, playerFilter);
+
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string? filename, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(ResolvedSoundSpecifier? specifier, EntityUid uid, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (specifier is null)
             return null;
 
         if (TerminatingOrDeleted(uid))
-        {
-            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
             return null;
-        }
 
-        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
-        var audio = SetupAudio(entity, filename, audioParams);
+        var entity = SetupAudio(specifier, audioParams);
+        XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
 
-        return (entity, audio);
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(ResolvedSoundSpecifier? specifier, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (specifier is null)
             return null;
 
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}.  Trace: {Environment.StackTrace}");
+            LogAudioPlaybackOnInvalidEntity(specifier, coordinates.EntityId);
             return null;
         }
 
         if (!coordinates.IsValid(EntityManager))
             return null;
 
-        var entity = Spawn("Audio", coordinates);
-        var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, audio, playerFilter);
+        var entity = SetupAudio(specifier, audioParams);
+        XformSystem.SetCoordinates(entity, coordinates);
+        AddAudioFilter(entity, entity.Comp, playerFilter);
 
-        return (entity, audio);
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string? filename, EntityCoordinates coordinates,
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(ResolvedSoundSpecifier? specifier, EntityCoordinates coordinates,
         AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (specifier is null)
             return null;
 
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}.  Trace: {Environment.StackTrace}");
+            LogAudioPlaybackOnInvalidEntity(specifier, coordinates.EntityId);
             return null;
         }
 
         if (!coordinates.IsValid(EntityManager))
             return null;
 
-        var entity = Spawn("Audio", coordinates);
-        var audio = SetupAudio(entity, filename, audioParams);
+        // TODO: Transform TryFindGridAt mess + optimisation required.
+        var entity = SetupAudio(specifier, audioParams);
+        XformSystem.SetCoordinates(entity, coordinates);
 
-        return (entity, audio);
+        return (entity, entity.Comp);
+    }
+
+    /// <inheritdoc />
+    public override (EntityUid Entity, AudioComponent Component)? PlayLocal(
+        SoundSpecifier? sound,
+        EntityUid source,
+        EntityUid? soundInitiator,
+        AudioParams? audioParams = null
+    )
+    {
+        return null;
     }
 
     /// <inheritdoc />
@@ -175,7 +191,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (sound == null)
             return null;
 
-        var audio = PlayPvs(GetSound(sound), source, audioParams ?? sound.Params);
+        var audio = PlayPvs(ResolveSound(sound), source, audioParams ?? sound.Params);
 
         if (audio == null)
             return null;
@@ -190,7 +206,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (sound == null)
             return null;
 
-        var audio = PlayPvs(GetSound(sound), coordinates, audioParams ?? sound.Params);
+        var audio = PlayPvs(ResolveSound(sound), coordinates, audioParams ?? sound.Params);
 
         if (audio == null)
             return null;
@@ -199,12 +215,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return audio;
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, ICommonSession recipient, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(ResolvedSoundSpecifier? filename, ICommonSession recipient, AudioParams? audioParams = null)
     {
         return PlayGlobal(filename, Filter.SinglePlayer(recipient), false, audioParams);
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, EntityUid recipient, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(ResolvedSoundSpecifier? filename, EntityUid recipient, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayGlobal(filename, actor.PlayerSession, audioParams);
@@ -212,12 +228,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return null;
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(ResolvedSoundSpecifier? filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         return PlayEntity(filename, Filter.SinglePlayer(recipient), uid, false, audioParams);
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(ResolvedSoundSpecifier? filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayEntity(filename, actor.PlayerSession, uid, audioParams);
@@ -225,12 +241,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return null;
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(ResolvedSoundSpecifier? filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return PlayStatic(filename, Filter.SinglePlayer(recipient), coordinates, false, audioParams);
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(ResolvedSoundSpecifier? filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayStatic(filename, actor.PlayerSession, coordinates, audioParams);
@@ -264,5 +280,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override void LoadStream<T>(Entity<AudioComponent> entity, T stream)
     {
         // TODO: Yeah remove this...
+    }
+
+    private void LogAudioPlaybackOnInvalidEntity(ResolvedSoundSpecifier? specifier, EntityUid entityId)
+    {
+        var soundInfo = specifier?.ToString() ?? "unknown sound";
+        Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
     }
 }

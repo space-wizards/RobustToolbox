@@ -123,11 +123,10 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void ClearPvsData()
     {
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
+        WaitSendTask();
+        WaitLeaveTask();
 
-        _deletionTask?.WaitOne();
-        _deletionTask = null;
+        WaitDeletionTask();
 
         _incomingReturns.Clear();
         _pendingReturns.Clear();
@@ -245,8 +244,6 @@ internal sealed partial class PvsSystem
 
     private void OnEntityAdded(Entity<MetaDataComponent> entity)
     {
-        DebugTools.Assert(entity.Comp.PvsData.Index == default);
-
         AssignEntityPointer(entity.Comp);
     }
 
@@ -255,6 +252,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AssignEntityPointer(MetaDataComponent meta)
     {
+        DebugTools.Assert(meta.PvsData == PvsIndex.Invalid);
         if (_dataFreeListHead == PvsIndex.Invalid)
         {
             ExpandEntityCapacity();
@@ -267,8 +265,6 @@ internal sealed partial class PvsSystem
         ref var freeLink = ref Unsafe.As<PvsMetadata, PvsMetadataFreeLink>(ref metadata);
         _dataFreeListHead = freeLink.NextFree;
 
-        // TODO: re-introduce this assert.
-        // DebugTools.AssertEqual(((PvsMetadata*) ptr)->NetEntity, NetEntity.Invalid);
         DebugTools.AssertNotEqual(meta.NetEntity, NetEntity.Invalid);
 
         meta.PvsData = index;
@@ -276,6 +272,7 @@ internal sealed partial class PvsSystem
         metadata.LastModifiedTick = meta.LastModifiedTick;
         metadata.VisMask = meta.VisibilityMask;
         metadata.LifeStage = meta.EntityLifeStage;
+        metadata.IsChunkEntity = false;
 #if DEBUG
         metadata.Marker = uint.MaxValue;
 #endif
@@ -287,9 +284,9 @@ internal sealed partial class PvsSystem
     private void OnEntityDeleted(Entity<MetaDataComponent> entity)
     {
         var ptr = entity.Comp.PvsData;
-        entity.Comp.PvsData = default;
+        entity.Comp.PvsData = PvsIndex.Invalid;
 
-        if (ptr == default)
+        if (ptr == PvsIndex.Invalid)
             return;
 
         _incomingReturns.Add(ptr);
@@ -300,7 +297,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AfterEntityFlush()
     {
-        DebugTools.Assert(EntityManager.EntityCount == 0);
+        if (EntityManager.EntityCount > 0)
+            throw new Exception("Cannot reset PVS data without first deleting all entities.");
 
         ClearPvsData();
         ShrinkDataMemory();
@@ -321,11 +319,11 @@ internal sealed partial class PvsSystem
         if (curTick < _lastReturn)
             throw new InvalidOperationException($"Time travel is not supported");
 
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
+        WaitLeaveTask();
 
-        _deletionTask?.WaitOne();
-        _deletionTask = null;
+        WaitSendTask();
+
+        WaitDeletionTask();
 
         _lastReturn = curTick;
 

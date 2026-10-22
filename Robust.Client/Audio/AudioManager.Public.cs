@@ -5,6 +5,7 @@ using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
+using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Sources;
@@ -45,6 +46,11 @@ internal partial class AudioManager
 
     public void Shutdown()
     {
+        _clyde.OnWindowFocused -= OnWindowFocused;
+        _cfg.UnsubValueChanged(CVars.AudioMasterVolume, SetMasterGain);
+        _cfg.UnsubValueChanged(CVars.AudioMuteUnfocused, OnMuteUnfocusedChanged);
+        _cfg.UnsubValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
+
         DisposeAllAudio();
 
         if (_openALContext != ALContext.Null)
@@ -84,6 +90,30 @@ internal partial class AudioManager
         AL.Listener(ALListenerfv.Orientation, ref at, ref up);
     }
 
+    public void FrameUpdate(float frameTime)
+    {
+        if (MathF.Abs(FadeGain - _masterFadeTargetGain) < 0.001f)
+            return;
+
+        _masterFadeElapsed = MathF.Min(_masterFadeElapsed + frameTime, MasterFadeDuration);
+        var t = MasterFadeDuration <= 0f ? 1f : _masterFadeElapsed / MasterFadeDuration;
+        FadeGain = MathHelper.Lerp(_masterFadeStartGain, _masterFadeTargetGain, t);
+        ApplyMasterGain();
+    }
+
+    void IAudioInternal.Remove(AudioStream stream)
+    {
+        if (stream.ClydeHandle == null)
+            return;
+
+        if (!_audioSampleBuffers.Remove(stream.BufferId))
+        {
+            return;
+        }
+
+        AL.DeleteBuffer(stream.BufferId);
+    }
+
     /// <inheritdoc/>
     public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
     {
@@ -120,9 +150,9 @@ internal partial class AudioManager
         _checkAlError();
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
-        return new AudioStream(handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
+        return new AudioStream(this, buffer, handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
     }
 
     /// <inheritdoc/>
@@ -179,9 +209,9 @@ internal partial class AudioManager
         _checkAlError();
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
-        return new AudioStream(handle, length, wav.NumChannels, name);
+        return new AudioStream(this, buffer, handle, length, wav.NumChannels, name);
     }
 
     /// <inheritdoc/>
@@ -210,8 +240,8 @@ internal partial class AudioManager
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
-        return new AudioStream(handle, length, channels, name);
+        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
+        return new AudioStream(this, buffer, handle, length, channels, name);
     }
 
     public void SetMasterGain(float newGain)
@@ -219,15 +249,26 @@ internal partial class AudioManager
         if (newGain < 0f)
         {
             OpenALSawmill.Error("Tried to set master gain below 0, clamping to 0");
-            AL.Listener(ALListenerf.Gain, 0f);
-            return;
+            newGain = 0f;
         }
+
+        BaseGain = newGain;
+        ApplyMasterGain();
+    }
+
+    public float BaseGain { get; private set; }
+
+    public float FadeGain { get; private set; } = 1f;
+
+    private void ApplyMasterGain()
+    {
+        var effectiveGain = BaseGain * FadeGain;
 
 
         #region Platform hack for MacOS
         // HACK/BUG: Apple's OpenAL implementation has a bug where values of 0f for listener gain don't actually
         // HACK/BUG: prevent sound playback. Workaround is to cap the minimum gain at a value just above 0.
-        if (OperatingSystem.IsMacOS() && newGain == 0f)
+        if (OperatingSystem.IsMacOS() && effectiveGain == 0f)
         {
             OpenALSawmill.Verbose("Not setting gain to 0 because Apple can't write an OpenAL implementation");
             AL.Listener(ALListenerf.Gain, float.Epsilon);
@@ -235,7 +276,7 @@ internal partial class AudioManager
         }
         #endregion Platform hack for MacOS
 
-        AL.Listener(ALListenerf.Gain, newGain);
+        AL.Listener(ALListenerf.Gain, effectiveGain);
     }
 
     public void SetAttenuation(Attenuation attenuation)
@@ -271,6 +312,13 @@ internal partial class AudioManager
         OpenALSawmill.Info($"Set audio attenuation to {attenuation.ToString()}");
     }
 
+    public void SetDopplerFactor(float factor)
+    {
+        factor = Math.Max(factor, 0f);
+        AL.DopplerFactor(factor);
+        OpenALSawmill.Info($"Set doppler factor to {factor:F2}");
+    }
+
     internal void RemoveAudioSource(int handle)
     {
         _audioSources.Remove(handle);
@@ -293,7 +341,7 @@ internal partial class AudioManager
 
         // ReSharper disable once PossibleInvalidOperationException
         // TODO: This really shouldn't be indexing based on the ClydeHandle...
-        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value].BufferHandle);
+        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.BufferId].BufferHandle);
 
         var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));
@@ -302,7 +350,7 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
-    IBufferedAudioSource? IAudioInternal.CreateBufferedAudioSource(int buffers, bool floatAudio=false)
+    IBufferedAudioSource? IAudioInternal.CreateBufferedAudioSource(int buffers, bool floatAudio)
     {
         var source = AL.GenSource();
 
@@ -370,5 +418,12 @@ internal partial class AudioManager
         }
 
         _bufferedAudioSources.Clear();
+
+        foreach (var buffer in _audioSampleBuffers.Values)
+        {
+            DeleteAudioBufferOnMainThread(buffer.BufferHandle);
+        }
+
+        _audioSampleBuffers.Clear();
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using Robust.Client;
 using Robust.Client.Input;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
@@ -11,8 +12,9 @@ namespace Robust.UnitTesting
         public InitialLaunchState LaunchState { get; } = new(false, null, null, null);
         public GameControllerOptions Options { get; } = new();
         public bool ContentStart { get; set; }
+        public StartType StartTypeValue => ContentStart ? StartType.Content : StartType.Engine;
 
-        public event Action<FrameEventArgs>? TickUpdateOverride;
+        public event Action<FrameEventArgs>? TickUpdateOverride { add { } remove { } }
 
         public void Shutdown(string? reason = null)
         {
@@ -65,6 +67,21 @@ namespace Robust.UnitTesting
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
+        }
+
+        public string GameTitle()
+        {
+            return "RobustToolbox";
+        }
+
+        public string WindowIconSet()
+        {
+            return "";
+        }
+
+        public string SplashLogo()
+        {
+            return "";
         }
     }
 }

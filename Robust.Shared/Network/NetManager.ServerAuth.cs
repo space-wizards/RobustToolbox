@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -79,10 +80,12 @@ namespace Robust.Shared.Network
 
                     var verifyToken = new byte[4];
                     RandomNumberGenerator.Fill(verifyToken);
+                    var wantHwid = _config.GetCVar(CVars.NetHWId);
                     var msgEncReq = new MsgEncryptionRequest
                     {
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
-                        VerifyToken = verifyToken
+                        VerifyToken = verifyToken,
+                        WantHwid = wantHwid
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();
@@ -137,7 +140,12 @@ namespace Robust.Shared.Network
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
-                    var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
+                    var url = $"{authServer}api/session/hasJoined" +
+                              $"?hash={authHash}&" +
+                              $"userId={msgEncResponse.UserId}";
+                    var serverUrl = _config.GetCVar(CVars.HubServerUrl);
+                    if (!string.IsNullOrWhiteSpace(serverUrl))
+                        url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
                     var joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
 
                     if (joinedRespJson is not {IsValid: true})
@@ -153,10 +161,26 @@ namespace Robust.Shared.Network
                         $"Patron: {joinedRespJson.UserData.PatronTier}");
 
                     var userId = new NetUserId(joinedRespJson.UserData!.UserId);
+                    ImmutableArray<ImmutableArray<byte>> modernHWIds = [
+                        ..joinedRespJson.ConnectionData!.Hwids
+                            .Select(h => ImmutableArray.Create(Convert.FromBase64String(h)))
+                    ];
+                    ImmutableArray<byte> legacyHwid = [..msgEncResponse.LegacyHwid];
+                    if (!wantHwid)
+                    {
+                        // If the client somehow sends a HWID even if we didn't ask for one, ignore it.
+                        modernHWIds = [];
+                        legacyHwid = [];
+                    }
+
                     userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
                     {
                         PatronTier = joinedRespJson.UserData.PatronTier,
-                        HWId = msgLogin.HWId
+                        HWId = legacyHwid,
+                        ModernHWIds = modernHWIds,
+                        Trust = joinedRespJson.ConnectionData!.Trust,
+                        CreatedTime = joinedRespJson.UserData.CreatedTime,
+                        IsLocal = isLocal
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -197,9 +221,15 @@ namespace Robust.Shared.Network
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Assigned user ID: {userId}");
 
+                    var localTrust = _config.GetCVar(CVars.AuthLocalTrust);
+                    var guestTrust = _config.GetCVar(CVars.AuthGuestTrust);
+
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = msgLogin.HWId
+                        HWId = [],
+                        ModernHWIds = [],
+                        Trust = isLocal ? localTrust : guestTrust,
+                        IsLocal = isLocal
                     };
                 }
 
@@ -359,8 +389,9 @@ namespace Robust.Shared.Network
         }
 
         // ReSharper disable ClassNeverInstantiated.Local
-        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData);
-        private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier);
+        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData, HasJoinedConnectionData? ConnectionData);
+        private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier, DateTime CreatedTime);
+        private sealed record HasJoinedConnectionData(string[] Hwids, float Trust);
         // ReSharper restore ClassNeverInstantiated.Local
     }
 }

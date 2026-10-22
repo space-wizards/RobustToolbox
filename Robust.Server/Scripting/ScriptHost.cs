@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -30,14 +31,14 @@ using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 namespace Robust.Server.Scripting
 {
-    internal sealed class ScriptHost : IScriptHost
+    internal sealed partial class ScriptHost : IScriptHost
     {
-        [Dependency] private readonly IServerNetManager _netManager = default!;
-        [Dependency] private readonly IConGroupController _conGroupController = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IServerNetManager _netManager = default!;
+        [Dependency] private IConGroupController _conGroupController = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         readonly Dictionary<ICommonSession, Dictionary<int, ScriptInstance>> _instances =
             new();
@@ -188,13 +189,20 @@ namespace Robust.Server.Scripting
             }
 
             // Compile ahead of time so that we can do syntax highlighting correctly for the echo.
-            newScript.Compile();
+            await Task.Run(() =>
+            {
+                newScript.Compile();
 
-            // Echo entered script.
-            var echoMessage = new FormattedMessage();
-            ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, instance.HighlightWorkspace);
+                // Echo entered script.
+                var echoMessage = new FormattedMessage();
+                ScriptInstanceShared.AddWithSyntaxHighlighting(
+                    newScript,
+                    echoMessage,
+                    code,
+                    instance.HighlightWorkspace.Value);
 
-            replyMessage.Echo = echoMessage;
+                replyMessage.Echo = echoMessage;
+            });
 
             var msg = new FormattedMessage();
 
@@ -264,7 +272,7 @@ namespace Robust.Server.Scripting
 
             if (!_instances.TryGetValue(session, out var instances) ||
                 !instances.TryGetValue(message.ScriptSession, out var instance))
-                    return;
+                return;
 
             var replyMessage = new MsgScriptCompletionResponse();
             replyMessage.ScriptSession = message.ScriptSession;
@@ -300,7 +308,7 @@ namespace Robust.Server.Scripting
                 .GetCompletionsAsync(document, message.Cursor) ?? Task.FromResult(CompletionList.Empty));
 
             var ires = ImmutableArray.CreateBuilder<LiteResult>();
-            foreach  (var r in results.ItemsList)
+            foreach (var r in results.ItemsList)
                 ires.Add(new LiteResult(
                             displayText: r.DisplayText,
                             displayTextPrefix: r.DisplayTextPrefix,
@@ -332,7 +340,7 @@ namespace Robust.Server.Scripting
 
         private sealed class ScriptInstance
         {
-            public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
+            public Lazy<Workspace> HighlightWorkspace { get; } = new(() => new AdhocWorkspace());
             public StringBuilder InputBuffer { get; } = new();
             public FormattedMessage OutputBuffer { get; } = new();
             public bool RunningScript { get; set; }
@@ -366,14 +374,14 @@ namespace Robust.Server.Scripting
 
             protected override void WriteSyntax(object toString)
             {
-                if (_scriptInstance.RunningScript && toString?.ToString() is {} code)
+                if (_scriptInstance.RunningScript && toString?.ToString() is { } code)
                 {
                     var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
                     var script = CSharpScript.Create(code, options, typeof(ScriptGlobals));
                     script.Compile();
 
                     var syntax = new FormattedMessage();
-                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace);
+                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace.Value);
 
                     _scriptInstance.OutputBuffer.AddMessage(syntax);
                 }
@@ -381,7 +389,7 @@ namespace Robust.Server.Scripting
 
             public override void write(object toString)
             {
-                if (_scriptInstance.RunningScript && toString.ToString() is {} value)
+                if (_scriptInstance.RunningScript && toString.ToString() is { } value)
                 {
                     _scriptInstance.OutputBuffer.AddText(value);
                 }

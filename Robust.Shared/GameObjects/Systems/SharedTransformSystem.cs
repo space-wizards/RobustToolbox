@@ -18,19 +18,25 @@ namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedTransformSystem : EntitySystem
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
-        [Dependency] private readonly SharedContainerSystem _container = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private MetaDataSystem _metaData = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private INetManager _netMan = default!;
+        [Dependency] private SharedContainerSystem _container = default!;
+        [Dependency] private SharedGridTraversalSystem _traversal = default!;
 
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
         protected EntityQuery<TransformComponent> XformQuery;
+
+        internal const int TransformLocalPositionIndex = 0;
+        internal const int TransformLocalRotationIndex = 1;
+        internal const int TransformParentIndex = 2;
+        internal const int TransformNoLocalRotationIndex = 3;
+        internal const int TransformAnchoredIndex = 4;
 
         public delegate void MoveEventHandler(ref MoveEvent ev);
 
@@ -59,6 +65,13 @@ namespace Robust.Shared.GameObjects
             _metaQuery = GetEntityQuery<MetaDataComponent>();
             XformQuery = GetEntityQuery<TransformComponent>();
 
+            EntityManager.ComponentFactory.RegisterNetworkedFields<TransformComponent>(
+                nameof(TransformComponent.LocalPosition),
+                nameof(TransformComponent.LocalRotation),
+                nameof(TransformComponent.ParentUid),
+                nameof(TransformComponent.NoLocalRotation),
+                nameof(TransformComponent.Anchored));
+
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
             SubscribeLocalEvent<TransformComponent, ComponentInit>(OnCompInit);
             SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnCompStartup);
@@ -69,11 +82,14 @@ namespace Robust.Shared.GameObjects
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
-            if(e.NewTile.Tile != Tile.Empty)
-                return;
+            foreach (var change in e.Changes)
+            {
+                if(change.NewTile != Tile.Empty)
+                    continue;
 
-            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
-            DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
+                // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
+                DeparentAllEntsOnTile(e.Entity, change.GridIndices);
+            }
         }
 
         /// <summary>
@@ -132,14 +148,14 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!_gridQuery.HasComp(uid) && !_mapQuery.HasComp(uid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = GetWorldPosition(xform, XformQuery);
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -173,14 +189,14 @@ namespace Robust.Shared.GameObjects
             if (mapId == parentUid)
                 return coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
+            DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldMatrix(parentXform, XformQuery).Transform(coordinates.Position);
+            var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
 
             return parentXform.GridUid == null
                 ? new EntityCoordinates(mapId ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(parentXform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
         }
 
         /// <summary>
@@ -200,13 +216,13 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!HasComp<MapComponent>(uid) && !HasComp<MapComponent>(uid));
 
             var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 
             var coords = xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
-                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(pos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
 
             return (coords, worldRot);
         }
@@ -259,12 +275,13 @@ namespace Robust.Shared.GameObjects
             return true;
         }
 
-        public void RaiseMoveEvent(
+        internal void RaiseMoveEvent(
             Entity<TransformComponent, MetaDataComponent> ent,
             EntityUid oldParent,
             Vector2 oldPosition,
             Angle oldRotation,
-            EntityUid? oldMap)
+            EntityUid? oldMap,
+            bool checkTraversal = true)
         {
             var pos = ent.Comp1._parent == EntityUid.Invalid
                 ? default
@@ -294,7 +311,10 @@ namespace Robust.Shared.GameObjects
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
-            _traversal.CheckTraverse(ent.Owner, ent.Comp1);
+            if (checkTraversal)
+            {
+                _traversal.CheckTraverse(ent);
+            }
         }
     }
 
@@ -309,32 +329,32 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a TransformComponent.
     /// </summary>
     [Serializable, NetSerializable]
-    internal readonly record struct TransformComponentState : IComponentState
+    internal sealed class TransformComponentState : IComponentState
     {
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public readonly NetEntity ParentID;
+        public NetEntity ParentID;
 
         /// <summary>
         ///     Current position offset of the entity.
         /// </summary>
-        public readonly Vector2 LocalPosition;
+        public Vector2 LocalPosition;
 
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
-        public readonly Angle Rotation;
+        public Angle Rotation;
 
         /// <summary>
         /// Is the transform able to be locally rotated?
         /// </summary>
-        public readonly bool NoLocalRotation;
+        public bool NoLocalRotation;
 
         /// <summary>
         /// True if the transform is anchored to a tile.
         /// </summary>
-        public readonly bool Anchored;
+        public bool Anchored;
 
         /// <summary>
         ///     Constructs a new state snapshot of a TransformComponent.
@@ -350,6 +370,63 @@ namespace Robust.Shared.GameObjects
             ParentID = parentId;
             NoLocalRotation = noLocalRotation;
             Anchored = anchored;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    internal sealed class TransformComponentDeltaState : IAutoGeneratedComponentDeltaState, IComponentDeltaState<TransformComponentState>
+    {
+        public ulong ChangedFields { get; set; }
+
+        [NetworkedDeltaField(SharedTransformSystem.TransformLocalPositionIndex)]
+        public Vector2 LocalPosition;
+
+        [NetworkedDeltaField(SharedTransformSystem.TransformLocalRotationIndex)]
+        public Angle Rotation;
+
+        [NetworkedDeltaField(SharedTransformSystem.TransformParentIndex)]
+        public NetEntity ParentID;
+
+        [NetworkedDeltaField(SharedTransformSystem.TransformNoLocalRotationIndex)]
+        public bool NoLocalRotation;
+
+        [NetworkedDeltaField(SharedTransformSystem.TransformAnchoredIndex)]
+        public bool Anchored;
+
+        public TransformComponentState CreateNewFullState(TransformComponentState fullState)
+        {
+            var newState = new TransformComponentState(
+                fullState.LocalPosition,
+                fullState.Rotation,
+                fullState.ParentID,
+                fullState.NoLocalRotation,
+                fullState.Anchored);
+
+            ApplyToFullState(newState);
+            return newState;
+        }
+
+        public void ApplyToFullState(TransformComponentState fullState)
+        {
+            if (IsChanged(SharedTransformSystem.TransformLocalPositionIndex))
+                fullState.LocalPosition = LocalPosition;
+
+            if (IsChanged(SharedTransformSystem.TransformLocalRotationIndex))
+                fullState.Rotation = Rotation;
+
+            if (IsChanged(SharedTransformSystem.TransformParentIndex))
+                fullState.ParentID = ParentID;
+
+            if (IsChanged(SharedTransformSystem.TransformNoLocalRotationIndex))
+                fullState.NoLocalRotation = NoLocalRotation;
+
+            if (IsChanged(SharedTransformSystem.TransformAnchoredIndex))
+                fullState.Anchored = Anchored;
+        }
+
+        public bool IsChanged(int index)
+        {
+            return (ChangedFields & (1UL << index)) != 0;
         }
     }
 }

@@ -17,6 +17,7 @@ namespace Robust.Shared.Network;
 /// content code can't send arbitrary HTTP requests.
 /// </para>
 /// </remarks>
+[NotContentImplementable]
 public interface IHttpClientHolder
 {
     HttpClient Client { get; }

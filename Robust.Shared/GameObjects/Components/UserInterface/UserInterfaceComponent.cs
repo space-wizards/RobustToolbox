@@ -3,47 +3,110 @@ using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
     [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem))]
-    public sealed partial class UserInterfaceComponent : Component
+    public sealed partial class UserInterfaceComponent : Component, IComponentDelta
     {
+        /// <inheritdoc/>
+        public GameTick LastUnclassifiedDirty { get; set; }
+
+        /// <inheritdoc />
+        public GameTick[] LastModifiedFields { get; set; } = default!;
+
         /// <summary>
         /// The currently open interfaces. Used clientside to store the UI.
         /// </summary>
         [ViewVariables, Access(Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadWriteExecute)]
         public readonly Dictionary<Enum, BoundUserInterface> ClientOpenInterfaces = new();
 
-        [DataField]
+        [DataField, AlwaysPushInheritance]
         internal Dictionary<Enum, InterfaceData> Interfaces = new();
 
         /// <summary>
         /// Actors that currently have interfaces open.
         /// </summary>
         [DataField]
-        public Dictionary<Enum, List<EntityUid>> Actors = new();
+        public Dictionary<Enum, HashSet<EntityUid>> Actors = new();
 
         /// <summary>
         /// Legacy data, new BUIs should be using comp states.
         /// </summary>
         public Dictionary<Enum, BoundUserInterfaceState> States = new();
+    }
 
-        [Serializable, NetSerializable]
-        internal sealed class UserInterfaceComponentState(
-            Dictionary<Enum, List<NetEntity>> actors,
-            Dictionary<Enum, BoundUserInterfaceState> states)
-            : IComponentState
+    [Serializable, NetSerializable]
+    internal sealed class UserInterfaceComponentState(
+        Dictionary<Enum, List<NetEntity>> actors,
+        Dictionary<Enum, BoundUserInterfaceState> states,
+        Dictionary<Enum, InterfaceData> data)
+        : IComponentState
+    {
+        public Dictionary<Enum, List<NetEntity>> Actors = actors;
+
+        public Dictionary<Enum, BoundUserInterfaceState> States = states;
+
+        public Dictionary<Enum, InterfaceData> Data = data;
+    }
+
+    [Serializable, NetSerializable]
+    internal sealed class UserInterfaceActorsDeltaState : IComponentDeltaState<UserInterfaceComponentState>
+    {
+        public Dictionary<Enum, List<NetEntity>> Actors = new();
+
+        public void ApplyToFullState(UserInterfaceComponentState fullState)
         {
-            public Dictionary<Enum, List<NetEntity>> Actors = actors;
+            fullState.Actors.Clear();
 
-            public Dictionary<Enum, BoundUserInterfaceState> States = states;
+            foreach (var (key, value) in Actors)
+            {
+                fullState.Actors.Add(key, value);
+            }
+        }
+
+        public UserInterfaceComponentState CreateNewFullState(UserInterfaceComponentState fullState)
+        {
+            var newState = new UserInterfaceComponentState(
+                new Dictionary<Enum, List<NetEntity>>(Actors),
+                new(fullState.States),
+                new(fullState.Data));
+
+            return newState;
         }
     }
 
-    [DataDefinition]
+    [Serializable, NetSerializable]
+    internal sealed class UserInterfaceStatesDeltaState : IComponentDeltaState<UserInterfaceComponentState>
+    {
+        public Dictionary<Enum, BoundUserInterfaceState> States = new();
+
+        public void ApplyToFullState(UserInterfaceComponentState fullState)
+        {
+            fullState.States.Clear();
+
+            foreach (var (key, value) in States)
+            {
+                fullState.States.Add(key, value);
+            }
+        }
+
+        public UserInterfaceComponentState CreateNewFullState(UserInterfaceComponentState fullState)
+        {
+            var newState = new UserInterfaceComponentState(
+                new Dictionary<Enum, List<NetEntity>>(fullState.Actors),
+                new(States),
+                new(fullState.Data));
+
+            return newState;
+        }
+    }
+
+    [DataDefinition, Serializable, NetSerializable]
     public sealed partial class InterfaceData
     {
         [DataField("type", required: true)]
@@ -65,19 +128,49 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         [DataField]
         public bool RequireInputValidation = true;
+
+        public InterfaceData(string clientType, float interactionRange = 2f, bool requireInputValidation = true)
+        {
+            ClientType = clientType;
+            InteractionRange = interactionRange;
+            RequireInputValidation = requireInputValidation;
+        }
+        public InterfaceData(InterfaceData data)
+        {
+            ClientType = data.ClientType;
+            InteractionRange = data.InteractionRange;
+            RequireInputValidation = data.RequireInputValidation;
+        }
     }
 
     /// <summary>
-    ///     Raised whenever the server receives a BUI message from a client relating to a UI that requires input
-    ///     validation.
+    /// Raised whenever the server receives a BUI message from a client relating to a UI that requires input validation.
+    /// This is first broadcast then, if not cancelled already, raised directly on the BUI's owner.
     /// </summary>
-    public sealed class BoundUserInterfaceMessageAttempt(EntityUid actor, EntityUid target, Enum uiKey)
-        : CancellableEntityEventArgs
+    [ByRefEvent]
+    public record struct BoundUserInterfaceMessageAttempt(EntityUid Actor, EntityUid Target, Enum UiKey, BoundUserInterfaceMessage Message)
     {
-        public readonly EntityUid Actor = actor;
-        public readonly EntityUid Target = target;
-        public readonly Enum UiKey = uiKey;
+        public bool Cancelled { get; private set; }
+
+        public void Cancel()
+        {
+            Cancelled = true;
+        }
+
+        public void Uncancel()
+        {
+            Cancelled = false;
+        }
     }
+
+    /// <summary>
+    ///     Raised whenever the server receives a BUI wrap message from a client for a valid interface.
+    /// </summary>
+    [ByRefEvent]
+    public readonly record struct BoundUserInterfaceMessageReceivedEvent(
+        EntityUid Actor,
+        EntityUid Target,
+        Enum UiKey);
 
     [NetSerializable, Serializable]
     public abstract class BoundUserInterfaceState
@@ -130,12 +223,12 @@ namespace Robust.Shared.GameObjects
     }
 
     [NetSerializable, Serializable]
-    internal sealed class OpenBoundInterfaceMessage : BoundUserInterfaceMessage
+    public sealed class OpenBoundInterfaceMessage : BoundUserInterfaceMessage
     {
     }
 
     [NetSerializable, Serializable]
-    internal sealed class CloseBoundInterfaceMessage : BoundUserInterfaceMessage
+    public sealed class CloseBoundInterfaceMessage : BoundUserInterfaceMessage
     {
     }
 

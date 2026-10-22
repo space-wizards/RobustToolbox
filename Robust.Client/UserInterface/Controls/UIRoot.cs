@@ -18,6 +18,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public Color? BackgroundColor { get; set; }
 
+        public virtual LayoutContainer PopupRoot => throw new NotSupportedException();
+        public virtual PopupContainer ModalRoot  => throw new NotSupportedException();
+
         private Color _styleBgColor;
 
         internal Color ActualBgColor => BackgroundColor ?? _styleBgColor;

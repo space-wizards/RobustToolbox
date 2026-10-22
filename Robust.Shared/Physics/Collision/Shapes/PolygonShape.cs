@@ -23,12 +23,15 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -43,7 +46,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [ViewVariables]
         public int VertexCount => Vertices.Length;
 
-        [DataField("vertices"),
+        [DataField("vertices", customTypeSerializer: typeof(PhysicsHullSerializer)),
          Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
              Other = AccessPermissions.Read)]
         public Vector2[] Vertices = Array.Empty<Vector2>();
@@ -61,18 +64,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// <summary>
         /// The radius of this polygon.
         /// </summary>
-        [DataField("radius"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [DataField, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
 
         public bool Set(List<Vector2> vertices)
         {
-            Span<Vector2> verts = stackalloc Vector2[vertices.Count];
-
-            for (var i = 0; i < vertices.Count; i++)
-            {
-                verts[i] = vertices[i];
-            }
-
+            var verts = CollectionsMarshal.AsSpan(vertices);
             return Set(verts, vertices.Count);
         }
 
@@ -80,7 +77,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             DebugTools.Assert(count is >= 3 and <= PhysicsConstants.MaxPolygonVertices);
 
-            var hull = PhysicsHull.ComputeHull(vertices, count);
+            var hull = InternalPhysicsHull.ComputeHull(vertices, count);
 
             if (hull.Count < 3)
             {
@@ -91,7 +88,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return true;
         }
 
-        public void Set(PhysicsHull hull)
+        internal void Set(InternalPhysicsHull hull)
         {
             DebugTools.Assert(hull.Count >= 3);
             var vertexCount = hull.Count;
@@ -123,14 +120,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
             if (count is < 3 or > PhysicsConstants.MaxPolygonVertices)
                 return false;
 
-            var hull = new PhysicsHull();
+            var hull = new InternalPhysicsHull();
             for (var i = 0; i < count; i++)
             {
                 hull.Points[i] = Vertices[i];
             }
 
             hull.Count = count;
-            return PhysicsHull.ValidateHull(hull);
+            return InternalPhysicsHull.ValidateHull(hull);
         }
 
         private static Vector2 ComputeCentroid(Vector2[] vs, int count)
@@ -177,6 +174,28 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
         }
 
+        internal PolygonShape(SlimPolygon poly)
+        {
+            Vertices = new Vector2[poly.VertexCount];
+            Normals = new Vector2[poly.VertexCount];
+
+            poly._vertices.AsSpan[..VertexCount].CopyTo(Vertices);
+            poly._normals.AsSpan[..VertexCount].CopyTo(Normals);
+
+            Centroid = poly.Centroid;
+        }
+
+        internal PolygonShape(Polygon poly)
+        {
+            Vertices = new Vector2[poly.VertexCount];
+            Normals = new Vector2[poly.VertexCount];
+
+            poly._vertices.AsSpan[..VertexCount].CopyTo(Vertices);
+            poly._normals.AsSpan[..VertexCount].CopyTo(Normals);
+
+            Centroid = poly.Centroid;
+        }
+
         public PolygonShape(float radius)
         {
             Radius = radius;
@@ -188,17 +207,13 @@ namespace Robust.Shared.Physics.Collision.Shapes
             Set(Vertices.AsSpan(), VertexCount);
         }
 
-        public bool Set(Box2Rotated bounds)
+        public void Set(Box2Rotated bounds)
         {
-            Span<Vector2> vertices = stackalloc Vector2[]
-            {
-                bounds.BottomLeft,
-                bounds.BottomRight,
-                bounds.TopRight,
-                bounds.TopLeft,
-            };
+            Span<Vector2> verts = stackalloc Vector2[4];
+            bounds.GetCorners(out verts[0], out verts[1], out verts[2], out verts[3]);
 
-            return Set(vertices, 4);
+            var hull = new InternalPhysicsHull(verts, 4);
+            Set(hull);
         }
 
         public void SetAsBox(Box2 box)

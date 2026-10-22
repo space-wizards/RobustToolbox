@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects
         public readonly ComponentEventArgs BaseArgs;
         public readonly ComponentRegistration ComponentType;
 
-        public AddedComponentEventArgs(ComponentEventArgs baseArgs, ComponentRegistration componentType)
+        internal AddedComponentEventArgs(ComponentEventArgs baseArgs, ComponentRegistration componentType)
         {
             BaseArgs = baseArgs;
             ComponentType = componentType;
@@ -48,11 +48,14 @@ namespace Robust.Shared.GameObjects
 
         public readonly MetaDataComponent Meta;
 
-        public RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating, MetaDataComponent meta)
+        public readonly CompIdx Idx;
+
+        internal RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating, MetaDataComponent meta, CompIdx idx)
         {
             BaseArgs = baseArgs;
             Terminating = terminating;
             Meta = meta;
+            Idx = idx;
         }
     }
 }

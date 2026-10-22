@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
@@ -7,7 +10,7 @@ namespace Robust.Shared.Toolshed;
 ///     Used to mark a class so that <see cref="ToolshedManager"/> automatically discovers and registers it.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[MeansImplicitUse]
+[MeansImplicitUse(ImplicitUseTargetFlags.WithMembers)]
 public sealed class ToolshedCommandAttribute : Attribute
 {
     public string? Name = null;
@@ -29,22 +32,62 @@ public sealed class CommandImplementationAttribute :  Attribute
 }
 
 /// <summary>
+///     Provides a default description for this function in a <see cref="ToolshedCommand"/>.
+///     If localized, the localized string will take priority over the one in this attribute.
+///     To localize it, use command-description-yourcommandname in an .ftl file.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class CommandDescriptionAttribute(string description) : Attribute
+{
+    public readonly string Description = description;
+}
+
+/// <summary>
+///     Provides a default help string for this function in a <see cref="ToolshedCommand"/>.
+///     If localized, the localized string will take priority over the one in this attribute.
+///     To localize it, use command-help-yourcommandname in an .ftl file.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class CommandHelpAttribute(string help) : Attribute
+{
+    public readonly string Help = help;
+}
+
+/// <summary>
 ///     Marks an argument in a function in a <see cref="ToolshedCommand"/> as being the "piped" argument, the return value of the prior command in the chain.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
 [MeansImplicitUse]
-public sealed class PipedArgumentAttribute : Attribute
-{
-}
+public sealed class PipedArgumentAttribute : Attribute;
 
 /// <summary>
-///     Marks an argument in a function as being an argument of a <see cref="ToolshedCommand"/>.
-///     This will make it so the argument will get parsed.
+/// Marks an argument in a function as being an argument of a <see cref="ToolshedCommand"/>. Unless a custom parser is
+/// specified, the default parser for the argument's type will be used. This attribute is implicitly present if a
+/// parameter has no other relevant attributes and the parameter type is not <see cref="IInvocationContext"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
 [MeansImplicitUse]
 public sealed class CommandArgumentAttribute : Attribute
 {
+    public CommandArgumentAttribute(Type? customParser = null, bool unparseable = false)
+    {
+        Unparseable = unparseable;
+        if (customParser == null)
+            return;
+
+        CustomParser = customParser;
+        DebugTools.Assert(customParser.IsCustomParser(),
+            $"Custom parser {customParser.PrettyName()} does not inherit from {typeof(CustomTypeParser<>).PrettyName()}");
+    }
+
+    /// <summary>
+    /// Command initialization will validate that all of a command's arguments are parseable (i.e., have a type parser).
+    /// In some niche situations you might want to have a command that accepts unparseable arguments that must be
+    /// supplied via a toolshed variable or command block, in which case the check can be disabled via this property.
+    /// </summary>
+    public bool Unparseable { get; }
+
+    public Type? CustomParser { get; }
 }
 
 /// <summary>
@@ -52,39 +95,34 @@ public sealed class CommandArgumentAttribute : Attribute
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
 [MeansImplicitUse]
-public sealed class CommandInvertedAttribute : Attribute
-{
-}
+public sealed class CommandInvertedAttribute : Attribute;
 
 /// <summary>
-///     Marks an argument in a function as being where the invocation context should be provided in a <see cref="ToolshedCommand"/>.
+/// Marks an argument in a function as being where the invocation context should be provided in a
+/// <see cref="ToolshedCommand"/>. This attribute is implicitly present if one of the arguments is of type
+/// <see cref="IInvocationContext"/> and has no other relevant attributes.
 /// </summary>
 /// <seealso cref="IInvocationContext"/>
 [AttributeUsage(AttributeTargets.Parameter)]
 [MeansImplicitUse]
-public sealed class CommandInvocationContextAttribute : Attribute
-{
-}
+public sealed class CommandInvocationContextAttribute : Attribute;
 
 /// <summary>
-///     Marks a command implementation as taking the type of the previous command in sequence as a generic argument.
+///     Marks a command implementation as taking the type of the previous command in sequence as a generic argument. Supports only one generic type.
 /// </summary>
 /// <remarks>
-///     If the argument marked with <see cref="PipedArgumentAttribute"/> is not <c>T</c> but instead a pattern like <c>IEnumerable&lt;T&gt;</c>, Toolshed will account for this.
+///     If the argument marked with <see cref="PipedArgumentAttribute"/> is not <c>T</c> but instead a pattern like <c>IEnumerable&lt;T&gt;</c>,
+///     Toolshed will account for this by using <see cref="ReflectionExtensions.IntersectWithGeneric"/>. It's not very precise.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class TakesPipedTypeAsGenericAttribute : Attribute
-{
-}
+public sealed class TakesPipedTypeAsGenericAttribute : Attribute;
 
-// Internal because this is just a hack at the moment and should be replaced with proper inference later!
-// Overrides type argument parsing to parse a block and then use it's return type as the sole type argument.
-internal sealed class MapLikeCommandAttribute : Attribute
+/// <summary>
+/// Sets the min/max length for a <see cref="List{T}"/> in a bit cleaner of a way than the existing attributes for doing so.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+public sealed class ListLengthAttribute : Attribute
 {
-    public bool TakesPipedType;
-
-    public MapLikeCommandAttribute(bool takesPipedType = true)
-    {
-        TakesPipedType = takesPipedType;
-    }
+    public int MinLength { get; init; }
+    public int MaxLength { get; init; } = -1; // -1 = no max length
 }

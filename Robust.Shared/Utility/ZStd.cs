@@ -53,18 +53,26 @@ public static class ZStd
 
     private static IntPtr ResolveZstd(string name, Assembly assembly, DllImportSearchPath? path)
     {
-        if (name == "zstd" && OperatingSystem.IsLinux())
+        if (name == "zstd")
         {
-            // Try zstd.so we ship ourselves.
-            if (NativeLibrary.TryLoad("zstd.so", typeof(Zstd).Assembly, null, out var handle))
-                return handle;
+            if (OperatingSystem.IsLinux())
+            {
+                // Try zstd.so we ship ourselves.
+                if (NativeLibrary.TryLoad("zstd.so", assembly, path, out var handle))
+                    return handle;
 
-            // Try some extra paths from the system too worst case.
-            if (NativeLibrary.TryLoad("libzstd.so.1", out handle))
-                return handle;
+                // Try some extra paths from the system too worst case.
+                if (NativeLibrary.TryLoad("libzstd.so.1", assembly, path, out handle))
+                    return handle;
 
-            if (NativeLibrary.TryLoad("libzstd.so", out handle))
-                return handle;
+                if (NativeLibrary.TryLoad("libzstd.so", assembly, path, out handle))
+                    return handle;
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                if (NativeLibrary.TryLoad("libzstd.1.dylib", assembly, path, out var handle))
+                    return handle;
+            }
         }
 
         return IntPtr.Zero;
@@ -271,30 +279,34 @@ public sealed class ZStdDecompressStream : Stream
                     return 0;
             }
 
-            unsafe
-            {
-                fixed (byte* inputPtr = _buffer)
-                fixed (byte* outputPtr = buffer.Span)
-                {
-                    ZSTD_outBuffer outputBuf = default;
-                    outputBuf.dst = outputPtr;
-                    outputBuf.pos = 0;
-                    outputBuf.size = (nuint)buffer.Length;
-                    ZSTD_inBuffer inputBuf = default;
-                    inputBuf.src = inputPtr;
-                    inputBuf.pos = (nuint)_bufferPos;
-                    inputBuf.size = (nuint)_bufferSize;
+            var ret = DecompressChunk(this, buffer.Span);
+            if (ret > 0)
+                return (int)ret;
 
-                    var ret = ZSTD_decompressStream(_ctx, &outputBuf, &inputBuf);
-
-                    _bufferPos = (int)inputBuf.pos;
-                    ZStdException.ThrowIfError(ret);
-
-                    if (outputBuf.pos > 0)
-                        return (int)outputBuf.pos;
-                }
-            }
         } while (true);
+
+        static unsafe nuint DecompressChunk(ZStdDecompressStream stream, Span<byte> buffer)
+        {
+            fixed (byte* inputPtr = stream._buffer)
+            fixed (byte* outputPtr = buffer)
+            {
+                ZSTD_outBuffer outputBuf = default;
+                outputBuf.dst = outputPtr;
+                outputBuf.pos = 0;
+                outputBuf.size = (nuint)buffer.Length;
+                ZSTD_inBuffer inputBuf = default;
+                inputBuf.src = inputPtr;
+                inputBuf.pos = (nuint)stream._bufferPos;
+                inputBuf.size = (nuint)stream._bufferSize;
+
+                var ret = ZSTD_decompressStream(stream._ctx, &outputBuf, &inputBuf);
+
+                stream._bufferPos = (int)inputBuf.pos;
+                ZStdException.ThrowIfError(ret);
+
+                return outputBuf.pos;
+            }
+        }
     }
 
     public override long Seek(long offset, SeekOrigin origin)

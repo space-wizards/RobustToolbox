@@ -15,9 +15,11 @@ public sealed class DefinitionFixer : CodeFixProvider
 {
     private const string DataFieldAttributeName = "DataField";
 
+    private const string ViewVariablesAttributeName = "ViewVariables";
+
     public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
-        IdDataDefinitionPartial, IdNestedDataDefinitionPartial, IdDataFieldWritable, IdDataFieldPropertyWritable,
-        IdDataFieldRedundantTag
+        IdDataDefinitionPartial, IdNestedDataDefinitionPartial, IdDataFieldPropertyWritable,
+        IdDataFieldRedundantTag, IdDataFieldNoVVReadWrite
     );
 
     public override Task RegisterCodeFixesAsync(CodeFixContext context)
@@ -30,12 +32,12 @@ public sealed class DefinitionFixer : CodeFixProvider
                     return RegisterPartialTypeFix(context, diagnostic);
                 case IdNestedDataDefinitionPartial:
                     return RegisterPartialTypeFix(context, diagnostic);
-                case IdDataFieldWritable:
-                    return RegisterDataFieldFix(context, diagnostic);
                 case IdDataFieldPropertyWritable:
                     return RegisterDataFieldPropertyFix(context, diagnostic);
                 case IdDataFieldRedundantTag:
                     return RegisterRedundantTagFix(context, diagnostic);
+                case IdDataFieldNoVVReadWrite:
+                    return RegisterVVReadWriteFix(context, diagnostic);
             }
         }
 
@@ -136,20 +138,46 @@ public sealed class DefinitionFixer : CodeFixProvider
         return document.WithSyntaxRoot(root);
     }
 
-    private static async Task RegisterDataFieldFix(CodeFixContext context, Diagnostic diagnostic)
+    private static async Task RegisterVVReadWriteFix(CodeFixContext context, Diagnostic diagnostic)
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
         var span = diagnostic.Location.SourceSpan;
-        var field = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<FieldDeclarationSyntax>().FirstOrDefault();
+        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<MemberDeclarationSyntax>().First();
 
-        if (field == null)
+        if (token == null)
             return;
 
         context.RegisterCodeFix(CodeAction.Create(
-            "Make data field writable",
-            c => MakeFieldWritable(context.Document, field, c),
-            "Make data field writable"
+            "Remove ViewVariables attribute",
+            c => RemoveVVAttribute(context.Document, token, c),
+            "Remove ViewVariables attribute"
         ), diagnostic);
+    }
+
+    private static async Task<Document> RemoveVVAttribute(Document document, MemberDeclarationSyntax syntax, CancellationToken cancellation)
+    {
+        var root = (CompilationUnitSyntax?) await document.GetSyntaxRootAsync(cancellation);
+
+        var newLists = new SyntaxList<AttributeListSyntax>();
+        foreach (var attributeList in syntax.AttributeLists)
+        {
+            var attributes = new SeparatedSyntaxList<AttributeSyntax>();
+            foreach (var attribute in attributeList.Attributes)
+            {
+                if (attribute.Name.ToString() != ViewVariablesAttributeName)
+                {
+                    attributes = attributes.Add(attribute);
+                }
+            }
+            // Don't add empty lists []
+            if (attributes.Count > 0)
+                newLists = newLists.Add(attributeList.WithAttributes(attributes));
+        }
+        var newSyntax = syntax.WithAttributeLists(newLists);
+
+        root = root!.ReplaceNode(syntax, newSyntax);
+
+        return document.WithSyntaxRoot(root);
     }
 
     private static async Task RegisterDataFieldPropertyFix(CodeFixContext context, Diagnostic diagnostic)
@@ -166,17 +194,6 @@ public sealed class DefinitionFixer : CodeFixProvider
             c => MakePropertyWritable(context.Document, property, c),
             "Make data field writable"
         ), diagnostic);
-    }
-
-    private static async Task<Document> MakeFieldWritable(Document document, FieldDeclarationSyntax declaration, CancellationToken cancellation)
-    {
-        var root = (CompilationUnitSyntax?) await document.GetSyntaxRootAsync(cancellation);
-        var token = declaration.Modifiers.First(t => t.IsKind(ReadOnlyKeyword));
-        var newDeclaration = declaration.WithModifiers(declaration.Modifiers.Remove(token));
-
-        root = root!.ReplaceNode(declaration, newDeclaration);
-
-        return document.WithSyntaxRoot(root);
     }
 
     private static async Task<Document> MakePropertyWritable(Document document, PropertyDeclarationSyntax declaration, CancellationToken cancellation)

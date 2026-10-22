@@ -16,8 +16,8 @@ internal sealed partial class ProfTree : Control
 {
     public const float TreeLevelMargin = 16;
 
-    [Dependency] private readonly ProfManager _prof = default!;
-    [Dependency] private readonly ProfViewManager _profViewMgr = default!;
+    [Dependency] private ProfManager _prof = default!;
+    [Dependency] private ProfViewManager _profViewMgr = default!;
 
     private ProfViewManager.Snapshot? _snapshot;
     public long Frame;

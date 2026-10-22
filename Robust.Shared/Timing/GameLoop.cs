@@ -33,6 +33,11 @@ namespace Robust.Shared.Timing
         int MaxQueuedTicks { get; set; }
 
         /// <summary>
+        /// Minimum frame time to attain if <see cref="SleepMode"/> is set to <see cref="Timing.SleepMode.Limit"/>.
+        /// </summary>
+        TimeSpan LimitMinFrameTime { get; set; }
+
+        /// <summary>
         ///     The method currently being used to limit the Update rate.
         /// </summary>
         SleepMode SleepMode { get; set; }
@@ -84,6 +89,8 @@ namespace Robust.Shared.Timing
         ///     How many ticks behind the simulation can get before it starts to slow down.
         /// </summary>
         public int MaxQueuedTicks { get; set; } = 5;
+
+        public TimeSpan LimitMinFrameTime { get; set; }
 
         /// <summary>
         ///     If true and the same event causes an event 10 times in a row, the game loop will shut itself down.
@@ -149,6 +156,8 @@ namespace Robust.Shared.Timing
                 var profFrameGcGen1 = GC.CollectionCount(1);
                 var profFrameGcGen2 = GC.CollectionCount(2);
 
+                _timing.StartFrame();
+
                 // maximum number of ticks to queue before the loop slows down.
                 var maxTime = TimeSpan.FromTicks(_timing.TickPeriod.Ticks * MaxQueuedTicks);
 
@@ -174,7 +183,6 @@ namespace Robust.Shared.Timing
                     }
                 }
 
-                _timing.StartFrame();
                 realFrameEvent = new FrameEventArgs((float)_timing.RealFrameTime.TotalSeconds);
                 GameLoopEventSource.Log.InputStart();
 #if EXCEPTION_TOLERANCE
@@ -211,7 +219,7 @@ namespace Robust.Shared.Timing
                         if (_timing.Paused)
                             continue;
 
-                        _timing.TickRemainder = accumulator;
+                        _timing.TickRemainder = accumulator / _timing.TimeScale;
                         countTicksRan += 1;
 
                         // update the simulation
@@ -274,7 +282,7 @@ namespace Robust.Shared.Timing
 
                 // if not paused, save how close to the next tick we are so interpolation works
                 if (!_timing.Paused)
-                    _timing.TickRemainder = accumulator;
+                    _timing.TickRemainder = accumulator / _timing.TimeScale;
 
                 _timing.InSimulation = false;
 
@@ -302,7 +310,7 @@ namespace Robust.Shared.Timing
                 try
 #endif
                 {
-                    using (_prof.Group("Render"))
+                    using (_prof.Frame("Render"))
                     {
                         Render?.Invoke(this, realFrameEvent);
                     }
@@ -317,9 +325,13 @@ namespace Robust.Shared.Timing
                 {
                     using var gc = _prof.Group("GC Overview");
 
-                    _prof.WriteValue("Gen 0 Count", ProfData.Int32(GC.CollectionCount(0) - profFrameGcGen0));
-                    _prof.WriteValue("Gen 1 Count", ProfData.Int32(GC.CollectionCount(1) - profFrameGcGen1));
-                    _prof.WriteValue("Gen 2 Count", ProfData.Int32(GC.CollectionCount(2) - profFrameGcGen2));
+                    var gcGen0 = GC.CollectionCount(0);
+                    var gcGen1 = GC.CollectionCount(1);
+                    var gcGen2 = GC.CollectionCount(2);
+                    _prof.WriteValue("Gen 0 Count", ProfData.Int32(gcGen0 - profFrameGcGen0));
+                    _prof.WriteValue("Gen 1 Count", ProfData.Int32(gcGen1 - profFrameGcGen1));
+                    _prof.WriteValue("Gen 2 Count", ProfData.Int32(gcGen2 - profFrameGcGen2));
+                    _prof.EmitMemoryPlots(gcGen0, gcGen1, gcGen2);
                 }
 
                 _prof.WriteGroupEnd(profFrameGroupStart, "Frame", profFrameSw);
@@ -345,6 +357,21 @@ namespace Robust.Shared.Timing
 
                         if (timeToSleep.Ticks > 0)
                             _precisionSleep.Sleep(timeToSleep);
+
+                        break;
+
+                    case SleepMode.Limit:
+                        var lastFrameOver = _timing.RealFrameTime - LimitMinFrameTime;
+                        if (lastFrameOver.Ticks < 0)
+                            lastFrameOver = TimeSpan.Zero;
+
+                        var curTimeSpent = _timing.RealTime - _timing.FrameStartTime;
+                        var timeRemaining = LimitMinFrameTime - curTimeSpent - lastFrameOver;
+                        if (timeRemaining.Ticks > 0)
+                        {
+                            var sw2 = RStopwatch.StartNew();
+                            _precisionSleep.Sleep(timeRemaining);
+                        }
 
                         break;
                 }
@@ -384,6 +411,11 @@ namespace Robust.Shared.Timing
         ///     have low CPU usage. You should use this on a dedicated server.
         /// </summary>
         Delay = 1,
+
+        /// <summary>
+        /// "FPS Limiter". Sleep to keep the loop frame time at least at <see cref="IGameLoop.LimitMinFrameTime"/>.
+        /// </summary>
+        Limit = 2,
     }
 
     [EventSource(Name = "Robust.GameLoop")]

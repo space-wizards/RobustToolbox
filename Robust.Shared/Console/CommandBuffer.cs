@@ -22,7 +22,7 @@ public sealed class CommandBuffer
         _commandBuffer.AddFirst(command);
     }
 
-    public void Tick(byte tickRate)
+    public void Tick(ushort tickRate)
     {
         _tickrate = tickRate;
 

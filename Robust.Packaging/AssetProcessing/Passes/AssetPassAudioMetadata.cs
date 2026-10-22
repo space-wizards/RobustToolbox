@@ -14,7 +14,7 @@ namespace Robust.Packaging.AssetProcessing.Passes;
 /// </summary>
 public sealed class AssetPassAudioMetadata : AssetPass
 {
-    private readonly List<AudioMetadataPrototype> _audioMetadata = new();
+    private readonly List<(string ID, TimeSpan Length)> _audioMetadata = new();
     private readonly string _metadataPath;
 
     public AssetPassAudioMetadata(string metadataPath = "Prototypes/_audio_metadata.yml")
@@ -32,11 +32,7 @@ public sealed class AssetPassAudioMetadata : AssetPass
 
         lock (_audioMetadata)
         {
-            _audioMetadata.Add(new AudioMetadataPrototype()
-            {
-                ID = "/" + file.Path,
-                Length = metadata.Length,
-            });
+            _audioMetadata.Add(("/" + file.Path, metadata.Length));
         }
 
         return AssetFileAcceptResult.Consumed;

@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Prototypes;
 
@@ -16,11 +17,17 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="ProtoId{T}"/> for a wrapper of other prototype kinds.</remarks>
 [Serializable, NetSerializable]
-public readonly record struct EntProtoId(string Id) : IEquatable<string>, IComparable<EntProtoId>
+public readonly record struct EntProtoId(string Id) : IEquatable<string>, IComparable<EntProtoId>, IAsType<string>,
+    IAsType<ProtoId<EntityPrototype>>
 {
     public static implicit operator string(EntProtoId protoId)
     {
         return protoId.Id;
+    }
+
+    public static implicit operator EntProtoId(EntityPrototype proto)
+    {
+        return new EntProtoId(proto.ID);
     }
 
     public static implicit operator EntProtoId(string id)
@@ -42,6 +49,10 @@ public readonly record struct EntProtoId(string Id) : IEquatable<string>, ICompa
     {
         return string.Compare(Id, other.Id, StringComparison.Ordinal);
     }
+
+    string IAsType<string>.AsType() => Id;
+
+    ProtoId<EntityPrototype> IAsType<ProtoId<EntityPrototype>>.AsType() => new(Id);
 
     public override string ToString() => Id ?? string.Empty;
 }
@@ -86,7 +97,7 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
     {
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
         var proto = prototypes.Index(this);
-        if (!proto.TryGetComponent(out T? comp, compFactory))
+        if (!proto.TryComp(out T? comp, compFactory))
         {
             throw new ArgumentException($"{nameof(EntityPrototype)} {proto.ID} has no {nameof(T)}");
         }
@@ -96,8 +107,9 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
 
     public bool TryGet([NotNullWhen(true)] out T? comp, IPrototypeManager? prototypes, IComponentFactory compFactory)
     {
+        comp = default;
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
-        var proto = prototypes.Index(this);
-        return proto.TryGetComponent(out comp, compFactory);
+        return prototypes.TryIndex(this, out var proto) &&
+               proto.TryComp(out comp, compFactory);
     }
 }

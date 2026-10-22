@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
 
@@ -18,6 +17,9 @@ internal abstract partial class SharedPlayerManager
         states.Clear();
         if (LastStateUpdate < fromTick)
             return;
+
+        // TODO PlayerManager delta states
+        // Track last update tick/time per session, and only send sessions that actually changed.
 
         states.EnsureCapacity(InternalSessions.Count);
         foreach (var player in InternalSessions.Values)

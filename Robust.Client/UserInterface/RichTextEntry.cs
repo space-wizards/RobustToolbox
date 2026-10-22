@@ -13,11 +13,23 @@ namespace Robust.Client.UserInterface
 {
     /// <summary>
     ///     Used by <see cref="OutputPanel"/> and <see cref="RichTextLabel"/> to handle rich text layout.
+    ///     Note that if this text is ever removed or modified without removing the owning control,
+    ///     then <see cref="RemoveControls"/> should be called to ensure that any controls that were added by this
+    ///     entry are also removed.
     /// </summary>
     internal struct RichTextEntry
     {
+        public static readonly Type[] DefaultTags =
+        [
+            typeof(BoldItalicTag),
+            typeof(BoldTag),
+            typeof(BulletTag),
+            typeof(ColorTag),
+            typeof(HeadingTag),
+            typeof(ItalicTag)
+        ];
+
         private readonly Color _defaultColor;
-        private readonly MarkupTagManager _tagManager;
         private readonly Type[]? _tagsAllowed;
 
         public readonly FormattedMessage Message;
@@ -37,31 +49,69 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public ValueList<int> LineBreaks;
 
-        private readonly Dictionary<int, Control> _tagControls = new();
+        public readonly Dictionary<int, Control>? Controls;
 
-        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
+
+        public RichTextEntry(
+            FormattedMessage message,
+            Control parent,
+            MarkupTagManager tagManager,
+            Color? defaultColor = null) : this(message, parent, tagManager, DefaultTags, defaultColor)
+        {
+            // RichTextEntry constructor but with DefaultTags
+        }
+
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             Message = message;
             Height = 0;
             Width = 0;
             LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
-            _tagManager = tagManager;
             _tagsAllowed = tagsAllowed;
+            Controls = GetControls(parent, tagManager);
+        }
 
+        private readonly Dictionary<int, Control>? GetControls(Control parent, MarkupTagManager tagManager)
+        {
+            Dictionary<int, Control>? tagControls = null;
             var nodeIndex = -1;
-            foreach (var node in Message.Nodes)
+
+            foreach (var node in Message)
             {
                 nodeIndex++;
 
                 if (node.Name == null)
                     continue;
 
-                if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
+                if (!tagManager.TryGetMarkupTagHandler(node.Name, _tagsAllowed, out var handler) || !handler.TryCreateControl(node, out var control))
                     continue;
 
+                // Markup tag handler instances are shared across controls. We need to ensure that the hanlder doesn't
+                // store state information and return the same control for each rich text entry.
+                DebugTools.Assert(handler.TryCreateControl(node, out var other) && other != control);
+
                 parent.Children.Add(control);
-                _tagControls.Add(nodeIndex, control);
+                tagControls ??= new Dictionary<int, Control>();
+                tagControls.Add(nodeIndex, control);
+            }
+
+            return tagControls;
+        }
+
+        // TODO RICH TEXT
+        // Somehow ensure that this **has** to be called when removing rich text from some control.
+        /// <summary>
+        /// Remove all owned controls from their parents.
+        /// </summary>
+        public readonly void RemoveControls()
+        {
+            if (Controls == null)
+                return;
+
+            foreach (var ctrl in Controls.Values)
+            {
+                ctrl.Orphan();
             }
         }
 
@@ -72,7 +122,7 @@ namespace Robust.Client.UserInterface
         /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
         /// <param name="lineHeightScale"></param>
-        public void Update(Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
+        public RichTextEntry Update(MarkupTagManager tagManager, Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
         {
             // This method is gonna suck due to complexity.
             // Bear with me here.
@@ -91,10 +141,10 @@ namespace Robust.Client.UserInterface
             // Nodes can change the markup drawing context and return additional text.
             // It's also possible for nodes to return inline controls. They get treated as one large rune.
             var nodeIndex = -1;
-            foreach (var node in Message.Nodes)
+            foreach (var node in Message)
             {
                 nodeIndex++;
-                var text = ProcessNode(node, context);
+                var text = ProcessNode(tagManager, node, context);
 
                 if (!context.Font.TryPeek(out var font))
                     font = defaultFont;
@@ -110,16 +160,13 @@ namespace Robust.Client.UserInterface
                         continue;
 
                     if (ProcessMetric(ref this, metrics, out breakLine))
-                        return;
+                        return this;
                 }
 
-                if (!_tagControls.TryGetValue(nodeIndex, out var control))
+                if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                if (ProcessRune(ref this, new Rune(' '), out breakLine))
-                    continue;
-
-                control.Measure(new Vector2(Width, Height));
+                control.Measure(new Vector2(maxSizeX, Height));
 
                 var desiredSize = control.DesiredPixelSize;
                 var controlMetrics = new CharMetrics(
@@ -129,11 +176,13 @@ namespace Robust.Client.UserInterface
                     desiredSize.Y);
 
                 if (ProcessMetric(ref this, controlMetrics, out breakLine))
-                    return;
+                    return this;
             }
 
             Width = wordWrap.FinalizeText(out breakLine);
             CheckLineBreak(ref this, breakLine);
+
+            return this;
 
             bool ProcessRune(ref RichTextEntry src, Rune rune, out int? outBreakLine)
             {
@@ -165,14 +214,67 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        internal readonly void HideControls()
+        {
+            if (Controls == null)
+                return;
+
+            foreach (var control in Controls.Values)
+            {
+                control.Visible = false;
+            }
+        }
+
         public readonly void Draw(
-            DrawingHandleScreen handle,
+            MarkupTagManager tagManager,
+            DrawingHandleBase handle,
             Font defaultFont,
             UIBox2 drawBox,
             float verticalOffset,
             MarkupDrawingContext context,
             float uiScale,
-            float lineHeightScale = 1)
+            float lineHeightScale = 1,
+            TextOutline? outline = null)
+        {
+            if (outline is { } outlineSettings)
+            {
+                DrawPass(
+                    tagManager,
+                    handle,
+                    defaultFont,
+                    drawBox,
+                    verticalOffset,
+                    context,
+                    uiScale,
+                    lineHeightScale,
+                    outlineSettings,
+                    arrangeControls: false);
+            }
+
+            DrawPass(
+                tagManager,
+                handle,
+                defaultFont,
+                drawBox,
+                verticalOffset,
+                context,
+                uiScale,
+                lineHeightScale,
+                outline: null,
+                arrangeControls: true);
+        }
+
+        private readonly void DrawPass(
+            MarkupTagManager tagManager,
+            DrawingHandleBase handle,
+            Font defaultFont,
+            UIBox2 drawBox,
+            float verticalOffset,
+            MarkupDrawingContext context,
+            float uiScale,
+            float lineHeightScale,
+            TextOutline? outline,
+            bool arrangeControls)
         {
             context.Clear();
             context.Color.Push(_defaultColor);
@@ -182,12 +284,16 @@ namespace Robust.Client.UserInterface
             var lineBreakIndex = 0;
             var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
             var controlYAdvance = 0f;
+            var hasOutline = outline.HasValue;
+            var outlineSettings = outline.GetValueOrDefault();
+
+            var spaceRune = new Rune(' ');
 
             var nodeIndex = -1;
-            foreach (var node in Message.Nodes)
+            foreach (var node in Message)
             {
                 nodeIndex++;
-                var text = ProcessNode(node, context);
+                var text = ProcessNode(tagManager, node, context);
                 if (!context.Color.TryPeek(out var color) || !context.Font.TryPeek(out var font))
                 {
                     color = _defaultColor;
@@ -196,51 +302,76 @@ namespace Robust.Client.UserInterface
 
                 foreach (var rune in text.EnumerateRunes())
                 {
+                    bool skipSpaceBaseline = false;
+
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
                         baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
+
+                        // The baseline calc is kind of messed up, the newline is After the space but the space is being drawn after doing the newline
+                        // Which means if this metric Ends on a space, the next metric will use the wrong baseline when it starts, for some reason ..
+                        if (rune == spaceRune)
+                            skipSpaceBaseline = true;
                     }
 
-                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
-                    baseLine += new Vector2(advance, 0);
+                    var advance = hasOutline
+                        ? font.DrawCharOutline(handle, rune, baseLine, uiScale, outlineSettings)
+                        : font.DrawChar(handle, rune, baseLine, uiScale, color);
+
+                    if (!skipSpaceBaseline)
+                        baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;
                 }
 
-                if (!_tagControls.TryGetValue(nodeIndex, out var control))
+                if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
                 var invertedScale = 1f / uiScale;
+                if (arrangeControls)
+                {
+                    // Controls may have been previously hidden via HideControls due to being "out-of frame".
+                    // If this ever gets replaced with RectClipContents / scissor box testing, this can be removed.
+                    control.Visible = true;
+                    control.Measure(new Vector2(Width, Height));
+                    control.Arrange(UIBox2.FromDimensions(
+                        baseLine.X * invertedScale,
+                        (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale,
+                        control.DesiredSize.X,
+                        control.DesiredSize.Y
+                    ));
+                }
+                else
+                {
+                    // The outline pass still needs the control's advance to place later glyphs correctly.
+                    control.Measure(new Vector2(Width, Height));
+                }
 
-                control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
-                control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);
             }
         }
 
-        private readonly string ProcessNode(MarkupNode node, MarkupDrawingContext context)
+        private readonly string ProcessNode(MarkupTagManager tagManager, MarkupNode node, MarkupDrawingContext context)
         {
             // If a nodes name is null it's a text node.
             if (node.Name == null)
                 return node.Value.StringValue ?? "";
 
             //Skip the node if there is no markup tag for it.
-            if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag))
+            if (!tagManager.TryGetMarkupTagHandler(node.Name, _tagsAllowed, out var tag))
                 return "";
 
             if (!node.Closing)
             {
-                context.Tags.Add(tag);
                 tag.PushDrawContext(node, context);
                 return tag.TextBefore(node);
             }
 
-            context.Tags.Remove(tag);
             tag.PopDrawContext(node, context);
             return tag.TextAfter(node);
         }

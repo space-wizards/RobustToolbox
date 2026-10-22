@@ -1,17 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\MSBuild\Robust.Engine.props" />
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+      <TargetFramework>net10.0</TargetFramework>
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+      <LangVersion>8.0</LangVersion>
+      <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Build.Framework" Version="17.8.3" />
-      <PackageReference Include="Mono.Cecil" Version="0.11.5" />
-      <PackageReference Include="Pidgin" Version="2.5.0" />
+      <PackageReference Include="Microsoft.Build.Framework" Version="18.0.2" />
+      <PackageReference Include="Mono.Cecil" Version="0.11.6" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj" />
+      <ProjectReference Include="..\Robust.Xaml\Robust.Xaml.csproj" />
     </ItemGroup>
 </Project>

@@ -22,18 +22,21 @@ namespace Robust.Shared.Scripting
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [SuppressMessage("ReSharper", "CA1822")]
-    public abstract class ScriptGlobalsShared : IInvocationContext
+    public abstract partial class ScriptGlobalsShared : IInvocationContext
     {
         private const BindingFlags DefaultHelpFlags =
             BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
 
-        [field: Dependency] public IEntityManager ent { get; } = default!;
-        [field: Dependency] public IEntitySystemManager esm { get; } = default!;
-        [field: Dependency] public IPrototypeManager prot { get; } = default!;
-        [field: Dependency] public IMapManager map { get; } = default!;
-        [field: Dependency] public IDependencyCollection dependencies { get; } = default!;
-
-        [field: Dependency] public ToolshedManager shed { get; } = default!;
+        [Dependency] private IEntityManager _ent = null!;
+        public IEntityManager ent => _ent;
+        [Dependency] private IEntitySystemManager _esm = null!;
+        public IEntitySystemManager esm => _esm;
+        [Dependency] private IPrototypeManager _prot = null!;
+        public IPrototypeManager prot => _prot;
+        [Dependency] private IDependencyCollection _dependencies = null!;
+        public IDependencyCollection dependencies => _dependencies;
+        [Dependency] private ToolshedManager _shed = null!;
+        public ToolshedManager shed => _shed;
 
         public ToolshedManager Toolshed => shed;
         public ToolshedEnvironment Environment => shed.DefaultEnvironment;
@@ -87,33 +90,33 @@ namespace Robust.Shared.Scripting
 
         public object? prop(object target, string name)
         {
-            return target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                    !.GetValue(target);
+            var prop = (PropertyInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Property, name);
+            return prop!.GetValue(target);
         }
 
         public void setprop(object target, string name, object? value)
         {
-            target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.SetValue(target, value);
+            var prop = (PropertyInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Property, name);
+            prop!.SetValue(target, value);
         }
 
         public object? fld(object target, string name)
         {
-            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.GetValue(target);
+            var fld = (FieldInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Field, name);
+            return fld!.GetValue(target);
         }
 
         public void setfld(object target, string name, object? value)
         {
-            target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.SetValue(target, value);
+            var fld = (FieldInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Field, name);
+            fld!.SetValue(target, value);
         }
 
         public object? call(object target, string name, params object[] args)
         {
             var t = target.GetType();
             // TODO: overloads
-            var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            var m = (MethodInfo?) ReflectionGetInstanceMember(t, MemberTypes.Method, name);
             return m!.Invoke(target, args);
         }
 
@@ -198,7 +201,7 @@ namespace Robust.Shared.Scripting
             => ent.HasComponent<T>(uid);
 
         public EntityUid Spawn(string? prototype, EntityCoordinates position)
-            => ent.SpawnEntity(prototype, position);
+            => ent.SpawnAttachedTo(prototype, position);
 
         public void Del(EntityUid uid)
             => ent.DeleteEntity(uid);
@@ -206,8 +209,11 @@ namespace Robust.Shared.Scripting
         public void Dirty(EntityUid uid)
             => ent.DirtyEntity(uid);
 
+#pragma warning disable CS0618 // Type or member is obsolete
+        // Remove this helper when component.Owner finally gets removed.
         public void Dirty(Component comp)
             => ent.Dirty(comp.Owner, comp);
+#pragma warning restore CS0618 // Type or member is obsolete
 
         public string Name(EntityUid uid)
             => ent.GetComponent<MetaDataComponent>(uid).EntityName;
@@ -279,10 +285,46 @@ namespace Robust.Shared.Scripting
             return Array.Empty<IConError>();
         }
 
+        public bool HasErrors => false;
+
         public void ClearErrors()
         {
         }
 
-        public Dictionary<string, object?> Variables { get; }  = new();
+        /// <inheritdoc />
+        public object? ReadVar(string name)
+        {
+            return Variables.GetValueOrDefault(name);
+        }
+
+        /// <inheritdoc />
+        public void WriteVar(string name, object? value)
+        {
+            Variables[name] = value;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> GetVars()
+        {
+            return Variables.Keys;
+        }
+
+        public Dictionary<string, object?> Variables { get; } = new();
+
+        private static MemberInfo? ReflectionGetInstanceMember(Type type, MemberTypes memberType, string name)
+        {
+            for (var curType = type; curType != null; curType = curType.BaseType)
+            {
+                var member = curType.GetMember(
+                    name,
+                    memberType,
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (member.Length > 0)
+                    return member[0];
+            }
+
+            return null;
+        }
     }
 }

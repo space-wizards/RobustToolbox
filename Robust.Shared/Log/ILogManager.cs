@@ -6,6 +6,7 @@ namespace Robust.Shared.Log
     ///     Manages logging sawmills.
     /// </summary>
     /// <seealso cref="ISawmill"/>
+    [NotContentImplementable]
     public interface ILogManager
     {
         /// <summary>

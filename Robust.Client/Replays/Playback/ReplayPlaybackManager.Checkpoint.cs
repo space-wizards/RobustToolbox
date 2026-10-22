@@ -17,7 +17,7 @@ internal sealed partial class ReplayPlaybackManager
     /// </summary>
     /// <param name="index">The target tick/index. The actual checkpoint will have an index less than or equal to this.</param>
     /// <param name="flushEntities">Whether to delete all entities</param>
-    public void ResetToNearestCheckpoint(int index, bool flushEntities)
+    public void ResetToNearestCheckpoint(int index, bool flushEntities, CheckpointState? checkpoint = null)
     {
         if (Replay == null)
             throw new Exception("Not currently playing a replay");
@@ -25,7 +25,8 @@ internal sealed partial class ReplayPlaybackManager
         if (flushEntities)
             _entMan.FlushEntities();
 
-        var checkpoint = GetLastCheckpoint(Replay, index);
+        // Look up the desired checkpoint, unless our caller kindly provided one to us.
+        checkpoint ??= GetLastCheckpoint(Replay, index);
 
         _sawmill.Info($"Resetting to checkpoint. From {Replay.CurrentIndex} to {checkpoint.Index}");
         var st = new Stopwatch();
@@ -58,7 +59,7 @@ internal sealed partial class ReplayPlaybackManager
         DebugTools.Assert(replay.ClientSideRecording || checkpoint.Detached.Count == 0);
 
         var nextIndex = checkpoint.Index + 1;
-        var next =  nextIndex < replay.States.Count ? replay.States[nextIndex] : null;
+        var next =  nextIndex < replay.Count ? replay.GetState(nextIndex) : null;
         _gameState.PartialStateReset(checkpoint.FullState, false, false);
         _entMan.EntitySysManager.GetEntitySystem<ClientDirtySystem>().Reset();
         _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().Reset();

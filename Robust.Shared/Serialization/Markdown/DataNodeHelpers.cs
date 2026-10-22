@@ -25,10 +25,7 @@ public static class DataNodeHelpers
 
         foreach (var (k, v) in node)
         {
-            foreach (var child in GetAllNodes(k))
-            {
-                yield return child;
-            }
+            yield return node.GetKeyNode(k);
 
             foreach (var child in GetAllNodes(v))
             {

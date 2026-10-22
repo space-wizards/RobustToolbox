@@ -9,18 +9,17 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class TeleportCommand : LocalizedCommands
+internal sealed partial class TeleportCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
-    [Dependency] private readonly IEntitySystemManager _entitySystem = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     public override string Command => "tp";
     public override bool RequireServerOrSingleplayer => true;
@@ -36,11 +35,10 @@ internal sealed class TeleportCommand : LocalizedCommands
             return;
         }
 
-        var xformSystem = _entitySystem.GetEntitySystem<SharedTransformSystem>();
         var transform = _entityManager.GetComponent<TransformComponent>(entity);
         var position = new Vector2(posX, posY);
 
-        xformSystem.AttachToGridOrMap(entity, transform);
+        _transform.AttachToGridOrMap(entity, transform);
 
         MapId mapId;
         if (args.Length == 3 && int.TryParse(args[2], out var intMapId))
@@ -48,33 +46,47 @@ internal sealed class TeleportCommand : LocalizedCommands
         else
             mapId = transform.MapID;
 
-        if (!_map.MapExists(mapId))
+        if (!_mapSystem.MapExists(mapId))
         {
             shell.WriteError($"Map {mapId} doesn't exist!");
             return;
         }
 
-        if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
+        if (_mapSystem.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
-            var gridPos = xformSystem.GetInvWorldMatrix(gridUid).Transform(position);
+            var gridPos = Vector2.Transform(position, _transform.GetInvWorldMatrix(gridUid));
 
-            xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
+            _transform.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
         }
         else
         {
-            var mapEnt = _map.GetMapEntityIdOrThrow(mapId);
-            xformSystem.SetWorldPosition(transform, position);
-            xformSystem.SetParent(entity, transform, mapEnt);
+            if (_mapSystem.TryGetMap(mapId, out var mapEnt))
+            {
+                _transform.SetWorldPosition((entity, transform), position);
+                _transform.SetParent(entity, transform, mapEnt.Value);
+            }
         }
 
         shell.WriteLine($"Teleported {shell.Player} to {mapId}:{posX},{posY}.");
     }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length switch
+        {
+            1 => CompletionResult.FromHint("<x>"),
+            2 => CompletionResult.FromHint("<y>"),
+            3 => CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entityManager), "[MapId]"),
+            _ => CompletionResult.Empty
+        };
+    }
 }
 
-public sealed class TeleportToCommand : LocalizedCommands
+public sealed partial class TeleportToCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly ISharedPlayerManager _players = default!;
-    [Dependency] private readonly IEntityManager _entities = default!;
+    [Dependency] private ISharedPlayerManager _players = default!;
+    [Dependency] private IEntityManager _entities = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public override string Command => "tpto";
     public override bool RequireServerOrSingleplayer => true;
@@ -89,7 +101,6 @@ public sealed class TeleportToCommand : LocalizedCommands
         if (!TryGetTransformFromUidOrUsername(target, shell, out var targetUid, out _))
             return;
 
-        var transformSystem = _entities.System<SharedTransformSystem>();
         var targetCoords = new EntityCoordinates(targetUid.Value, Vector2.Zero);
 
         if (_entities.TryGetComponent(targetUid, out PhysicsComponent? targetPhysics))
@@ -115,20 +126,21 @@ public sealed class TeleportToCommand : LocalizedCommands
         {
             foreach (var victim in args)
             {
-                if (victim == target)
+                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
                     continue;
 
-                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
+                if (uid == targetUid)
                     continue;
 
                 victims.Add((uid.Value, victimTransform));
             }
         }
 
+        var targetMapCoords = _transform.ToMapCoordinates(targetCoords);
         foreach (var victim in victims)
         {
-            transformSystem.SetCoordinates(victim.Entity, targetCoords);
-            transformSystem.AttachToGridOrMap(victim.Entity, victim.Transform);
+            _transform.SetMapCoordinates(victim.Entity, targetMapCoords);
+            _transform.AttachToGridOrMap(victim.Entity, victim.Transform);
         }
     }
 
@@ -147,7 +159,7 @@ public sealed class TeleportToCommand : LocalizedCommands
             return true;
         }
 
-        if (_players.Sessions.TryFirstOrDefault(x => x.Channel.UserName == str, out var session)
+        if (_players.TryGetSessionByUsername(str, out var session)
             && _entities.TryGetComponent(session.AttachedEntity, out transform))
         {
             victimUid = session.AttachedEntity;
@@ -174,18 +186,14 @@ public sealed class TeleportToCommand : LocalizedCommands
 
         var hint = args.Length == 1 ? "cmd-tpto-destination-hint" : "cmd-tpto-victim-hint";
         hint = Loc.GetString(hint);
-
-        var opts = CompletionResult.FromHintOptions(users, hint);
-        if (last != string.Empty && !NetEntity.TryParse(last, out _))
-            return opts;
-
-        return CompletionResult.FromHintOptions(opts.Options.Concat(CompletionHelper.NetEntities(last, _entities)), hint);
+        return CompletionResult.FromHintOptions(users, hint);
     }
 }
 
-sealed class LocationCommand : LocalizedCommands
+sealed partial class LocationCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
+    [Dependency] private IEntityManager _ent = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public override string Command => "loc";
 
@@ -197,18 +205,19 @@ sealed class LocationCommand : LocalizedCommands
         var pt = _ent.GetComponent<TransformComponent>(entity);
         var pos = pt.Coordinates;
 
-        shell.WriteLine($"MapID:{pos.GetMapId(_ent)} GridUid:{pos.GetGridUid(_ent)} X:{pos.X:N2} Y:{pos.Y:N2}");
+        var mapId = _transform.GetMapId(pos);
+        var gridUid = _transform.GetGrid(pos);
+
+        shell.WriteLine($"MapID:{mapId} GridUid:{gridUid} X:{pos.X:N2} Y:{pos.Y:N2}");
     }
 }
 
-sealed class TpGridCommand : LocalizedCommands
+sealed partial class TpGridCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private IEntityManager _ent = default!;
+    [Dependency] private SharedMapSystem _map = default!;
 
     public override string Command => "tpgrid";
-    public override string Description => Loc.GetString("cmd-tpgrid-desc");
-    public override string Help => Loc.GetString("cmd-tpgrid-help");
     public override bool RequireServerOrSingleplayer => true;
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -251,14 +260,14 @@ sealed class TpGridCommand : LocalizedCommands
             mapId = new MapId(map);
         }
 
-        var id = _map.GetMapEntityId(mapId);
+        var id = _map.GetMap(mapId);
         if (id == EntityUid.Invalid)
         {
             shell.WriteError(Loc.GetString("cmd-parse-failure-mapid", ("arg", mapId.Value)));
             return;
         }
 
-        var pos = new EntityCoordinates(_map.GetMapEntityId(mapId), new Vector2(xPos, yPos));
+        var pos = new EntityCoordinates(id, new Vector2(xPos, yPos));
         _ent.System<SharedTransformSystem>().SetCoordinates(uid.Value, pos);
     }
 

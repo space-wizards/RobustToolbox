@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects;
 
@@ -9,6 +10,7 @@ public partial interface IEntityManager
     /// </summary>
     /// <typeparam name="T">The type of entity system to find.</typeparam>
     /// <returns>The <see cref="IEntitySystem"/> instance matching the specified type.</returns>
+    [Pure]
     T System<T>() where T : IEntitySystem;
 
     /// <summary>
@@ -16,6 +18,7 @@ public partial interface IEntityManager
     /// </summary>
     /// <typeparam name="T">The type of entity system to find.</typeparam>
     /// <returns>The <see cref="IEntitySystem"/> instance matching the specified type, or null.</returns>
+    [Pure]
     T? SystemOrNull<T>() where T : IEntitySystem;
 
     /// <summary>

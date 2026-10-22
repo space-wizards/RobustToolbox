@@ -10,11 +10,11 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Physics
 {
-    internal sealed class GridFixtureSystem : SharedGridFixtureSystem
+    public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
-        [Dependency] private readonly IOverlayManager _overlay = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IOverlayManager _overlay = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private SharedMapSystem _map = default!;
 
         public bool EnableDebug
         {
@@ -28,7 +28,7 @@ namespace Robust.Client.Physics
 
                 if (_enableDebug)
                 {
-                    var overlay = new GridSplitNodeOverlay(_map, this, _transform);
+                    var overlay = new GridSplitNodeOverlay(this, _transform, _map);
                     _overlay.AddOverlay(overlay);
                     RaiseNetworkEvent(new RequestGridNodesMessage());
                 }
@@ -71,15 +71,15 @@ namespace Robust.Client.Physics
         {
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            private readonly IMapManager _mapManager;
             private readonly GridFixtureSystem _system;
             private readonly SharedTransformSystem _transform;
+            private readonly SharedMapSystem _map;
 
-            public GridSplitNodeOverlay(IMapManager mapManager, GridFixtureSystem system, SharedTransformSystem transform)
+            public GridSplitNodeOverlay(GridFixtureSystem system, SharedTransformSystem transform, SharedMapSystem map)
             {
-                _mapManager = mapManager;
                 _system = system;
                 _transform = transform;
+                _map = map;
             }
 
             protected internal override void Draw(in OverlayDrawArgs args)
@@ -88,8 +88,8 @@ namespace Robust.Client.Physics
 
                 var state = (_system, _transform, args.WorldBounds, worldHandle);
 
-                _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
-                    static (EntityUid uid, MapGridComponent grid,
+                _map.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
+                    (EntityUid uid, MapGridComponent grid,
                         ref (GridFixtureSystem system, SharedTransformSystem transform, Box2Rotated worldBounds, DrawingHandleWorld worldHandle) tuple) =>
                     {
                         // May not have received nodes yet.
@@ -97,7 +97,7 @@ namespace Robust.Client.Physics
                             return true;
 
                         tuple.worldHandle.SetTransform(tuple.transform.GetWorldMatrix(uid));
-                        var chunkEnumerator = grid.GetMapChunks(tuple.worldBounds);
+                        var chunkEnumerator = _map.GetMapChunks(uid, grid, tuple.worldBounds);
 
                         while (chunkEnumerator.MoveNext(out var chunk))
                         {
@@ -129,17 +129,15 @@ namespace Robust.Client.Physics
                             // Add an offset to yIndex so we at least have some colour that isn't grey at 0,0
                             var actualIndex = chunk.Indices.X * 20 + (chunk.Indices.Y + 20) * 35 + index * 50;
 
-                            var red = (byte) (actualIndex % 255);
-                            var green = (byte) (actualIndex * 20 % 255);
-                            var blue = (byte) (actualIndex * 30 % 255);
+                            var red = (byte)(actualIndex % 255);
+                            var green = (byte)(actualIndex * 20 % 255);
+                            var blue = (byte)(actualIndex * 30 % 255);
 
                             return new Color(red, green, blue, 85);
                         }
 
                         return true;
                     }, true);
-
-                worldHandle.SetTransform(Matrix3.Identity);
             }
         }
     }

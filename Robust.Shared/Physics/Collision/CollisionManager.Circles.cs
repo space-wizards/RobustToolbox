@@ -27,7 +27,7 @@ internal sealed partial class CollisionManager
         manifold.LocalNormal = Vector2.Zero;
         manifold.PointCount = 1;
 
-        ref var p0 = ref manifold.Points[0];
+        ref var p0 = ref manifold.Points._00;
 
         p0.LocalPoint = Vector2.Zero; // Also here
         p0.Id.Key = 0;

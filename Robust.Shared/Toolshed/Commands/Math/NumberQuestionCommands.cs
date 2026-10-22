@@ -102,7 +102,7 @@ public sealed class IsImaginaryCommand : ToolshedCommand
 
     // everyone on the internet is imaginary except you.
     [CommandImplementation]
-    public bool Operation([CommandInvocationContext] IInvocationContext ctx, [PipedArgument] ICommonSession x)
+    public bool Operation(IInvocationContext ctx, [PipedArgument] ICommonSession x)
     {
         return ctx.Session != x;
     }
@@ -205,7 +205,7 @@ public sealed class IsRealCommand : ToolshedCommand
 
     // nobody on the internet is real except you.
     [CommandImplementation]
-    public bool Operation([CommandInvocationContext] IInvocationContext ctx, [PipedArgument] ICommonSession x)
+    public bool Operation(IInvocationContext ctx, [PipedArgument] ICommonSession x)
     {
         return ctx.Session == x;
     }

@@ -21,6 +21,10 @@ namespace Robust.Shared.GameStates
         [ViewVariables]
         public SessionStatus Status { get; set; }
 
+        // TODO PlayerManager
+        // Network ping information, though probably do it outside of SessionState to avoid re-sending the name and such
+        // for all players every few seconds.
+        [Obsolete("Ping data is not currently networked")]
         [ViewVariables]
         public short Ping { get; set; }
 
@@ -34,7 +38,6 @@ namespace Robust.Shared.GameStates
                 UserId = UserId,
                 Name = Name,
                 Status = Status,
-                Ping = Ping,
                 ControlledEntity = ControlledEntity
             };
         }

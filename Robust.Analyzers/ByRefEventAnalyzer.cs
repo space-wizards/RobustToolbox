@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -24,7 +24,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         "Make sure that methods subscribing to a ref event have the ref keyword for the event argument."
     );
 
-    private static readonly DiagnosticDescriptor ByRefEventRaisedByValueRule = new(
+    public static readonly DiagnosticDescriptor ByRefEventRaisedByValueRule = new(
         Diagnostics.IdByRefEventRaisedByValue,
         "By-ref event raised by value",
         "Tried to raise a by-ref event '{0}' by value",
@@ -34,7 +34,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         "Make sure to use the ref keyword when raising ref events."
     );
 
-    private static readonly DiagnosticDescriptor ByValueEventRaisedByRefRule = new(
+    public static readonly DiagnosticDescriptor ByValueEventRaisedByRefRule = new(
         Diagnostics.IdValueEventRaisedByRef,
         "Value event raised by-ref",
         "Tried to raise a value event '{0}' by-ref",
@@ -54,31 +54,48 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(CheckEventRaise, OperationKind.Invocation);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var byRefAttribute = compilationContext.Compilation.GetTypeByMetadataName(ByRefAttribute);
+            if (byRefAttribute == null)
+                return;
+
+            var raiseMethods = compilationContext.Compilation
+                .GetTypeByMetadataName("Robust.Shared.GameObjects.EntitySystem")?
+                .GetMembers()
+                .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
+                .Cast<IMethodSymbol>();
+
+            var busRaiseMethods = compilationContext.Compilation
+                .GetTypeByMetadataName("Robust.Shared.GameObjects.EntityEventBus")?
+                .GetMembers()
+                .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
+                .Cast<IMethodSymbol>();
+
+            if (raiseMethods == null)
+                return;
+
+            if (busRaiseMethods != null)
+                raiseMethods = raiseMethods.Concat(busRaiseMethods);
+
+            var raiseMethodsArray = raiseMethods.ToArray();
+
+            compilationContext.RegisterOperationAction(
+                ctx => CheckEventRaise(ctx, raiseMethodsArray, byRefAttribute),
+                OperationKind.Invocation);
+        });
     }
 
-    private void CheckEventRaise(OperationAnalysisContext context)
+    private static void CheckEventRaise(
+        OperationAnalysisContext context,
+        IReadOnlyCollection<IMethodSymbol> raiseMethods,
+        INamedTypeSymbol byRefAttribute)
     {
         if (context.Operation is not IInvocationOperation operation)
             return;
 
-        var raiseMethods = context.Compilation
-            .GetTypeByMetadataName("Robust.Shared.GameObjects.EntitySystem")?
-            .GetMembers()
-            .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
-            .Cast<IMethodSymbol>();
-
-        var busRaiseMethods = context.Compilation
-            .GetTypeByMetadataName("Robust.Shared.GameObjects.EntityEventBus")?
-            .GetMembers()
-            .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
-            .Cast<IMethodSymbol>();
-
-        if (raiseMethods == null)
+        if (!operation.TargetMethod.Name.Contains("RaiseLocalEvent"))
             return;
-
-        if (busRaiseMethods != null)
-            raiseMethods = raiseMethods.Concat(busRaiseMethods);
 
         if (!raiseMethods.Any(m => m.Equals(operation.TargetMethod.OriginalDefinition, Default)))
         {
@@ -113,10 +130,6 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         {
             return;
         }
-
-        var byRefAttribute = context.Compilation.GetTypeByMetadataName(ByRefAttribute);
-        if (byRefAttribute == null)
-            return;
 
         var isByRefEventType = eventParameter.Type
             .GetAttributes()

@@ -17,10 +17,25 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 [TypeSerializer]
 public sealed class ProtoIdSerializer<T> : ITypeSerializer<ProtoId<T>, ValueDataNode>, ITypeCopyCreator<ProtoId<T>> where T : class, IPrototype
 {
+    // TODO: use Dependency when this is made non-static
+    private static IPrototypeManager? _proto;
+
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        var prototypes = dependencies.Resolve<IPrototypeManager>();
-        if (prototypes.HasMapping<T>(node.Value))
+        return Validate(dependencies, node);
+    }
+
+    // TODO: kill all PrototypeIdSerializers then make this a regular method
+    public static ValidationNode Validate(IDependencyCollection deps, ValueDataNode node)
+    {
+        var proto = deps.Resolve<IPrototypeManager>();
+        if (!proto.TryGetKindFrom<T>(out var kind))
+            return new ErrorNode(node, $"Unknown prototype kind: {typeof(T)}");
+
+        if (proto.IsIgnored(kind))
+            return new ErrorNode(node,$"Attempting to validate an ignored prototype: {typeof(T)}.\nDid you forget to remove the IPrototypeManager.RegisterIgnore(\"{kind}\") call when moving a prototype to Shared?");
+
+        if (proto.HasMapping<T>(node.Value))
             return new ValidatedValueNode(node);
 
         return new ErrorNode(node, $"No {typeof(T)} found with id {node.Value}");

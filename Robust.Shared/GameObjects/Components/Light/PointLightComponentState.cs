@@ -14,6 +14,10 @@ public sealed class PointLightComponentState : ComponentState
 
     public float Softness;
 
+    public float Falloff;
+
+    public float CurveFactor;
+
     public bool CastShadows;
 
     public bool Enabled;
@@ -21,4 +25,6 @@ public sealed class PointLightComponentState : ComponentState
     public float Radius;
 
     public Vector2 Offset;
+
+    public bool ContainerOccluded;
 }

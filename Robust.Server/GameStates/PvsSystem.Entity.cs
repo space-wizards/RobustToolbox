@@ -11,6 +11,9 @@ internal sealed partial class PvsSystem
 {
     private void OnEntityMove(ref MoveEvent ev)
     {
+        if (ev.OnlyRotation)
+            return;
+
         UpdatePosition(ev.Entity.Owner, ev.Entity.Comp1, ev.Entity.Comp2, ev.OldPosition.EntityId);
     }
 
@@ -107,7 +110,7 @@ internal sealed partial class PvsSystem
 
     internal void SyncMetadata(MetaDataComponent meta)
     {
-        if (meta.PvsData == default)
+        if (meta.PvsData == PvsIndex.Invalid)
             return;
 
         ref var ptr = ref _metadataMemory.GetRef(meta.PvsData.Index);

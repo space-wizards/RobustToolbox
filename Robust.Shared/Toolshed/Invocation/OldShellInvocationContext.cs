@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -9,10 +10,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Invocation;
 
 /// <inheritdoc />
-internal sealed class OldShellInvocationContext : IInvocationContext
+internal sealed partial class OldShellInvocationContext : IInvocationContext
 {
-    [field: Dependency]
-    public ToolshedManager Toolshed { get; } = default!;
+    [Dependency]
+    private ToolshedManager _toolshed = null!;
+    public ToolshedManager Toolshed => _toolshed;
 
     public ToolshedEnvironment Environment => Toolshed.DefaultEnvironment;
 
@@ -23,18 +25,18 @@ internal sealed class OldShellInvocationContext : IInvocationContext
     /// </summary>
     public IConsoleShell? Shell;
 
+    /// <inheritdoc />
+    public NetUserId? User { get; }
+
+    /// <inheritdoc />
+    public ICommonSession? Session => Shell?.Player;
+
     public OldShellInvocationContext(IConsoleShell shell)
     {
         IoCManager.InjectDependencies(this);
         Shell = shell;
         User = Session?.UserId;
     }
-
-    /// <inheritdoc />
-    public NetUserId? User { get; }
-
-    /// <inheritdoc />
-    public ICommonSession? Session => Shell?.Player;
 
     /// <inheritdoc />
     public void WriteLine(string line)
@@ -60,6 +62,8 @@ internal sealed class OldShellInvocationContext : IInvocationContext
         return _errors;
     }
 
+    public bool HasErrors => _errors.Count > 0;
+
     /// <inheritdoc />
     public void ClearErrors()
     {
@@ -67,6 +71,33 @@ internal sealed class OldShellInvocationContext : IInvocationContext
     }
 
     /// <inheritdoc />
+    public object? ReadVar(string name)
+    {
+        if (name == "self" && Session?.AttachedEntity is { } ent)
+            return ent;
+        return Variables.GetValueOrDefault(name);
+    }
+
+    /// <inheritdoc />
+    public void WriteVar(string name, object? value)
+    {
+        if (name == "self")
+            ReportError(new ReadonlyVariableError("self"));
+        else
+            Variables[name] = value;
+    }
+
+    /// <inheritdoc />
+    public bool IsReadonlyVar(string name) => name == "self";
+
+    /// <inheritdoc />
+    public IEnumerable<string> GetVars()
+    {
+        return Session?.AttachedEntity != null
+            ? Variables.Keys.Append("self")
+            : Variables.Keys;
+    }
+
     public Dictionary<string, object?> Variables { get; } = new();
 }
 

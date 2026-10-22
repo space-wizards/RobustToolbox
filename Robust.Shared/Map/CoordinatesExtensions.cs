@@ -8,11 +8,12 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
-        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
+        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null)
         {
-            IoCManager.Resolve(ref entityManager, ref mapManager);
+            IoCManager.Resolve(ref entityManager);
 
-            var gridId = coords.GetGridUid(entityManager);
+            var xform = entityManager.System<SharedTransformSystem>();
+            var gridId = xform.GetGrid(coords);
             var mapSystem = entityManager.System<SharedMapSystem>();
 
             if (entityManager.TryGetComponent<MapGridComponent>(gridId, out var mapGrid))
@@ -20,10 +21,9 @@ namespace Robust.Shared.Map
                 return mapSystem.GridTileToLocal(gridId.Value, mapGrid, mapSystem.CoordinatesToTile(gridId.Value, mapGrid, coords));
             }
 
-            var transformSystem = entityManager.System<SharedTransformSystem>();
-            var mapCoords = coords.ToMap(entityManager, transformSystem);
+            var mapCoords = xform.ToMapCoordinates(coords);
 
-            if (mapManager.TryFindGridAt(mapCoords, out var gridUid, out mapGrid))
+            if (mapSystem.TryFindGridAt(mapCoords, out var gridUid, out mapGrid))
             {
                 return mapSystem.GridTileToLocal(gridUid, mapGrid, mapSystem.CoordinatesToTile(gridUid, mapGrid, coords));
             }
@@ -34,7 +34,7 @@ namespace Robust.Shared.Map
             // find grids in search box
             var gridsInArea = new List<Entity<MapGridComponent>>();
 
-            mapManager.FindGridsIntersecting(mapCoords.MapId, gridSearchBox, ref gridsInArea);
+            mapSystem.FindGridsIntersecting(mapCoords.MapId, gridSearchBox, ref gridsInArea);
 
             // find closest grid intersecting our search box.
             gridUid = EntityUid.Invalid;
@@ -49,7 +49,8 @@ namespace Robust.Shared.Map
                 // TODO: Use CollisionManager to get nearest edge.
 
                 // figure out closest intersect
-                var gridIntersect = gridSearchBox.Intersect(gridXform.WorldMatrix.TransformBox(grid.Comp.LocalAABB));
+                var worldMatrix = xform.GetWorldMatrix(gridXform);
+                var gridIntersect = gridSearchBox.Intersect(worldMatrix.TransformBox(grid.Comp.LocalAABB));
                 var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared();
 
                 if (gridDist >= distance)

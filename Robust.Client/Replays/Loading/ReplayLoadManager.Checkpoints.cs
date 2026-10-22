@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Channels;
 using NetSerializer;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Threading.Tasks;
+using System.Threading.Channels;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Replays;
@@ -21,19 +21,39 @@ namespace Robust.Client.Replays.Loading;
 // so that when jumping to tick 1001 the client only has to apply states for tick 1000 and 1001, instead of 0, 1, 2, ...
 public sealed partial class ReplayLoadManager
 {
-    public struct ReplayTickData(int stateId, GameState state, ReplayMessage messages, int progress, int maxProgress)
+    private readonly record struct ReplayTickData(
+        int StateId, GameState State, ReplayMessage Messages, int Progress, int MaxProgress);
+
+    // Scratch data used by UpdateEntityStates.
+    // Avoids copying changes for every change to an entity between checkpoints, instead copies once per checkpoint on
+    // first change. We can also use this to avoid building a dictionary of ComponentChange inside the inner loop.
+    private sealed class UpdateScratchData
     {
-        public readonly int StateId = stateId;
-        public readonly GameState State = state;
-        public readonly ReplayMessage Messages = messages;
-        public readonly int Progress = progress;
-        public readonly int MaxProgress = maxProgress;
+        public Dictionary<ushort, ComponentChange> Changes;
+        public EntityState lastChange;
+        public HashSet<ushort>? netComps;
+
+        public UpdateScratchData(EntityState oldEntState)
+        {
+            Changes = oldEntState.ComponentChanges.Value.ToDictionary(x => x.NetID);
+            lastChange = oldEntState;
+            netComps = oldEntState.NetComponents;
+        }
+
+        public EntityState BakeChanges()
+        {
+            return new EntityState(lastChange.NetEntity,
+                Changes.Values.ToList(),
+                lastChange.EntityLastModified,
+                netComps);
+        }
     }
 
-    public async Task<(CheckpointState[], TimeSpan[])> GenerateCheckpointsAsync(
+    private async Task<(CheckpointState[], TimeSpan[])> GenerateCheckpointsAsync(
         ReplayMessage? initMessages,
         HashSet<string> initialCvars,
         ChannelReader<ReplayTickData> states,
+        int totalBlocks,
         LoadReplayCallback callback,
         LoadReplayJob? job)
     {
@@ -75,7 +95,20 @@ public sealed partial class ReplayLoadManager
         }
 
         var timeBase = _timing.TimeBase;
-        var checkPoints = new List<CheckpointState>(1 + states.Count / _checkpointInterval);
+        var checkPoints = new List<CheckpointState>();
+
+        ReplayTickData firstData;
+        try
+        {
+            var read = states.ReadAsync();
+            firstData = await (job?.WaitAsyncTask(read) ?? read);
+        }
+        catch (ChannelClosedException e)
+        {
+            throw new Exception("Replay contains no game states", e);
+        }
+        var state0 = firstData.State;
+        var messages0 = firstData.Messages;
 
         // Get all initial prototypes
         var prototypes = new Dictionary<Type, HashSet<string>>();
@@ -94,13 +127,11 @@ public sealed partial class ReplayLoadManager
         var detached = new HashSet<NetEntity>();
         var detachQueue = new Dictionary<GameTick, List<NetEntity>>();
 
-        var firstData = await (job?.WaitAsyncTask(states.ReadAsync()) ?? states.ReadAsync());
-        await callback(firstData.Progress, firstData.MaxProgress, LoadingState.ProcessingFiles, false);
         if (initMessages != null)
             UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
-        UpdateMessages(firstData.Messages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
+        UpdateMessages(messages0, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
 
-        var entSpan = firstData.State.EntityStates.Value;
+        var entSpan = state0.EntityStates.Value;
         Dictionary<NetEntity, EntityState> entStates = new(entSpan.Count);
         foreach (var entState in entSpan)
         {
@@ -110,15 +141,16 @@ public sealed partial class ReplayLoadManager
 
         ProcessQueue(GameTick.MaxValue, detachQueue, detached, entStates);
 
-        var playerSpan = firstData.State.PlayerStates.Value;
+        await callback(0, totalBlocks, LoadingState.ProcessingFiles, true);
+        var playerSpan = state0.PlayerStates.Value;
         Dictionary<NetUserId, SessionState> playerStates = new(playerSpan.Count);
         foreach (var player in playerSpan)
         {
             playerStates.Add(player.UserId, player);
         }
 
-        var state0 = new GameState(GameTick.Zero,
-            firstData.State.ToSequence,
+        state0 = new GameState(GameTick.Zero,
+            state0.ToSequence,
             default,
             entStates.Values.ToArray(),
             playerStates.Values.ToArray(),
@@ -147,39 +179,41 @@ public sealed partial class ReplayLoadManager
         var stats_due_spawned = 0;
         var stats_due_state = 0;
 
-        var lastStateId = 0;
-        while (await (job?.WaitAsyncTask(states.WaitToReadAsync()) ?? states.WaitToReadAsync()))
+        var modifiedEntities = new Dictionary<NetEntity, UpdateScratchData>();
+        var i = 0;
+        while (true)
         {
-            while (states.TryRead(out var state))
-            {
-                if (state.StateId % 10 == 0)
-                    await callback(state.Progress, state.MaxProgress, LoadingState.ProcessingFiles, false);
+            var wait = states.WaitToReadAsync();
+            if (!await (job?.WaitAsyncTask(wait) ?? wait))
+                break;
+            if (!states.TryRead(out var data))
+                continue;
 
-                DebugTools.Assert(state.State.FromSequence <= curState.ToSequence);
-                lastStateId = state.StateId;
-                curState = state.State;
+            i = data.StateId;
+            if (i % 10 == 0)
+                await callback(data.Progress, data.MaxProgress, LoadingState.ProcessingFiles, false);
 
-                UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
-                UpdateEntityStates(curState.EntityStates.Span,
-                    entStates,
-                    ref spawnedTracker,
-                    ref stateTracker,
-                    detached);
-                UpdateMessages(state.Messages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
-                ProcessQueue(curState.ToSequence, detachQueue, detached, entStates);
-                UpdateDeletions(curState.EntityDeletions, entStates, detached);
-                serverTime.Add(GetTime(curState.ToSequence) - initialTime);
-                ticksSinceLastCheckpoint++;
+            var lastState = curState;
+            curState = data.State;
+            DebugTools.Assert(curState.FromSequence <= lastState.ToSequence);
+
+            UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
+            UpdateEntityStates(curState.EntityStates.Span, entStates, modifiedEntities, ref spawnedTracker, ref stateTracker, detached);
+            UpdateMessages(data.Messages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
+            ProcessQueue(curState.ToSequence, detachQueue, detached, entStates);
+            UpdateDeletions(curState.EntityDeletions, entStates, detached, modifiedEntities);
+            serverTime.Add(GetTime(curState.ToSequence) - initialTime);
+            ticksSinceLastCheckpoint++;
 
             // Don't create checkpoints too frequently no matter the circumstance
             if (ticksSinceLastCheckpoint < _checkpointMinInterval)
                 continue;
 
             // Check if enough time, spawned entities or changed states have occurred.
-                if (ticksSinceLastCheckpoint < _checkpointInterval
-                    && spawnedTracker < _checkpointEntitySpawnThreshold
-                    && stateTracker < _checkpointEntityStateThreshold)
-                    continue;
+            if (ticksSinceLastCheckpoint < _checkpointInterval
+                && spawnedTracker < _checkpointEntitySpawnThreshold
+                && stateTracker < _checkpointEntityStateThreshold)
+                continue;
 
             // Track and update statistics about why checkpoints are getting created:
             if (ticksSinceLastCheckpoint >= _checkpointInterval)
@@ -193,24 +227,25 @@ public sealed partial class ReplayLoadManager
             else if (stateTracker >= _checkpointEntityStateThreshold)
             {
                 stats_due_state += 1;
-                }
-
-                ticksSinceLastCheckpoint = 0;
-                spawnedTracker = 0;
-                stateTracker = 0;
-                var newState = new GameState(GameTick.Zero,
-                    curState.ToSequence,
-                    default,
-                    entStates.Values.ToArray(),
-                    playerStates.Values.ToArray(),
-                    empty); // for full states, deletions are implicit by simply not being in the state
-                checkPoints.Add(new CheckpointState(newState, timeBase, cvars, state.StateId, detached));
             }
+
+            ticksSinceLastCheckpoint = 0;
+            spawnedTracker = 0;
+            stateTracker = 0;
+            ApplyModifiedEntities(entStates, modifiedEntities);
+
+            var newState = new GameState(GameTick.Zero,
+                curState.ToSequence,
+                default,
+                entStates.Values.ToArray(),
+                playerStates.Values.ToArray(),
+                empty); // for full states, deletions are implicit by simply not being in the state
+            checkPoints.Add(new CheckpointState(newState, timeBase, cvars, i, detached));
         }
 
-        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)lastStateId / checkPoints.Count} ticks on average");
+        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)serverTime.Count / checkPoints.Count} ticks on average");
         _sawmill.Info($"Checkpoint stats - Spawning: {stats_due_spawned} StateChanges: {stats_due_state} Ticks: {stats_due_ticks}. ");
-        await callback(10000, 10000, LoadingState.ProcessingFiles, false);
+        await callback(totalBlocks, totalBlocks, LoadingState.ProcessingFiles, false);
         return (checkPoints.ToArray(), serverTime.ToArray());
     }
 
@@ -268,10 +303,7 @@ public sealed partial class ReplayLoadManager
                     var path = resUpload.RelativePath.Clean().ToRelativePath();
                     if (uploadedFiles.Add(path) && !_netResMan.FileExists(path))
                     {
-                        _netMan.DispatchLocalNetMessage(new NetworkResourceUploadMessage
-                        {
-                            RelativePath = path, Data = resUpload.Data
-                        });
+                        _netResMan.StoreFile(path, resUpload.Data);
                         message.Messages.RemoveSwap(i);
                         break;
                     }
@@ -341,6 +373,9 @@ public sealed partial class ReplayLoadManager
                 // prototype changes when jumping around in time. This also requires reworking how the initial
                 // implicit state data is generated, because we can't simply cache it anymore.
                 // Also, does reloading prototypes in release mode modify existing entities?
+                // Yes, yes it does. See PrototypeReloadSystem.UpdateEntity()
+                // Its just not supported ATM.
+                // TBH it'd be easier if overriding existing prototypes in release mode was just forbidden.
 
                 var msg = $"Overwriting an existing prototype! Kind: {kind.Name}. Ids: {string.Join(", ", ids)}";
                 if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
@@ -350,22 +385,23 @@ public sealed partial class ReplayLoadManager
             }
         }
 
-        _protoMan.ResolveResults();
         _protoMan.ReloadPrototypes(changed);
         _locMan.ReloadLocalizations();
     }
 
     private void UpdateDeletions(NetListAsArray<NetEntity> entityDeletions,
-        Dictionary<NetEntity, EntityState> entStates, HashSet<NetEntity> detached)
+        Dictionary<NetEntity, EntityState> entStates, HashSet<NetEntity> detached, Dictionary<NetEntity, UpdateScratchData> modifiedEntities)
     {
         foreach (var ent in entityDeletions.Span)
         {
             entStates.Remove(ent);
             detached.Remove(ent);
+            modifiedEntities.Remove(ent);
         }
     }
 
     private void UpdateEntityStates(ReadOnlySpan<EntityState> span, Dictionary<NetEntity, EntityState> entStates,
+        Dictionary<NetEntity, UpdateScratchData> modified,
         ref int spawnedTracker, ref int stateTracker, HashSet<NetEntity> detached)
     {
         foreach (var entState in span)
@@ -380,22 +416,82 @@ public sealed partial class ReplayLoadManager
 #if DEBUG
                 foreach (var state in modifiedState.ComponentChanges.Value)
                 {
-                    DebugTools.Assert(state.State is not IComponentDeltaState delta || delta.FullState);
+                    DebugTools.Assert(state.State is not IComponentDeltaState delta);
                 }
 #endif
                 continue;
             }
 
+            // Get scratch versions (with write access) for entities modified since last checkpoint
+            UpdateScratchData? scratch;
+            if (!modified.TryGetValue(entState.NetEntity, out scratch))
+            {
+                scratch = new UpdateScratchData(oldEntState);
+                modified[entState.NetEntity] = scratch;
+            }
+
             stateTracker++;
             DebugTools.Assert(oldEntState.NetEntity == entState.NetEntity);
-            entStates[entState.NetEntity] = MergeStates(entState, oldEntState.ComponentChanges.Value, oldEntState.NetComponents);
+            // Note this does not change entStates, that change occurs later in ApplyModifiedEntities (to avoid early copies)
+            UpdateScratch(entState, scratch.Changes);
+            if (entState.NetComponents != null)
+                scratch.netComps = entState.NetComponents;
+            scratch.lastChange = entState;
+
 
 #if DEBUG
             foreach (var state in entStates[entState.NetEntity].ComponentChanges.Span)
             {
-                DebugTools.Assert(state.State is not IComponentDeltaState delta || delta.FullState);
+                DebugTools.Assert(state.State is not IComponentDeltaState delta);
             }
 #endif
+        }
+    }
+
+    private void ApplyModifiedEntities(Dictionary<NetEntity, EntityState> entStates, Dictionary<NetEntity, UpdateScratchData> modifiedEntities)
+    {
+        foreach (var modified in modifiedEntities)
+        {
+            entStates[modified.Key] = modified.Value.BakeChanges();
+        }
+
+        modifiedEntities.Clear();
+    }
+
+    private void UpdateScratch(
+        EntityState newState,
+        Dictionary<ushort, ComponentChange> oldState)
+    {
+        // remove any deleted components
+        if (newState.NetComponents != null)
+        {
+            foreach (var change in oldState.Values)
+            {
+                if (!newState.NetComponents.Contains(change.NetID))
+                    oldState.Remove(change.NetID);
+            }
+        }
+
+        foreach (var newCompState in newState.ComponentChanges.Value)
+        {
+            if (!oldState.TryGetValue(newCompState.NetID, out var existing))
+            {
+                // This is a new component
+                // I'm not 100% sure about this, but I think delta states should always be full states here?
+                DebugTools.Assert(newCompState.State is not IComponentDeltaState newDelta);
+                oldState[newCompState.NetID] = newCompState;
+                continue;
+            }
+
+            // Modify or replace existing component
+            if (newCompState.State is not IComponentDeltaState delta)
+            {
+                oldState[newCompState.NetID] = newCompState;
+                continue;
+            }
+
+            DebugTools.Assert(existing.State != null && existing.State is not IComponentDeltaState);
+            oldState[newCompState.NetID] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State!), newCompState.LastModifiedTick);
         }
     }
 
@@ -424,20 +520,20 @@ public sealed partial class ReplayLoadManager
             if (!newCompStates.Remove(existing.NetID, out var newCompState))
                 continue;
 
-            if (newCompState.State is not IComponentDeltaState delta || delta.FullState)
+            if (newCompState.State is not IComponentDeltaState delta)
             {
                 combined[index] = newCompState;
                 continue;
             }
 
-            DebugTools.Assert(existing.State is IComponentDeltaState fullDelta && fullDelta.FullState);
-            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
+            DebugTools.Assert(existing.State != null && existing.State is not IComponentDeltaState);
+            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State!), newCompState.LastModifiedTick);
         }
 
         foreach (var compChange in newCompStates.Values)
         {
             // I'm not 100% sure about this, but I think delta states should always be full states here?
-            DebugTools.Assert(compChange.State is not IComponentDeltaState delta || delta.FullState);
+            DebugTools.Assert(compChange.State is not IComponentDeltaState);
             combined.Add(compChange);
         }
 

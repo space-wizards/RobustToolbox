@@ -103,8 +103,11 @@ namespace Robust.Shared.Physics
         {
             foreach (var proxy in _nodeLookup.Values)
             {
-                _b2Tree.DestroyProxy(proxy);
+                if (proxy != DynamicTree.Proxy.Free)
+                    _b2Tree.DestroyProxy(proxy);
             }
+
+            _nodeLookup.Clear();
         }
 
         public bool Contains(T item)
@@ -139,7 +142,7 @@ namespace Robust.Shared.Physics
                 return true;
             }
 
-            proxy = _b2Tree.CreateProxy(aabb.Value, item);
+            proxy = _b2Tree.CreateProxy(aabb.Value, uint.MaxValue, item);
             _nodeLookup[item] = proxy;
 
             return true;
@@ -199,11 +202,12 @@ namespace Robust.Shared.Physics
 
             if (proxy == DynamicTree.Proxy.Free)
             {
-                proxy = _b2Tree.CreateProxy(newBox.Value, item);
+                proxy = _b2Tree.CreateProxy(newBox.Value, uint.MaxValue, item);
                 return true;
             }
 
-            return _b2Tree.MoveProxy(proxy, newBox.Value, Vector2.Zero);
+            _b2Tree.MoveProxy(proxy, newBox.Value);
+            return true;
         }
 
         public void QueryAabb(QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
@@ -239,23 +243,7 @@ namespace Robust.Shared.Physics
         public void QueryPoint<TState>(ref TState state, QueryCallbackDelegate<TState> callback, Vector2 point, bool approx = false)
         {
             var tuple = (state, _b2Tree, callback, point, approx, _extractAabb);
-            _b2Tree.Query(ref tuple,
-                (ref (TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Vector2 point, bool approx, ExtractAabbDelegate extract) tuple,
-                    DynamicTree.Proxy proxy) =>
-                {
-                    var item = tuple.tree.GetUserData(proxy)!;
-
-                    if (!tuple.approx)
-                    {
-                        var precise = tuple.extract(item);
-                        if (!precise.Contains(tuple.point))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return tuple.callback(ref tuple.state, item);
-                }, Box2.CenteredAround(point, new Vector2(0.1f, 0.1f)));
+            _b2Tree.Query(ref tuple, DelegateCache<TState>.PointQueryState, point);
             state = tuple.state;
         }
 
@@ -297,6 +285,15 @@ namespace Robust.Shared.Physics
             return tuple.callback(ref tuple.state, item);
         }
 
+        private static bool PointQueryStateCallback<TState>(ref (TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Vector2 point, bool approx, ExtractAabbDelegate extract) tuple, DynamicTree.Proxy proxy)
+        {
+            var item = tuple.tree.GetUserData(proxy)!;
+            if (tuple.approx)
+                return tuple.callback(ref tuple.state, item);
+
+            return !tuple.extract(item).Contains(tuple.point) || tuple.callback(ref tuple.state, item);
+        }
+
         private static bool RayQueryStateCallback<TState>(ref (TState state, RayQueryCallbackDelegate<TState> callback, B2DynamicTree<T> tree, ExtractAabbDelegate? extract, Ray srcRay) tuple, DynamicTree.Proxy proxy, in Vector2 hitPos, float distance)
         {
             var item = tuple.tree.GetUserData(proxy)!;
@@ -334,7 +331,7 @@ namespace Robust.Shared.Physics
             ref var proxy = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodeLookup, item, out var exists);
             if (!exists)
             {
-                proxy = aabb.Value.HasNan() ? DynamicTree.Proxy.Free : _b2Tree.CreateProxy(aabb.Value, item);
+                proxy = aabb.Value.HasNan() ? DynamicTree.Proxy.Free : _b2Tree.CreateProxy(aabb.Value, uint.MaxValue, item);
                 return;
             }
 
@@ -349,9 +346,9 @@ namespace Robust.Shared.Physics
             }
 
             if (proxy == DynamicTree.Proxy.Free)
-                proxy = _b2Tree.CreateProxy(aabb.Value, item);
+                proxy = _b2Tree.CreateProxy(aabb.Value, uint.MaxValue, item);
             else
-                _b2Tree.MoveProxy(proxy, aabb.Value, Vector2.Zero);
+                _b2Tree.MoveProxy(proxy, aabb.Value);
         }
 
         [Conditional("DEBUG_DYNAMIC_TREE")]
@@ -376,6 +373,10 @@ namespace Robust.Shared.Physics
             public static readonly
                 B2DynamicTree<T>.QueryCallback<(TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx, ExtractAabbDelegate extract)> AabbQueryState =
                     AabbQueryStateCallback;
+
+            public static readonly
+                B2DynamicTree<T>.QueryCallback<(TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Vector2 point, bool approx, ExtractAabbDelegate extract)> PointQueryState =
+                    PointQueryStateCallback;
 
             public static readonly
                 B2DynamicTree<T>.RayQueryCallback<(TState state, RayQueryCallbackDelegate<TState> callback,

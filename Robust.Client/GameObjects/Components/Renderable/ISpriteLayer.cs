@@ -1,11 +1,11 @@
 ﻿using System.Numerics;
 using Robust.Client.Graphics;
-using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
+    [NotContentImplementable]
     public interface ISpriteLayer
     {
         SpriteComponent.DirectionOffset DirOffset { get; set; }

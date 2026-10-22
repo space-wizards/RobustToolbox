@@ -1,37 +1,67 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+#if !ROBUST_ANALYZERS_TEST
 using Robust.Shared.ViewVariables;
-using YamlDotNet.Core.Tokens;
-using YamlDotNet.RepresentationModel;
+#endif
 
 namespace Robust.Shared.Prototypes
 {
     /// <summary>
-    ///     An IPrototype is a prototype that can be loaded from the global YAML prototypes.
+    ///     IPrototype, when combined with <see cref="PrototypeAttribute"/>, defines a type that the game can load from
+    ///     the global YAML prototypes folder during init or runtime. It's a way of defining data for the game to read
+    ///     and act on.
     /// </summary>
-    /// <remarks>
-    ///     To use this, the prototype must be accessible through IoC with <see cref="IoCTargetAttribute"/>
-    ///     and it must have a <see cref="PrototypeAttribute"/> to give it a type string.
-    /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="IPrototype"]/*'/>
+    /// <seealso cref="IPrototypeManager"/>
+    /// <seealso cref="PrototypeAttribute"/>
+    /// <seealso cref="IInheritingPrototype"/>
     public interface IPrototype
     {
         /// <summary>
-        /// An ID for this prototype instance.
-        /// If this is a duplicate, an error will be thrown.
+        ///     A unique ID for this prototype instance.
+        ///     This will never be a duplicate, and the game will error during loading if there are multiple prototypes
+        ///     with the same unique ID.
         /// </summary>
-        [ViewVariables(VVAccess.ReadOnly)] string ID { get; }
+#if !ROBUST_ANALYZERS_TEST
+        [ViewVariables(VVAccess.ReadOnly)]
+#endif
+        string ID { get; }
     }
 
+    /// <summary>
+    ///     An extension of <see cref="IPrototype"/> that allows for a prototype to have parents that it inherits data
+    ///     from. This, alongside <see cref="AlwaysPushInheritanceAttribute"/> and
+    ///     <see cref="NeverPushInheritanceAttribute"/>, allow data-based multiple inheritance.
+    /// </summary>
+    /// <example>
+    ///     An example of this in practice is <see cref="EntityPrototype"/>.
+    /// </example>
+    /// <include file='Docs.xml' path='entries/entry[@name="IPrototype"]/*'/>
+    /// <seealso cref="IPrototypeManager"/>
+    /// <seealso cref="PrototypeAttribute"/>
+    /// <seealso cref="IPrototype"/>
     public interface IInheritingPrototype
     {
+        /// <summary>
+        ///     The collection of parents for this prototype. Parents' data is applied to the child in order of
+        ///     specification in the array.
+        /// </summary>
         string[]? Parents { get; }
 
+        /// <summary>
+        ///     Whether this prototype is "abstract". This behaves ike an abstract class, abstract prototypes are never
+        ///     indexable and do not show up when enumerating prototypes, as they're just a source of data to inherit
+        ///     from.
+        /// </summary>
         bool Abstract { get; }
     }
 
+    /// <summary>
+    ///     Marks a field as a prototype's unique identifier. This field must always be a <c>string?</c>.
+    ///     <br/>
+    ///     This field is always required.
+    /// </summary>
+    /// <seealso cref="IPrototype"/>
     public sealed class IdDataFieldAttribute : DataFieldAttribute
     {
         public const string Name = "id";
@@ -41,6 +71,13 @@ namespace Robust.Shared.Prototypes
         }
     }
 
+    /// <summary>
+    ///     Marks a field as the parent/parents field for this prototype, as required by
+    ///     <see cref="IInheritingPrototype"/>. This must either be a <c>string?</c>, or <c>string[]?</c>.
+    ///     <br/>
+    ///     This field is never required.
+    /// </summary>
+    /// <seealso cref="IInheritingPrototype"/>
     public sealed class ParentDataFieldAttribute : DataFieldAttribute
     {
         public const string Name = "parent";
@@ -50,6 +87,13 @@ namespace Robust.Shared.Prototypes
         }
     }
 
+    /// <summary>
+    ///     Marks a field as the abstract field for this prototype, as required by
+    ///     <see cref="IInheritingPrototype"/>. This must be a <c>bool</c>.
+    ///     <br/>
+    ///     This field is never required.
+    /// </summary>
+    /// <seealso cref="IInheritingPrototype"/>
     public sealed class AbstractDataFieldAttribute : DataFieldAttribute
     {
         public const string Name = "abstract";

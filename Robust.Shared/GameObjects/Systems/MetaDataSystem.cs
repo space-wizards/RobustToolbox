@@ -7,10 +7,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
-public abstract class MetaDataSystem : EntitySystem
+public abstract partial class MetaDataSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private EntityPausedEvent _pausedEvent;
 
@@ -18,6 +17,8 @@ public abstract class MetaDataSystem : EntitySystem
 
     public override void Initialize()
     {
+        base.Initialize();
+
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         SubscribeLocalEvent<MetaDataComponent, ComponentHandleState>(OnMetaDataHandle);
         SubscribeLocalEvent<MetaDataComponent, ComponentGetState>(OnMetaDataGetState);
@@ -37,17 +38,26 @@ public abstract class MetaDataSystem : EntitySystem
         component._entityDescription = state.Description;
 
         if(state.PrototypeId != null && state.PrototypeId != component._entityPrototype?.ID)
-            component._entityPrototype = _proto.Index<EntityPrototype>(state.PrototypeId);
+            component._entityPrototype = ProtoMan.Index<EntityPrototype>(state.PrototypeId);
 
         component.PauseTime = state.PauseTime;
     }
 
-    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null, bool raiseEvents = true)
     {
         if (!_metaQuery.Resolve(uid, ref metadata) || value.Equals(metadata.EntityName))
             return;
 
+        var oldName = metadata.EntityName;
+
         metadata._entityName = value;
+
+        if (raiseEvents)
+        {
+            var ev = new EntityRenamedEvent(uid, oldName, value);
+            RaiseLocalEvent(uid, ref ev, true);
+        }
+
         Dirty(uid, metadata, metadata);
     }
 
@@ -150,6 +160,8 @@ public abstract class MetaDataSystem : EntitySystem
         if (toRemove == 0x0)
             return;
 
+        // TODO PERF
+        // does this need to be a broadcast event?
         var ev = new MetaFlagRemoveAttemptEvent(toRemove);
         RaiseLocalEvent(uid, ref ev, true);
 

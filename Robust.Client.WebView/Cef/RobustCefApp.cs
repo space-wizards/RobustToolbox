@@ -44,6 +44,8 @@ namespace Robust.Client.WebView.Cef
             //commandLine.AppendSwitch("--disable-gpu-compositing");
             //commandLine.AppendSwitch("--in-process-gpu");
 
+            commandLine.AppendSwitch("--off-screen-rendering-enabled");
+
             commandLine.AppendSwitch("disable-threaded-scrolling", "1");
             commandLine.AppendSwitch("disable-features", "TouchpadAndWheelScrollLatching,AsyncWheelEvents");
 
@@ -52,6 +54,7 @@ namespace Robust.Client.WebView.Cef
 
         protected override void OnRegisterCustomSchemes(CefSchemeRegistrar registrar)
         {
+            // NOTE: KEEP IN SYNC WITH RUST CODE!
             registrar.AddCustomScheme("res", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
             registrar.AddCustomScheme("usr", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
         }

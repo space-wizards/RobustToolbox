@@ -33,7 +33,7 @@ namespace Robust.Client.Graphics.Clyde
 #if EXCEPTION_TOLERANCE_LOCAL
                 catch (Exception e)
                 {
-                    Logger.ErrorS("clyde.win", $"Error dispatching window event {ev.GetType().Name}:\n{e}");
+                    _sawmillWin.Error($"Error dispatching window event {ev.GetType().Name}:\n{e}");
                 }
 #endif
             }
@@ -75,6 +75,9 @@ namespace Robust.Client.Graphics.Clyde
                     OnWindowScaleChanged?.Invoke(args);
                     break;
                 case DEventWindowFocus(var args):
+                    if (!args.Focused && args.Window == _mainWindow?.Handle)
+                        _inputManager.ReleaseAllKeys();
+
                     OnWindowFocused?.Invoke(args);
                     break;
                 case DEventWindowResized(var reg, var args):
@@ -109,6 +112,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private void SendWindowResized(WindowReg reg, Vector2i oldSize)
         {
+            if (!reg.IsVisible) // Only send this for open windows
+                return;
+
             var loaded = RtToLoaded(reg.RenderTarget);
             loaded.Size = reg.FramebufferSize;
 

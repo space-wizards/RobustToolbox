@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Graphics;
@@ -11,6 +11,7 @@ namespace Robust.Client.Graphics
     /// Keeps a reference to the current eye (camera) that the client is seeing though, and provides
     /// utility functions for the current eye.
     /// </summary>
+    [NotContentImplementable]
     public interface IEyeManager
     {
         /// <summary>
@@ -44,7 +45,7 @@ namespace Robust.Client.Graphics
         /// to UI screen space.
         /// </summary>
         /// <param name="projMatrix"></param>
-        void GetScreenProjectionMatrix(out Matrix3 projMatrix);
+        void GetScreenProjectionMatrix(out Matrix3x2 projMatrix);
 
         /// <summary>
         /// Projects a point from world space to UI screen space using the main viewport.

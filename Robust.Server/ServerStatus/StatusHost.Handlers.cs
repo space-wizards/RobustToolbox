@@ -61,6 +61,7 @@ namespace Robust.Server.ServerStatus
 
             OnStatusRequest?.Invoke(jObject);
 
+            context.AddAllowOriginAny();
             await context.RespondJsonAsync(jObject);
 
             return true;
@@ -80,8 +81,7 @@ namespace Robust.Server.ServerStatus
             if (string.IsNullOrEmpty(downloadUrl))
             {
                 var query = HttpUtility.ParseQueryString(context.Url.Query);
-                var optional = query.Keys;
-                buildInfo = await PrepareACZBuildInfo();
+                buildInfo = await PrepareACZBuildInfo(optional: query.Get("can_skip_build") == "1");
             }
             else
             {
@@ -104,8 +104,25 @@ namespace Robust.Server.ServerStatus
                 ["desc"] = _serverDescCache,
             };
 
+            var privacyPolicyLink = _cfg.GetCVar(CVars.StatusPrivacyPolicyLink);
+            var privacyPolicyIdentifier = _cfg.GetCVar(CVars.StatusPrivacyPolicyIdentifier);
+            var privacyPolicyVersion = _cfg.GetCVar(CVars.StatusPrivacyPolicyVersion);
+
+            if (!string.IsNullOrEmpty(privacyPolicyLink)
+                && !string.IsNullOrEmpty(privacyPolicyIdentifier)
+                && !string.IsNullOrEmpty(privacyPolicyVersion))
+            {
+                jObject["privacy_policy"] = new JsonObject
+                {
+                    ["identifier"] = privacyPolicyIdentifier,
+                    ["version"] = privacyPolicyVersion,
+                    ["link"] = privacyPolicyLink,
+                };
+            }
+
             OnInfoRequest?.Invoke(jObject);
 
+            context.AddAllowOriginAny();
             await context.RespondJsonAsync(jObject);
 
             return true;
@@ -129,9 +146,9 @@ namespace Robust.Server.ServerStatus
             };
         }
 
-        private async Task<JsonObject?> PrepareACZBuildInfo()
+        private async Task<JsonObject?> PrepareACZBuildInfo(bool optional)
         {
-            var acm = await PrepareAcz();
+            var acm = await PrepareAcz(optional);
             if (acm == null) return null;
 
             // Fork ID is an interesting case, we don't want to cause too many redownloads but we also don't want to pollute disk.

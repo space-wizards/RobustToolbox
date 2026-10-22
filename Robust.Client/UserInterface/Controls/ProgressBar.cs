@@ -14,6 +14,27 @@ namespace Robust.Client.UserInterface.Controls
         private StyleBox? _backgroundStyleBoxOverride;
         private StyleBox? _foregroundStyleBoxOverride;
 
+        private bool _vertical;
+
+        /// <summary>
+        /// Whether the progress bar is oriented vertically.
+        /// </summary>
+        /// <remarks>
+        /// A vertical progress bar fills from bottom to top.
+        /// </remarks>
+        public bool Vertical
+        {
+            get => _vertical;
+            set
+            {
+                if (_vertical != value)
+                {
+                    _vertical = value;
+                    InvalidateMeasure();
+                }
+            }
+        }
+
         public StyleBox? BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;
@@ -70,11 +91,23 @@ namespace Robust.Client.UserInterface.Controls
             {
                 return;
             }
-            var minSize = fg.MinimumSize;
-            var size = PixelWidth * GetAsRatio() - minSize.X;
-            if (size > 0)
+
+            if (_vertical)
             {
-                fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, PixelHeight), UIScale);
+                var size = PixelHeight * GetAsRatio();
+                if (size > 0)
+                {
+                    fg.Draw(handle, UIBox2.FromDimensions(0, PixelHeight - size, PixelWidth, size), UIScale);
+                }
+            }
+            else
+            {
+                var minSize = fg.MinimumSize;
+                var size = PixelWidth * GetAsRatio() - minSize.X;
+                if (size > 0)
+                {
+                    fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, PixelHeight), UIScale);
+                }
             }
         }
 

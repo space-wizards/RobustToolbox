@@ -1,16 +1,22 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.Manager
 {
+    [NotContentImplementable]
     public interface ISerializationManager
     {
         public delegate T InstantiationDelegate<out T>();
+
+        bool IsServer { get; }
 
         /// <summary>
         ///     Initializes the serialization manager.
@@ -107,12 +113,41 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
         T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
         T Read<T>(
             DataNode node,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             InstantiationDelegate<T>? instanceProvider = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T[] ReadArray<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T[]>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T ReadDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : ISerializationGenerated<T>;
+
+        T ReadEnum<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, Enum;
+
+        T ReadStructDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, ISerializationGenerated<T>;
 
 
         /// <summary>
@@ -228,6 +263,21 @@ namespace Robust.Shared.Serialization.Manager
         /// </returns>
         [PreferGenericVariant]
         DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
+
+        #endregion
+
+        #region Equality
+
+        /// <summary>
+        /// Compares serialized data fields structurally, including generated data definitions and collections.
+        /// </summary>
+        bool DataFieldEquals<T>(T left, T right, ISerializationContext? context = null);
+
+        /// <summary>
+        /// Compares serialized data fields structurally when their type is only known at runtime.
+        /// </summary>
+        [PreferGenericVariant]
+        bool DataFieldEquals(Type type, object? left, object? right, ISerializationContext? context = null);
 
         #endregion
 
@@ -420,11 +470,18 @@ namespace Robust.Shared.Serialization.Manager
         #region Composition
 
         DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null);
+        DataNode PushComposition(Type type, DataNode parent, DataNode child, ISerializationContext? context = null);
 
         public TNode PushComposition<TType, TNode>(TNode[] parents, TNode child, ISerializationContext? context = null) where TNode : DataNode
         {
             // ReSharper disable once CoVariantArrayConversion
             return (TNode)PushComposition(typeof(TType), parents, child, context);
+        }
+
+        public TNode PushComposition<TType, TNode>(TNode parent, TNode child, ISerializationContext? context = null)
+            where TNode : DataNode
+        {
+            return (TNode) PushComposition(typeof(TType), parent, child, context);
         }
 
         TNode PushInheritance<TType, TNode>(ITypeInheritanceHandler<TType, TNode> inheritanceHandler, TNode parent, TNode child,
@@ -439,6 +496,18 @@ namespace Robust.Shared.Serialization.Manager
             // ReSharper disable once CoVariantArrayConversion
             return (TNode) PushComposition(type, parents, child, context);
         }
+
+        public TNode PushCompositionWithGenericNode<TNode>(Type type, TNode parent, TNode child, ISerializationContext? context = null)
+            where TNode : DataNode
+        {
+            return (TNode) PushComposition(type, parent, child, context);
+        }
+
+        /// <summary>
+        /// Simple <see cref="MappingDataNode"/> inheritance pusher clones data and overrides a parent's values with
+        /// the child's.
+        /// </summary>
+        MappingDataNode CombineMappings(MappingDataNode child, MappingDataNode parent);
 
         #endregion
 

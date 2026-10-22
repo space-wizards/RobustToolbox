@@ -15,9 +15,9 @@ namespace Robust.Shared.Serialization
 {
     internal abstract partial class RobustSerializer : IRobustSerializerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IRobustMappedStringSerializer MappedStringSerializer = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
@@ -27,6 +27,8 @@ namespace Robust.Shared.Serialization
         private Serializer _serializer = default!;
 
         private HashSet<Type> _serializableTypes = default!;
+        private bool _initialized;
+        private SerializerFloatFlags _floatFlags;
 
         private static Type[] AlwaysNetSerializable => new[]
         {
@@ -56,8 +58,25 @@ namespace Robust.Shared.Serialization
 
         #endregion
 
+        public SerializerFloatFlags FloatFlags
+        {
+            get => _floatFlags;
+            set
+            {
+                if (_initialized)
+                    throw new InvalidOperationException("Already initialized!");
+
+                _floatFlags = value;
+            }
+        }
+
         public void Initialize()
         {
+            if (_initialized)
+                throw new InvalidOperationException("Already initialized!");
+
+            _initialized = true;
+
             var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>()
                 .OrderBy(x => x.FullName, StringComparer.InvariantCulture)
                 .ToList();
@@ -89,9 +108,24 @@ namespace Robust.Shared.Serialization
                 CustomTypeSerializers = new[]
                 {
                     MappedStringSerializer.TypeSerializer,
-                    new Vector2Serializer(),
+                    new NetMathSerializer(),
+                    new NetBitArraySerializer(),
+                    new NetComponentDeltaStateSerializer(),
+                    new NetFormattedStringSerializer(),
+                    new NetUnsafeFloatSerializer(),
                 }
             };
+
+            if ((_floatFlags & SerializerFloatFlags.RemoveReadNan) != 0)
+            {
+                settings.CustomTypeSerializers =
+                [
+                    ..settings.CustomTypeSerializers,
+                    // This replaces NetSerializer's default serializer.
+                    new NetSafeFloatSerializer()
+                ];
+            }
+
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
@@ -111,24 +145,9 @@ namespace Robust.Shared.Serialization
 
         public void Serialize(Stream stream, object toSerialize)
         {
-            var start = stream.Position;
+            var start = StartMeasureStats(stream);
             _serializer.Serialize(stream, toSerialize);
-            var end = stream.Position;
-            var byteCount = end - start;
-
-            lock (_statsLock)
-            {
-                BytesSerialized += byteCount;
-                ++ObjectsSerialized;
-
-                if (byteCount <= LargestObjectSerializedBytes)
-                {
-                    return;
-                }
-
-                LargestObjectSerializedBytes = byteCount;
-                LargestObjectSerializedType = toSerialize.GetType();
-            }
+            EndMeasureSerialize(stream, start, toSerialize.GetType());
         }
 
         public void SerializeDirect<T>(Stream stream, T toSerialize)
@@ -136,24 +155,9 @@ namespace Robust.Shared.Serialization
             DebugTools.Assert(toSerialize == null || typeof(T) == toSerialize.GetType(),
                 "Object must be of exact type specified in the generic parameter.");
 
-            var start = stream.Position;
+            var start = StartMeasureStats(stream);
             _serializer.SerializeDirect(stream, toSerialize);
-            var end = stream.Position;
-            var byteCount = end - start;
-
-            lock (_statsLock)
-            {
-                BytesSerialized += byteCount;
-                ++ObjectsSerialized;
-
-                if (byteCount <= LargestObjectSerializedBytes)
-                {
-                    return;
-                }
-
-                LargestObjectSerializedBytes = byteCount;
-                LargestObjectSerializedType = typeof(T);
-            }
+            EndMeasureSerialize(stream, start, typeof(T));
         }
 
         public T Deserialize<T>(Stream stream)
@@ -161,44 +165,16 @@ namespace Robust.Shared.Serialization
 
         public void DeserializeDirect<T>(Stream stream, out T value)
         {
-            var start = stream.Position;
+            var start = StartMeasureStats(stream);
             _serializer.DeserializeDirect(stream, out value);
-            var end = stream.Position;
-            var byteCount = end - start;
-
-            lock (_statsLock)
-            {
-                BytesDeserialized += byteCount;
-                ++ObjectsDeserialized;
-
-                if (byteCount > LargestObjectDeserializedBytes)
-                {
-                    LargestObjectDeserializedBytes = byteCount;
-                    LargestObjectDeserializedType = typeof(T);
-                }
-            }
+            EndMeasureDeserialize(stream, start, typeof(T));
         }
 
         public object Deserialize(Stream stream)
         {
-            var start = stream.Position;
+            var start = StartMeasureStats(stream);
             var result = _serializer.Deserialize(stream);
-            var end = stream.Position;
-            var byteCount = end - start;
-
-            lock (_statsLock)
-            {
-                BytesDeserialized += byteCount;
-                ++ObjectsDeserialized;
-
-                if (byteCount <= LargestObjectDeserializedBytes)
-                {
-                    return result;
-                }
-
-                LargestObjectDeserializedBytes = byteCount;
-                LargestObjectDeserializedType = result.GetType();
-            }
+            EndMeasureDeserialize(stream, start, result.GetType());
 
             return result;
         }
@@ -218,24 +194,55 @@ namespace Robust.Shared.Serialization
             if (assigned.TryGetValue(serializedTypeName, out var resolved))
                 return resolved;
 
-            var types = _reflectionManager.GetAllChildren(assignableType);
-            foreach (var type in types)
-            {
-                var serializedAttribute = type.GetCustomAttribute<SerializedTypeAttribute>();
-
-                if(serializedAttribute is null)
-                    continue;
-
-                if (serializedAttribute.SerializeName == serializedTypeName)
-                {
-                    assigned[serializedTypeName] = type;
-                    return type;
-                }
-            }
-
             assigned[serializedTypeName] = null;
             return null;
         }
-    }
 
+        private static long StartMeasureStats(Stream stream)
+        {
+            return stream.CanSeek ? stream.Position : 0;
+        }
+
+        private void EndMeasureDeserialize(Stream stream, long start, Type type)
+        {
+            lock (_statsLock)
+            {
+                ObjectsDeserialized += 1;
+
+                if (stream.CanSeek)
+                {
+                    var end = stream.Position;
+                    var byteCount = end - start;
+                    BytesDeserialized += byteCount;
+
+                    if (byteCount > LargestObjectDeserializedBytes)
+                    {
+                        LargestObjectDeserializedBytes = byteCount;
+                        LargestObjectDeserializedType = type;
+                    }
+                }
+            }
+        }
+
+        private void EndMeasureSerialize(Stream stream, long start, Type type)
+        {
+            lock (_statsLock)
+            {
+                ObjectsSerialized += 1;
+
+                if (stream.CanSeek)
+                {
+                    var end = stream.Position;
+                    var byteCount = end - start;
+                    BytesSerialized += byteCount;
+
+                    if (byteCount > LargestObjectSerializedBytes)
+                    {
+                        LargestObjectSerializedBytes = byteCount;
+                        LargestObjectSerializedType = type;
+                    }
+                }
+            }
+        }
+    }
 }

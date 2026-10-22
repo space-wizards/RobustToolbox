@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
+﻿using System.Text;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
@@ -13,66 +9,77 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
+public sealed partial class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
     where T : class, IPrototype
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
 
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, out ProtoId<T> result)
     {
-        var proto = parserContext.GetWord(ParserContext.IsToken);
+        result = default;
+        string? proto;
 
-        if (proto is null || !_prototype.TryIndex<T>(proto, out var resolved))
+        // Prototype ids can be specified without quotes, but for backwards compatibility, we also accept strings with
+        // quotes, as previously it **had** to be a string
+        if (ctx.PeekRune() == new Rune('"'))
         {
-            _prototype.TryGetKindFrom<T>(out var kind);
+            if (!Toolshed.TryParse(ctx, out proto))
+                return false;
+        }
+        else
+        {
+            proto = ctx.GetWord(ParserContext.IsToken);
+        }
+
+        if (proto is null || !_proto.HasIndex<T>(proto))
+        {
+            _proto.TryGetKindFrom<T>(out var kind);
             DebugTools.AssertNotNull(kind);
 
-            error = new NotAValidPrototype(proto ?? "[null]", kind!);
-            result = null;
+            ctx.Error = new NotAValidPrototype(proto ?? "[null]", kind!);
+            result = default;
             return false;
         }
 
-        result = new Prototype<T>(resolved);
-        error = null;
+        result = new(proto);
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        IEnumerable<CompletionOption> options;
-
-        // todo: this should be an attribute.
-        if (typeof(T) != typeof(EntityPrototype))
-            options = CompletionHelper.PrototypeIDs<T>();
-        else
-            options = Array.Empty<CompletionOption>();
-
-        _prototype.TryGetKindFrom<T>(out var kind);
-        DebugTools.AssertNotNull(kind);
-
-        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHintOptions(options, $"<{kind} prototype>"), null));
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(ProtoId<T>));
+        var maxCount = _config.GetCVar(CVars.ToolshedPrototypesAutocompleteLimit);
+        var options = CompletionHelper.PrototypeIdsLimited<T>(ctx.Input[ctx.Index..], _proto, true, maxCount);
+        return CompletionResult.FromHintOptions(options, hint);
     }
 }
 
-public readonly record struct Prototype<T>(T Value) : IAsType<string>
-    where T : class, IPrototype
+public sealed partial class EntProtoIdTypeParser : TypeParser<EntProtoId>
 {
-    public ProtoId<T> Id => Value.ID;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
 
-    public string AsType()
+    public override bool TryParse(ParserContext ctx, out EntProtoId result)
     {
-        return Value.ID;
+        result = default;
+        if (!Toolshed.TryParse(ctx, out ProtoId<EntityPrototype> proto))
+            return false;
+
+        result = new(proto.Id);
+        return true;
+    }
+
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
+    {
+        return Toolshed.TryAutocomplete(ctx, typeof(ProtoId<EntityPrototype>), arg);
     }
 }
 
-public record NotAValidPrototype(string Proto, string Kind) : IConError
+public sealed class NotAValidPrototype(string proto, string kind) : ConError
 {
-    public FormattedMessage DescribeInner()
+    public override FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"{Proto} is not a valid {Kind} prototype");
+        return FormattedMessage.FromUnformatted($"{proto} is not a valid {kind} prototype");
     }
-
-    public string? Expression { get; set; }
-    public Vector2i? IssueSpan { get; set; }
-    public StackTrace? Trace { get; set; }
 }

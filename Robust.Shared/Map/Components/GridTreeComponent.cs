@@ -9,5 +9,5 @@ namespace Robust.Shared.Map.Components;
 public sealed partial class GridTreeComponent : Component
 {
     [ViewVariables]
-    public readonly B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> Tree = new();
+    public readonly B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree = new();
 }

@@ -1,10 +1,10 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -34,6 +34,50 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<int> NetMaxConnections =
             CVarDef.Create("net.max_connections", 256, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// How many seconds after the last message from the server or a client before we consider it timed out.
+        /// </summary>
+        public static readonly CVarDef<float> NetConnectionTimeout =
+            CVarDef.Create("net.connection_timeout", 25.0f, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Hard max-cap of concurrent connections per client IP address.
+        /// Clients will always get a disconnection packet.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be bypassed in any way, since it is used by Lidgren internally.
+        /// </remarks>
+        public static readonly CVarDef<int> NetMaxIpConnections =
+            CVarDef.Create("net.max_ip_connections", 8, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Hard max-cap of connections a single client IP address can attempt in a window of <c>net.rapid_connection_window</c>.
+        /// Clients will only get a disconnection packet the first time, their packets are dropped afterwards.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be bypassed in any way, since it is used by Lidgren internally.
+        /// </remarks>
+        public static readonly CVarDef<int> NetMaxRapidConnections =
+            CVarDef.Create("net.max_rapid_connections", 3, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether Lidgren should send disconnection reasons when rejecting connections due to internal limits.
+        /// </summary>
+        public static readonly CVarDef<bool> NetSendConnectionRejectionReasons =
+            CVarDef.Create("net.send_connection_rejection_reasons", true, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many seconds until connection count decays for <c>net.max_rapid_connections</c>.
+        /// </summary>
+        public static readonly CVarDef<double> NetRapidConnectionWindow =
+            CVarDef.Create("net.rapid_connection_window", 60.0, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many connections are "forgotten" every <c>net.rapid_connection_window</c> seconds.
+        /// </summary>
+        public static readonly CVarDef<int> NetRapidConnectionDecay =
+            CVarDef.Create("net.rapid_connection_decay", 1, CVar.ARCHIVE);
 
         /// <summary>
         /// UDP port to bind to for main game networking.
@@ -70,7 +114,7 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         /// <seealso cref="NetMtuIpv6"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", 900, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 700, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum UDP payload size to send by default, for IPv6.
@@ -109,6 +153,18 @@ namespace Robust.Shared
             CVarDef.Create("net.mtu_expand_fail_attempts", 5, CVar.ARCHIVE);
 
         /// <summary>
+        /// Maximum bytes used by incomplete Lidgren fragment groups for one connection.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxFragmentReassemblyBytesPerConnection =
+            CVarDef.Create("net.max_fragment_reassembly_bytes_per_connection", 32 * 1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many seconds Lidgren keeps an incomplete fragment group alive.
+        /// </summary>
+        public static readonly CVarDef<float> NetFragmentGroupTimeout =
+            CVarDef.Create("net.fragment_group_timeout", 30.0f, CVar.ARCHIVE);
+
+        /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
@@ -132,13 +188,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
@@ -290,19 +346,13 @@ namespace Robust.Shared
         /// This influences both how frequently game code processes, and how frequently updates are sent to clients.
         /// </summary>
         public static readonly CVarDef<int> NetTickrate =
-            CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.tickrate", 30, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Offset CurTime at server start by this amount (in seconds).
         /// </summary>
         public static readonly CVarDef<int> NetTimeStartOffset =
             CVarDef.Create("net.time_start_offset", 0, CVar.SERVERONLY);
-
-        /// <summary>
-        /// How many seconds after the last message from the server before we consider it timed out.
-        /// </summary>
-        public static readonly CVarDef<float> ConnectionTimeout =
-            CVarDef.Create("net.connection_timeout", 25.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// When doing the connection handshake, how long to wait before initial connection attempt packets.
@@ -382,6 +432,95 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetLidgrenLogError =
             CVarDef.Create("net.lidgren_log_error", true);
+
+        /// <summary>
+        /// Controls whether repeated malformed network input logs from Lidgren are rate limited.
+        /// </summary>
+        public static readonly CVarDef<bool> NetLidgrenLogRateLimit =
+            CVarDef.Create("net.lidgren_log_rate_limit", true);
+
+        /// <summary>
+        /// Bitmask of malformed network input log categories that Lidgren should rate limit.
+        /// </summary>
+        /// <seealso cref="NetLogRateLimitTarget"/>
+        public static readonly CVarDef<int> NetLidgrenLogRateLimitTargets =
+            CVarDef.Create("net.lidgren_log_rate_limit_targets", (int) NetLogRateLimitTarget.All);
+
+        /// <summary>
+        /// How many matching Lidgren logs are emitted per endpoint and category before suppression starts.
+        /// </summary>
+        public static readonly CVarDef<int> NetLidgrenLogRateLimitBurst =
+            CVarDef.Create("net.lidgren_log_rate_limit_burst", 5);
+
+        /// <summary>
+        /// Window in seconds used by Lidgren's malformed network input log rate limiter.
+        /// </summary>
+        public static readonly CVarDef<float> NetLidgrenLogRateLimitWindow =
+            CVarDef.Create("net.lidgren_log_rate_limit_window", 10.0f);
+
+        /// <summary>
+        /// If true, run network message encryption on another thread.
+        /// </summary>
+        public static readonly CVarDef<bool> NetEncryptionThread =
+            CVarDef.Create("net.encryption_thread", true);
+
+        /// <summary>
+        /// Outstanding buffer size used by <see cref="NetEncryptionThread"/>.
+        /// </summary>
+        public static readonly CVarDef<int> NetEncryptionThreadChannelSize =
+            CVarDef.Create("net.encryption_thread_channel_size", 16);
+
+        /// <summary>
+        /// Whether the server should request HWID system for client identification.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Note that modern HWIDs are only available if the connection is authenticated.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> NetHWId =
+            CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
+
+        /**
+         * TRANSFER
+         */
+
+        /// <summary>
+        /// If true, enable the WebSocket-based high bandwidth transfer channel.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// If set, <see cref="TransferHttpEndpoint"/> must be set to the API address of the server,
+        /// and you must ensure your reverse proxy (if you have one) is configured to allow WebSocket connections.
+        /// </para>
+        /// <para>
+        /// The transfer channel has no additional encryption layer. Unless your API is exposed behind HTTPS,
+        /// traffic over the channel will not be encrypted, and you are discouraged from enabling it.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> TransferHttp =
+            CVarDef.Create("transfer.http", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// The base HTTP URL of the game server, used for the high-bandwidth transfer channel.
+        /// </summary>
+        public static readonly CVarDef<string> TransferHttpEndpoint =
+            CVarDef.Create("transfer.http_endpoint", "http://localhost:1212/", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Amount of concurrent client->server transfer streams allowed.
+        /// </summary>
+        /// <remarks>
+        /// Clients will be disconnected if they exceed this limit.
+        /// </remarks>
+        public static readonly CVarDef<int> TransferStreamLimit =
+            CVarDef.Create("transfer.stream_limit", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Artificially delay transfer operations to simulate slow network. Debug option.
+        /// </summary>
+        internal static readonly CVarDef<bool> TransferArtificialDelay =
+            CVarDef.Create("transfer.artificial_delay", false);
 
         /**
          * SUS
@@ -605,6 +744,43 @@ namespace Robust.Shared
         public static readonly CVarDef<string> StatusConnectAddress =
             CVarDef.Create("status.connectaddress", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
+        /// <summary>
+        /// HTTP(S) link to a privacy policy that the user must accept to connect to the server.
+        /// </summary>
+        /// <remarks>
+        /// This must be set along with <see cref="StatusPrivacyPolicyIdentifier"/> and
+        /// <see cref="StatusPrivacyPolicyVersion"/> for the user to be prompted about a privacy policy.
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyLink =
+            CVarDef.Create("status.privacy_policy_link", "https://example.com/privacy", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// An identifier for privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// This must be globally unique.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This value must be globally unique per server community. Servers that want to enforce a
+        /// privacy policy should set this to a value that is unique to their server and, preferably, recognizable.
+        /// </para>
+        /// <para>
+        /// This value is stored by the launcher to keep track of what privacy policies a player has accepted.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyIdentifier =
+            CVarDef.Create("status.privacy_policy_identifier", "", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// A "version" for the privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This parameter is stored by the launcher and should be modified whenever your server's privacy policy changes.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyVersion =
+            CVarDef.Create("status.privacy_policy_version", "", CVar.SERVER | CVar.REPLICATED);
+
         /*
          * BUILD
          */
@@ -659,6 +835,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> BuildManifestHash =
             CVarDef.Create("build.manifest_hash", "");
+
+        /// <summary>
+        /// Allows you to disable the display of all entities in the spawn menu that are not labeled with the ShowSpawnMenu category.
+        /// This is useful for forks that just want to disable the standard upstream content
+        /// </summary>
+        public static readonly CVarDef<string> EntitiesCategoryFilter =
+            CVarDef.Create("build.entities_category_filter", "");
 
         /*
          * WATCHDOG
@@ -720,6 +903,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> GameAutoPauseEmpty =
             CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Scales the game simulation time. Higher values make the game slower.
+        /// </summary>
+        public static readonly CVarDef<float> GameTimeScale =
+            CVarDef.Create("game.time_scale", 1f, CVar.REPLICATED | CVar.SERVER);
+
         /*
          * LOG
          */
@@ -767,7 +956,7 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Maximum number of lights that the client will draw.
@@ -822,6 +1011,14 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> LookupEnlargementRange =
             CVarDef.Create("lookup.enlargement_range", 10.0f, CVar.ARCHIVE | CVar.REPLICATED | CVar.CHEAT);
+
+        /// <summary>
+        /// Whether to enable the server-side point light lookup tree. To help with performance, this should only be
+        /// enabled if the server needs to be able to compute light levels.
+        /// This is only read during system startup; changing it at runtime does not initialize or shut down the tree.
+        /// </summary>
+        public static readonly CVarDef<bool> LookupEnableServerLightTree =
+            CVarDef.Create("lookup.enable_server_light_tree", false, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /*
          * LOKI
@@ -882,6 +1079,18 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Trust score for unauthenticated localhost connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthLocalTrust =
+            CVarDef.Create("auth.localtrust", 1f, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Trust score for guest connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthGuestTrust =
+            CVarDef.Create("auth.guesttrust", 0f, CVar.SERVERONLY);
+
         /*
          * RENDERING
          */
@@ -900,6 +1109,13 @@ namespace Robust.Shared
 
         public static readonly CVarDef<string> RenderFOVColor =
             CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Whether to render tile edges, which is where some tiles can partially overlap other adjacent tiles on a grid.
+        /// E.g., snow tiles partly extending beyond their own tile to blend together with different adjacent tiles types.
+        /// </summary>
+        public static readonly CVarDef<bool> RenderTileEdges =
+            CVarDef.Create("render.tile_edges", true, CVar.CLIENTONLY);
 
         /*
          *  CONTROLS
@@ -926,6 +1142,15 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> DisplayVSync =
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum framerate the client should run at. Set to 0 to have no limit.
+        /// </summary>
+        /// <remarks>
+        /// This is ignored if <see cref="DisplayVSync"/> is enabled.
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayMaxFPS =
+            CVarDef.Create("display.max_fps", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Window mode for the main game window. 0 = windowed, 1 = fullscreen.
@@ -1076,10 +1301,25 @@ namespace Robust.Shared
             CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Diagnostic flag for testing. When using a separate thread for multi-window blitting,
+        /// should the worker be unblocked before the SwapBuffers(). Setting to true may improve
+        /// performance but may cause crashes or rendering errors.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadUnlockBeforeSwap =
+            CVarDef.Create("display.thread_unlock_before_swap", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Buffer size of input command channel from windowing thread to main game thread.
         /// </summary>
         public static readonly CVarDef<int> DisplayInputBufferSize =
             CVarDef.Create("display.input_buffer_size", 32, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum estimated size in bytes of an individual post-shader render target retained in Clyde's pool.
+        /// Set to zero to disable retaining post-shader render targets.
+        /// </summary>
+        public static readonly CVarDef<int> DisplayPostShaderRenderTargetPoolMaxSize =
+            CVarDef.Create("display.post_shader_render_target_pool_max_size", 8 * 1024 * 1024, CVar.CLIENTONLY);
 
         /// <summary>
         /// Insert stupid performance hitches into the windowing thread, to test how the game thread handles it.
@@ -1112,7 +1352,7 @@ namespace Robust.Shared
             CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> DisplayWindowingApi =
-            CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
+            CVarDef.Create("display.windowing_api", "sdl3", CVar.CLIENTONLY);
 
         /// <summary>
         /// If true and on Windows 11 Build 22000,
@@ -1141,10 +1381,31 @@ namespace Robust.Shared
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// Scales listener & source velocities, which (if less than 1) de-emphasizes the doppler pitch-shifting effect
+        /// and (if more than 1) exaggerates the effect. Setting this to 0 will disable the doppler effect.
+        /// </summary>
+        /// <remarks>
+        /// This is replicated rather than client-only because it makes more sense to control this on a server-level depending on
+        /// what the game in question requires: servers with fast-moving grids may want to de-emphasize doppler even more than usual, etc.
+        /// </remarks>
+        public static readonly CVarDef<float> AudioDopplerFactor =
+            CVarDef.Create("audio.doppler_factor", 1f, CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether to enable HRTF (head-related transfer function) support for positional audio.
+        /// </summary>
+        /// <remarks>
+        /// This CVar being true isn't necessarily enough to actually use HRTF. Your platform must be using openal-soft,
+        /// and your device needs to actually support it (although it almost certainly does).
+        /// </remarks>
+        public static readonly CVarDef<bool> AudioHrtf =
+            CVarDef.Create("audio.hrtf", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =
-            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
+            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Master volume for audio output.
@@ -1153,10 +1414,29 @@ namespace Robust.Shared
             CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Whether to mute audio while the game window is unfocused.
+        /// </summary>
+        public static readonly CVarDef<bool> AudioMuteUnfocused =
+            CVarDef.Create("audio.mute_unfocused", false, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Maximum raycast distance for audio occlusion.
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum offset for audio to be played at from its full duration. If it's past this then the audio won't be played.
+        /// </summary>
+        public static readonly CVarDef<float> AudioEndBuffer =
+            CVarDef.Create("audio.end_buffer", 0.01f, CVar.REPLICATED);
+
+        /// <summary>
+        /// Tickrate for audio calculations.
+        /// OpenAL recommends 30TPS. This is to avoid running raycasts every frame especially for high-refresh rate monitors.
+        /// </summary>
+        public static readonly CVarDef<int> AudioTickRate =
+            CVarDef.Create("audio.tick_rate", 30, CVar.CLIENTONLY);
 
         public static readonly CVarDef<float> AudioZOffset =
             CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
@@ -1174,13 +1454,6 @@ namespace Robust.Shared
         /*
          * PHYSICS
          */
-
-        /// <summary>
-        /// How much to expand broadphase checking for. This is useful for cross-grid collisions.
-        /// Performance impact if additional broadphases are being checked.
-        /// </summary>
-        public static readonly CVarDef<float> BroadphaseExpand =
-            CVarDef.Create("physics.broadphase_expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
         /// The target minimum ticks per second on the server.
@@ -1201,7 +1474,7 @@ namespace Robust.Shared
         /// Can grids split if not connected by cardinals
         /// </summary>
         public static readonly CVarDef<bool> GridSplitting =
-            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE);
+            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// How much to enlarge grids when determining their fixture bounds.
@@ -1267,10 +1540,10 @@ namespace Robust.Shared
         /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
         /// </summary>
         /// <remarks>
-        /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
+        /// Default is 400 m/s in-line with Box2c. Box2d used 120m/s.
         /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 35f);
+            CVarDef.Create("physics.maxlinvelocity", 400f, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
@@ -1281,7 +1554,6 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
-
 
         /*
          * User interface
@@ -1374,7 +1646,7 @@ namespace Robust.Shared
         /// the purpose of using an atlas if it gets too small.
         /// </summary>
         public static readonly CVarDef<int> ResRSIAtlasSize =
-            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
+            CVarDef.Create("res.rsi_atlas_size", 12288, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>
@@ -1392,7 +1664,7 @@ namespace Robust.Shared
         /// Non-default seek modes WILL result in worse performance.
         /// </remarks>
         public static readonly CVarDef<int> ResStreamSeekMode =
-            CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
+            CVarDef.Create("res.stream_seek_mode", (int)StreamSeekMode.None);
 
         /// <summary>
         /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
@@ -1411,6 +1683,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> ResCheckBadFileExtensions =
             CVarDef.Create("res.check_bad_file_extensions", true);
+
+        /// <summary>
+        /// If true, prototypes will be validated upon uploading and throw an error if one fails, cancelling the upload.
+        /// </summary>
+        /// <remarks>
+        /// Setting to false is more permissive, but may result in uploading faulty prototypes.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResValidatePrototypeUpload =
+            CVarDef.Create("res.validate_prototype_upload", true, CVar.REPLICATED | CVar.SERVER);
 
         /*
          * DEBUG
@@ -1560,6 +1841,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ConCompletionMargin =
             CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Maximum amount of entries stored by the debug console.
+        /// </summary>
+        public static readonly CVarDef<int> ConMaxEntries =
+            CVarDef.Create("con.max_entries", 3_000, CVar.CLIENTONLY);
+
         /*
          * THREAD
          */
@@ -1579,6 +1866,16 @@ namespace Robust.Shared
         /// Enabled the profiling system.
         /// </summary>
         public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Enables the Tracy profiling system. Tracing will stay enabled for the entire runtime of the program even if
+        /// you turn this cvar off.
+        /// </summary>
+        /// <remarks>
+        /// By default, this will listen for Tracy connections on all interfaces! Set the <c>TRACY_ONLY_LOCALHOST</c>
+        /// env var to 1 if you want to restrict to localhost.
+        /// </remarks>
+        public static readonly CVarDef<bool> TracyProfEnabled = CVarDef.Create("prof.tracy.enabled", false);
 
         /// <summary>
         /// Event log buffer size for the profiling system.
@@ -1613,6 +1910,16 @@ namespace Robust.Shared
             1024L * 1024, CVar.ARCHIVE);
 
         /// <summary>
+        /// Size of the replay (in kilobytes) at which point the replay is considered "large",
+        /// and replay clients should enable server GC (if possible) to improve performance.
+        /// </summary>
+        /// <remarks>
+        /// Set to -1 to never make replays use server GC.
+        /// </remarks>
+        public static readonly CVarDef<long> ReplayServerGCSizeThreshold =
+            CVarDef.Create("replay.server_gc_size_threshold", 50L * 1024);
+
+        /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
         /// for one or more ticks. Actual files may be slightly larger, this is just a threshold for the file to get
         /// written. After compressing, the files are generally ~30% of their uncompressed size.
@@ -1624,6 +1931,14 @@ namespace Robust.Shared
         /// The max amount of pending write commands while recording replays.
         /// </summary>
         public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
+
+        /// <summary>
+        /// Number of replay data blocks (each ≈ one <c>data_N</c> file) the client keeps resident in memory
+        /// at once during playback. The full replay is no longer loaded entirely into RAM; blocks are read
+        /// lazily and evicted (LRU) once this window is exceeded. Higher values use more memory but reduce
+        /// re-reads when scrubbing back and forth. Minimum effective value is 2.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayLoadedBlockWindow = CVarDef.Create("replay.loaded_block_window", 8);
 
         /// <summary>
         /// Whether or not server-side replay recording is enabled.
@@ -1640,6 +1955,13 @@ namespace Robust.Shared
             "replay.client_recording_enabled",
             true,
             CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many milliseconds we will spend moving forward from the nearest checkpoint or current position.
+        /// We will spend this time when scrubbing the timeline per game tick. This limits CPU usage / locking up and
+        /// improves responsiveness
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxScrubTime = CVarDef.Create("replay.max_scrub_time", 10);
 
         /// <summary>
         /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when
@@ -1709,6 +2031,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
 
+        /// <summary>
+        /// Storage for CVars that should be rolled back next client startup.
+        /// </summary>
+        /// <remarks>
+        /// This CVar is utilized through <see cref="IConfigurationManager"/>'s rollback functionality.
+        /// </remarks>
+        internal static readonly CVarDef<string>
+            CfgRollbackData = CVarDef.Create("cfg.rollback_data", "", CVar.ARCHIVE);
+
         /*
         * Network Resource Manager
         */
@@ -1746,5 +2077,106 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LaunchContentBundle =
             CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
+
+        /*
+         * TOOLSHED
+         */
+
+        /// <summary>
+        ///     The max range that can be passed to the nearby toolshed command.
+        ///     Any higher value will cause an exception.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedNearbyLimit =
+            CVarDef.Create("toolshed.nearby_limit", 200, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        ///     The max amount of entities that can be passed to the nearby toolshed command.
+        ///     Any higher value will cause an exception.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
+            CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        ///     The max amount of prototype ids that can be sent to the client when autocompleting prototype ids.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedPrototypesAutocompleteLimit =
+            CVarDef.Create("toolshed.prototype_autocomplete_limit", 256, CVar.SERVER | CVar.REPLICATED);
+
+        /*
+         * Localization
+         */
+
+        public static readonly CVarDef<string> LocCultureName =
+            CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
+
+        /*
+         * UI
+         */
+
+        /// <summary>
+        ///     The file XamlHotReloadManager looks for when locating the root of the project.
+        ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
+        /// </summary>
+        public static readonly CVarDef<string> XamlHotReloadMarkerName =
+            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.slnx", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, all XAML UIs will be JITed for hot reload on client startup.
+        /// If false, they will be JITed on demand.
+        /// </summary>
+        public static readonly CVarDef<bool> UIXamlJitPreload =
+            CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        ///     If false, the UI engine will not ever sleep updating controls.
+        ///     This should <b>never</b> be set outside of test frameworks, doing so worsens user experience by allowing
+        ///     the game to do excessive amounts of work in one frame, causing extra lag.
+        /// </summary>
+        public static readonly CVarDef<bool> UIObeyUpdateLimits =
+            CVarDef.Create("ui.obey_update_limits", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The selected mode for the entity spawn window's placement mode dropdown.
+        /// </summary>
+        public static readonly CVarDef<int> EntitySpawnOverrideMode =
+            CVarDef.Create("ui.entity_spawn.override_mode", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /*
+         * FONT
+         */
+
+        /// <summary>
+        /// If false, disable system font support.
+        /// </summary>
+        public static readonly CVarDef<bool> FontSystem =
+            CVarDef.Create("font.system", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, allow Windows "downloadable" fonts to be exposed to the system fonts API.
+        /// </summary>
+        public static readonly CVarDef<bool> FontWindowsDownloadable =
+            CVarDef.Create("font.windows_downloadable", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
+         * LOADING
+         */
+
+        /// <summary>
+        /// Whether to show explicit loading bar during client initialization.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowBar =
+            CVarDef.Create("loading.show_bar", true, CVar.CLIENTONLY);
+
+#if TOOLS
+        private const bool DefaultShowDebug = true;
+#else
+        private const bool DefaultShowDebug = false;
+#endif
+
+        /// <summary>
+        /// Whether to show "debug" info in the loading screen.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowDebug =
+            CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
     }
 }

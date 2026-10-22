@@ -67,8 +67,11 @@ namespace Robust.Client.UserInterface.Controls
             get => _splitStart + _splitWidth / 2;
             set
             {
+                var args = new SplitCenterChangingEventArgs(value, _dragging);
+                OnSplitCenterChanging?.Invoke(args);
+
                 State = SplitState.Manual;
-                _splitStart = value - _splitWidth / 2;
+                _splitStart = args.SplitCenter - _splitWidth / 2;
                 ClampSplitCenter();
                 InvalidateMeasure();
                 OnSplitResized?.Invoke();
@@ -93,6 +96,14 @@ namespace Robust.Client.UserInterface.Controls
             {
                 SplitCenter = value * (Vertical ? Size.Y : Size.X);
             }
+        }
+
+        private float? _pendingSplitFraction;
+
+        public void SetSplitFractionOnNextArrange(float fraction)
+        {
+            _pendingSplitFraction = fraction;
+            State = SplitState.Manual;
         }
 
         private SplitState _splitState = SplitState.Auto;
@@ -137,6 +148,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public (Control First, Control Second)? Splits => ChildCount < 3 ? null : (GetChild(0), GetChild(1));
 
+        public event Action<SplitCenterChangingEventArgs>? OnSplitCenterChanging;
         public event Action? OnSplitResizeFinished;
         public event Action? OnSplitResized;
 
@@ -176,6 +188,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _orientation = value;
+                _splitDragArea.DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
                 InvalidateMeasure();
             }
         }
@@ -185,10 +198,23 @@ namespace Robust.Client.UserInterface.Controls
             MouseFilter = MouseFilterMode.Stop;
             AddChild(_splitDragArea);
             _splitDragArea.Visible = _resizeMode != SplitResizeMode.NotResizable;
-            _splitDragArea.DefaultCursorShape =  Vertical ? CursorShape.VResize : CursorShape.HResize;
+            _splitDragArea.DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
             _splitDragArea.OnMouseUp += StopDragging;
             _splitDragArea.OnMouseDown += StartDragging;
             _splitDragArea.OnMouseMove += OnMove;
+        }
+
+        /// <summary>
+        /// Swaps the position of the first and zeroeth children; for a 2-control viewport it effectively flips them.
+        /// </summary>
+        public void Flip()
+        {
+            if (ChildCount < 3)
+                return;
+
+            DebugTools.Assert(ChildCount <= 3);
+            GetChild(1).SetPositionFirst();
+            InvalidateArrange();
         }
 
         private void OnMove(GUIMouseMoveEventArgs args)
@@ -255,12 +281,15 @@ namespace Robust.Client.UserInterface.Controls
                 var first = GetChild(0);
                 var second = GetChild(1);
 
-                firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
-                secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
-                var size = Vertical ? controlSize.Y : controlSize.X;
+                if (first.IsMeasureValid && second.IsMeasureValid)
+                {
+                    firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
+                    secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
+                    var size = Vertical ? controlSize.Y : controlSize.X;
 
-                _splitStart = MathHelper.Clamp(_splitStart, firstMinSize.Value,
-                    size - (secondMinSize.Value + _splitWidth));
+                    _splitStart = MathHelper.Clamp(_splitStart, firstMinSize.Value,
+                        size - (secondMinSize.Value + _splitWidth));
+                }
             }
         }
 
@@ -281,6 +310,12 @@ namespace Robust.Client.UserInterface.Controls
             var secondDesiredSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
 
             var size = Vertical ? finalSize.Y : finalSize.X;
+            if (_pendingSplitFraction is { } pendingSplitFraction && size > 0)
+            {
+                _splitStart = pendingSplitFraction * size - _splitWidth / 2;
+                _pendingSplitFraction = null;
+                OnSplitResized?.Invoke();
+            }
 
             var ratio = first.SizeFlagsStretchRatio / (first.SizeFlagsStretchRatio + second.SizeFlagsStretchRatio);
 
@@ -442,6 +477,18 @@ namespace Robust.Client.UserInterface.Controls
         {
             Horizontal,
             Vertical
+        }
+
+        public sealed class SplitCenterChangingEventArgs
+        {
+            public SplitCenterChangingEventArgs(float splitCenter, bool dragging)
+            {
+                SplitCenter = splitCenter;
+                Dragging = dragging;
+            }
+
+            public float SplitCenter { get; set; }
+            public bool Dragging { get; }
         }
 
         /// <summary>

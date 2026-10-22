@@ -50,11 +50,11 @@ namespace Robust.Client.Console
     [Virtual]
     internal partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
     {
-        [Dependency] private readonly IClientConGroupController _conGroup = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IPlayerManager _player = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IClientConGroupController _conGroup = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IPlayerManager _player = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         [ViewVariables] private readonly Dictionary<string, IConsoleCommand> _availableServerCommands = new();
 
@@ -191,8 +191,16 @@ namespace Robust.Client.Console
             var shell = new ConsoleShell(this, session ?? _player.LocalSession, session == null);
             var cmdArgs = args.ToArray();
 
-            AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
-            cmd.Execute(shell, command, cmdArgs);
+            try
+            {
+                AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
+                cmd.Execute(shell, command, cmdArgs);
+            }
+            catch (Exception e)
+            {
+                _conLogger.Error($"ExecuteError - {command}:\n{e}");
+                shell.WriteError($"There was an error while executing the command: {e}");
+            }
         }
 
         private bool CanExecute(string cmdName)

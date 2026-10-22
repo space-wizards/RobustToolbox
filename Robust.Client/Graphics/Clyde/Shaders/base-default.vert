@@ -8,6 +8,7 @@
 
 varying vec2 UV;
 varying vec2 UV2;
+varying vec2 SCREEN_UV;
 varying vec2 Pos;
 varying vec4 VtxModulate;
 
@@ -18,6 +19,8 @@ uniform mat3 modelMatrix;
 // Allows us to do texture atlassing with texture coordinates 0->1
 // Input texture coordinates get mapped to this range.
 uniform vec4 modifyUV;
+uniform vec4 SCREEN_UV_RECT;
+// TODO CLYDE Is this still needed?
 
 // [SHADER_HEADER_CODE]
 
@@ -39,5 +42,16 @@ void main()
     Pos = (VERTEX + 1.0) / 2.0;
     UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
     UV2 = tCoord2;
-    VtxModulate = zFromSrgb(modulate);
+    SCREEN_UV = mix(SCREEN_UV_RECT.xy, SCREEN_UV_RECT.zw, tCoord2);
+
+    // Negative modulation is being used as a hacky way to squeeze in lighting data.
+    // I.e., negative modulation implies we ignore the lighting.
+    if (modulate.x < 0.0)
+    {
+        VtxModulate = -1.0 - zFromSrgb(-1.0 - modulate);
+    }
+    else
+    {
+        VtxModulate = zFromSrgb(modulate);
+    }
 }

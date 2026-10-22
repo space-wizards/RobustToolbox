@@ -5,6 +5,7 @@ namespace Robust.Server.Console
     /// <summary>
     /// The server console shell that executes commands.
     /// </summary>
+    [NotContentImplementable]
     public interface IServerConsoleHost : IConsoleHost
     {
         /// <summary>

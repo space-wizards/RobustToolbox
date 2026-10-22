@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public sealed class AppearanceSystem : SharedAppearanceSystem
+    public sealed partial class AppearanceSystem : SharedAppearanceSystem
     {
         private readonly Queue<(EntityUid uid, AppearanceComponent)> _queuedUpdates = new();
+        [Dependency] private ISerializationManager _serialization = default!;
 
         public override void Initialize()
         {
@@ -22,6 +26,8 @@ namespace Robust.Client.GameObjects
 
         protected override void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
         {
+            // TODO Game State
+            // Force the client to serialize & de-serialize implicitly generated component states.
             var clone = CloneAppearanceData(component.AppearanceData);
             args.State = new AppearanceComponentState(clone);
         }
@@ -63,10 +69,10 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Take in an appearance data dictionary and attempt to clone it.
+        /// Take in an appearance data dictionary and attempt to clone it.
         /// </summary>
         /// <remarks>
-        ///     As some appearance data values are not simple value-type objects, this is not just a shallow clone.
+        /// As some appearance data values are not simple value-type objects, this is not just a shallow clone.
         /// </remarks>
         private Dictionary<Enum, object> CloneAppearanceData(Dictionary<Enum, object> data)
         {
@@ -74,10 +80,13 @@ namespace Robust.Client.GameObjects
 
             foreach (var (key, value) in data)
             {
+                object? serializationObject;
                 if (value.GetType().IsValueType)
                     newDict[key] = value;
                 else if (value is ICloneable cloneable)
                     newDict[key] = cloneable.Clone();
+                else if ((serializationObject = _serialization.CreateCopy(value)) != null)
+                    newDict[key] = serializationObject;
                 else
                     throw new NotSupportedException("Invalid object in appearance data dictionary. Appearance data must be cloneable");
             }
@@ -139,7 +148,7 @@ namespace Robust.Client.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever the appearance data for an entity changes.
+    /// Raised whenever the appearance data for an entity changes.
     /// </summary>
     [ByRefEvent]
     public struct AppearanceChangeEvent
@@ -147,5 +156,26 @@ namespace Robust.Client.GameObjects
         public AppearanceComponent Component;
         public IReadOnlyDictionary<Enum, object> AppearanceData;
         public SpriteComponent? Sprite;
+
+        /// <summary>
+        /// Looks up <paramref name="key"> in the appearance data if it can.
+        /// If it finds data of type <typeparamref name="T"/>,
+        /// it outputs the value in <paramref name="data"/> and returns true.
+        /// Otherwise, it outputs default into data, returning false.
+        /// </summary>
+        public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T? data)
+        {
+            if (AppearanceData.TryGetValue(key, out var objValue)
+                && objValue is T value)
+            {
+                data = value;
+                return true;
+            }
+            else
+            {
+                data = default!;
+                return false;
+            }
+        }
     }
 }

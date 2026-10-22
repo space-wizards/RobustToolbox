@@ -1,19 +1,20 @@
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 [TypeSerializer]
 public sealed class DictionarySerializer<TKey, TValue> :
+    BaseTypeSerializer,
     ITypeSerializer<Dictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode>,
@@ -59,7 +60,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         var mapping = new Dictionary<ValidationNode, ValidationNode>();
         foreach (var (key, val) in node.Children)
         {
-            mapping.Add(serializationManager.ValidateNode<TKey>(key, context),
+            mapping.Add(serializationManager.ValidateNode<TKey>(node.GetKeyNode(key), context),
                 serializationManager.ValidateNode<TValue>(val, context));
         }
 
@@ -76,11 +77,17 @@ public sealed class DictionarySerializer<TKey, TValue> :
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        var mappingNode = new MappingDataNode();
+        var mappingNode = new MappingDataNode(value.Count);
         foreach (var (key, val) in value)
         {
+            // TODO SERIALIZATION
+            // Add some way to directly return a string w/o allocating a ValueDataNode
+            var keyNode = serializationManager.WriteValue(key, alwaysWrite, context);
+            if (keyNode is not ValueDataNode valueNode)
+                throw new NotSupportedException("Yaml mapping keys must serialize to a ValueDataNode (i.e. a string)");
+
             mappingNode.Add(
-                serializationManager.WriteValue(key, alwaysWrite, context),
+                valueNode.Value,
                 serializationManager.WriteValue(val, alwaysWrite, context));
         }
 
@@ -115,7 +122,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
+        return InterfaceWrite(serializationManager, value, alwaysWrite, context);
     }
 
     #endregion
@@ -126,11 +133,13 @@ public sealed class DictionarySerializer<TKey, TValue> :
         MappingDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context,
         ISerializationManager.InstantiationDelegate<Dictionary<TKey, TValue>>? instanceProvider)
     {
-        var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>();
+        var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>(node.Children.Count);
 
+        var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)
         {
-            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
+            keyNode.Value = key;
+            dict.Add(serializationManager.Read<TKey>(keyNode, hookCtx, context),
                 serializationManager.Read<TValue>(value, hookCtx, context));
         }
 
@@ -143,15 +152,17 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            Logger.Warning(
+            Log.Warning(
                 $"Provided value to a Read-call for a {nameof(FrozenDictionary<TKey, TValue>)}. Ignoring...");
         }
 
         var array = new KeyValuePair<TKey, TValue>[node.Children.Count];
         int i = 0;
+        var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)
         {
-            var k = serializationManager.Read<TKey>(key, hookCtx, context);
+            keyNode.Value = key;
+            var k = serializationManager.Read<TKey>(keyNode, hookCtx, context);
             var v = serializationManager.Read<TValue>(value, hookCtx, context);
             array[i++] = new(k,v);
         }
@@ -168,15 +179,17 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            Logger.Warning(
+            Log.Warning(
                 $"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
         }
 
-        var dict = new Dictionary<TKey, TValue>();
+        var dict = new Dictionary<TKey, TValue>(node.Children.Count);
 
+        var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)
         {
-            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
+            keyNode.Value = key;
+            dict.Add(serializationManager.Read<TKey>(keyNode, hookCtx, context),
                 serializationManager.Read<TValue>(value, hookCtx, context));
         }
 
@@ -190,10 +203,12 @@ public sealed class DictionarySerializer<TKey, TValue> :
         ISerializationManager.InstantiationDelegate<SortedDictionary<TKey, TValue>>? instanceProvider)
     {
         var dict = instanceProvider != null ? instanceProvider() : new SortedDictionary<TKey, TValue>();
+        var keyNode = new ValueDataNode();
 
         foreach (var (key, value) in node.Children)
         {
-            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
+            keyNode.Value = key;
+            dict.Add(serializationManager.Read<TKey>(keyNode, hookCtx, context),
                 serializationManager.Read<TValue>(value, hookCtx, context));
         }
 

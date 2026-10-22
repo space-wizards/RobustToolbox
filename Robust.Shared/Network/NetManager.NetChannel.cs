@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Net;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Lidgren.Network;
 using Robust.Shared.ViewVariables;
 
@@ -52,6 +54,9 @@ namespace Robust.Shared.Network
 
             [ViewVariables] public int CurrentMtu => _connection.CurrentMTU;
 
+            public ChannelWriter<EncryptChannelItem>? EncryptionChannel;
+            public Task? EncryptionChannelTask;
+
             /// <summary>
             ///     Creates a new instance of a NetChannel.
             /// </summary>
@@ -95,6 +100,11 @@ namespace Robust.Shared.Network
             {
                 if (_connection.Status == NetConnectionStatus.Connected)
                     _connection.Disconnect(reason, sendBye);
+            }
+
+            public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+            {
+                return _connection.CanSendImmediately(method, sequenceChannel);
             }
 
             public override string ToString()

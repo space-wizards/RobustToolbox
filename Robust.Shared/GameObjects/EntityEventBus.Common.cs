@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects;
 
 internal sealed partial class EntityEventBus : IEventBus
 {
-    private IEntityManager _entMan;
+    private EntityManager _entMan;
     private IComponentFactory _comFac;
     private IReflectionManager _reflection;
 
@@ -34,18 +34,18 @@ internal sealed partial class EntityEventBus : IEventBus
     /// <summary>
     /// Array of component events and their handlers. The array is indexed by a component's
     /// <see cref="CompIdx.Value"/>, while the dictionary is indexed by the event type. This does not include events
-    /// with the <see cref="ComponentEventAttribute"/>
+    /// with the <see cref="ComponentEventAttribute"/>, unless <see cref="ComponentEventAttribute.Exclusive"/> is false.
     /// </summary>
-    internal FrozenDictionary<Type, DirectedRegistration>[] _eventSubs = default!;
+    private FrozenDictionary<Type, DirectedRegistration>[] _eventSubs = default!;
 
     /// <summary>
-    /// Variant of <see cref="_eventSubs"/> that also includes events with the <see cref="ComponentEventAttribute"/>
+    /// Variant of <see cref="_eventSubs"/> that only includes events with the <see cref="ComponentEventAttribute"/>
     /// </summary>
-    internal FrozenDictionary<Type, DirectedRegistration>[] _compEventSubs = default!;
+    private FrozenDictionary<Type, DirectedEventHandler>[] _compEventSubs = default!;
 
     // pre-freeze event subscription data
-    internal Dictionary<Type, DirectedRegistration>?[] _eventSubsUnfrozen =
-        Array.Empty<Dictionary<Type, DirectedRegistration>>();
+    private Dictionary<Type, DirectedRegistration>?[] _eventSubsUnfrozen = [];
+    private Dictionary<Type, DirectedEventHandler>?[] _compEventSubsUnfrozen = [];
 
     /// <summary>
     /// Inverse of <see cref="_eventSubs"/>, mapping event types to sets of components.
@@ -94,10 +94,6 @@ internal sealed partial class EntityEventBus : IEventBus
     /// </summary>
     private sealed class EventData
     {
-        /// <summary>
-        /// <see cref="ComponentEventAttribute"/> set?
-        /// </summary>
-        public bool ComponentEvent;
         public bool IsOrdered;
         public bool OrderingUpToDate;
         public ValueList<BroadcastRegistration> BroadcastRegistrations;

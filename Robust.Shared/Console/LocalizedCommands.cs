@@ -1,13 +1,23 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Toolshed;
 
 namespace Robust.Shared.Console;
 
-public abstract class LocalizedCommands : IConsoleCommand
+/// <summary>
+///     A variant on <see cref="IConsoleCommand"/> that has some built-in default localization strings.
+/// </summary>
+/// <remarks>
+///     For server commands, it is much preferred to use <see cref="ToolshedCommand"/>.
+/// </remarks>
+public abstract partial class LocalizedCommands : IConsoleCommand
 {
-    [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
+    [Dependency] protected ILocalizationManager LocalizationManager = default!;
+
+    public ILocalizationManager Loc => LocalizationManager;
 
     /// <inheritdoc />
     public abstract string Command { get; }
@@ -16,7 +26,7 @@ public abstract class LocalizedCommands : IConsoleCommand
     public virtual string Description => LocalizationManager.TryGetString($"cmd-{Command}-desc", out var val) ? val : "";
 
     /// <inheritdoc />
-    public virtual string Help => LocalizationManager.TryGetString($"cmd-{Command}-help", out var val) ? val : "";
+    public virtual string Help => LocalizationManager.TryGetString($"cmd-{Command}-help", out var val, ("command", Command)) ? val : "";
 
     /// <inheritdoc />
     public virtual bool RequireServerOrSingleplayer => false;
@@ -33,4 +43,22 @@ public abstract class LocalizedCommands : IConsoleCommand
     {
         return ValueTask.FromResult(GetCompletion(shell, args));
     }
+}
+
+/// <summary>
+/// Base class for localized console commands that run in "entity space".
+/// </summary>
+/// <remarks>
+/// <para>
+/// This type of command is registered only while the entity system is active.
+/// On the client this means that the commands are only available while connected to a server or in single player.
+/// </para>
+/// <para>
+/// These commands are allowed to take dependencies on entity systems, reducing boilerplate for many usages.
+/// </para>
+/// </remarks>
+public abstract partial class LocalizedEntityCommands : LocalizedCommands, IEntityConsoleCommand
+{
+    [Dependency]
+    protected EntityManager EntityManager = default!;
 }

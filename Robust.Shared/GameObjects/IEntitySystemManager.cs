@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 
 namespace Robust.Shared.GameObjects
@@ -131,5 +132,10 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> GetEntitySystemTypes();
         bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system);
         object GetEntitySystem(Type sysType);
+
+        /// <summary>
+        /// Dependency collection that contains all the loaded systems.
+        /// </summary>
+        public IDependencyCollection DependencyCollection { get; }
     }
 }

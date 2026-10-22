@@ -1,22 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
+    // Characters that we don't allow in prototype IDs. Spaces and periods both
+    // break generated localization strings for entity prototypes, so we just
+    // disallow them for all prototypes.
+    private static readonly char[] DisallowedIdChars = [' ', '.'];
 
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
-        out Dictionary<Type, HashSet<string>> protos)
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path, bool partialNoOriginalError = false) => ValidateDirectory(path, out _, partialNoOriginalError);
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(
+        ResPath path,
+        out Dictionary<Type, HashSet<string>> protos,
+        bool partialNoOriginalError = false)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
@@ -24,6 +31,7 @@ public partial class PrototypeManager
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
         var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
 
+        var queue = Array.Empty<Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>?>();
         foreach (var resourcePath in streams)
         {
             using var reader = ReadFile(resourcePath);
@@ -34,7 +42,16 @@ public partial class PrototypeManager
             }
 
             var yamlStream = new YamlStream();
-            yamlStream.Load(reader);
+            try
+            {
+                yamlStream.Load(reader);
+            }
+            catch (Exception e)
+            {
+                throw new PrototypeLoadException($"Error loading file: '{resourcePath}'\n{e}");
+            }
+
+            var extractedNodes = new List<(Type, MappingDataNode)>();
 
             foreach (var doc in yamlStream.Documents)
             {
@@ -51,25 +68,105 @@ public partial class PrototypeManager
                     }
 
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
-                    var id = mapping.Get<ValueDataNode>("id").Value;
+                    var extracted = ExtractMapping(mapping);
 
-                    var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
-                    mapping.Remove("type");
+                    if (extracted is not null)
+                    {
+                        extractedNodes.Add((type, extracted.Data));
 
-                    if (prototypes.GetOrNew(type).TryAdd(id, data))
+                        if (extracted.VariantData is not null)
+                        {
+                            foreach (var (variantId, variantExtracted) in extracted.VariantData)
+                            {
+                                extractedNodes.Add((type, variantExtracted.Data));
+                            }
+                        }
+                    }
+                }
+            }
+
+            var partial = IsFilePartial(resourcePath, out var index);
+            var partialResults = new List<ExtractedMappingData>();
+            foreach (var (type, mapping) in extractedNodes)
+            {
+                if (partial && ExtractMapping(mapping) is { } extracted)
+                {
+                    partialResults.Add(extracted);
+                    partial = true;
+                }
+
+                var id = mapping.Get<ValueDataNode>("id").Value;
+                var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
+                mapping.Remove("type");
+
+                if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
+                {
+                    dict.GetOrNew(data.File)
+                        .Add(new ErrorNode(mapping, $"Prototype '{id}' ({type}) contains disallowed "
+                                                    + $"character '{letter}'."));
+                }
+
+                if (partial)
+                    continue;
+
+                if (prototypes.GetOrNew(type).TryAdd(id, data))
+                    continue;
+
+                var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
+                dict.GetOrNew(data.File).Add(error);
+            }
+
+            if (partialResults.Count > 0)
+            {
+                if (index >= queue.Length)
+                    Array.Resize(ref queue, index + 1);
+
+                ref var indexQueue = ref queue[index];
+                indexQueue ??= new Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>();
+                indexQueue.Enqueue((resourcePath, partialResults));
+            }
+        }
+
+        // Process partial prototypes
+        foreach (var array in queue)
+        {
+            if (array == null)
+                continue;
+
+            foreach (var (file, result) in array)
+            {
+                foreach (var mapping in result)
+                {
+                    if (!prototypes.TryGetValue(mapping.Kind, out var kindProtos) ||
+                        !kindProtos.TryGetValue(mapping.Id, out var original))
+                    {
+                        if (partialNoOriginalError && !mapping.PartialOnly)
+                        {
+                            dict.GetOrNew(file.ToString()).Add(new ErrorNode(mapping.Data, $"Partial prototype {mapping.Id} of type {mapping.Kind.Name} does not have an original definition to modify, and is not marked as !PartialOnly. Did the original {mapping.Id} prototype that you are trying to modify get deleted?"));
+                        }
+
                         continue;
+                    }
 
-                    var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
-                    dict.GetOrNew(data.File).Add(error);
+                    try
+                    {
+                        original.Mapping = MergeMappingExisting(mapping, null, true, _kinds[mapping.Kind], original.Mapping, file);
+
+                        // Re-remove "type" from merged partials
+                        original.Mapping.Remove("type");
+                    }
+                    catch (Exception e)
+                    {
+                        Sawmill.Error($"Exception whilst loading partial prototypes from {file}:\n{e}");
+                    }
                 }
             }
         }
 
-        var ctx = new YamlValidationContext();
+        var ctx = new YamlValidationContext(_serializationManager);
         var errors = new List<ErrorNode>();
         foreach (var (type, instances) in prototypes)
         {
-            var defaultErrorOccurred = false;
             foreach (var (id, data) in instances)
             {
                 errors.Clear();
@@ -203,7 +300,7 @@ public partial class PrototypeManager
 
         DebugTools.AssertNull(data.Parents);
         DebugTools.AssertNull(data.ParentMappings);
-        data.Parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
+        data.Parents = NodeToParentArray(parentNode);
         data.ParentMappings = new MappingDataNode[data.Parents.Length];
 
         var i = 0;

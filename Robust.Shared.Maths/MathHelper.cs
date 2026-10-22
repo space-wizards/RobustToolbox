@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace Robust.Shared.Maths
 {
@@ -526,6 +527,27 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        /// Returns whether two vectors are within <paramref name="percentage"/> of each other
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Vector4 a, Vector4 b, float percentage = .00001f)
+        {
+            a = Vector4.Abs(a);
+            b = Vector4.Abs(b);
+            var p = new Vector4(percentage);
+            var epsilon = Vector4.Max(Vector4.Max(a, b) * p, p);
+            var delta = Vector4.Abs(a - b);
+            return delta.X <= epsilon.X && delta.Y <= epsilon.Y && delta.Z <= epsilon.Z && delta.W <= epsilon.W;
+        }
+
+        /// <summary>
+        /// Returns whether two colours are within <paramref name="percentage"/> of each other
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Color a, Color b, float percentage = .00001f)
+            => CloseToPercent(a.RGBA, b.RGBA, percentage);
+
+        /// <summary>
         /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -558,6 +580,17 @@ namespace Robust.Shared.Maths
             return Math.Abs(a - b) <= epsilon;
         }
 
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Vector128<float> a, Vector128<float> b, float percentage = .00001f)
+        {
+            var epsilon = Vector128.Max(Vector128.Max(Vector128.Abs(a), Vector128.Abs(b)) * Vector128.Create(percentage),
+                Vector128.Create(percentage));
+            var result = Vector128.LessThanOrEqual(Vector128.Abs(a - b), epsilon);
+            return Vector128.EqualsAll(result.AsInt32(), Vector128<int>.AllBitsSet);
+        }
         #endregion CloseToPercent
 
         #region CloseTo
@@ -721,6 +754,21 @@ namespace Robust.Shared.Maths
             var mask = powerOfTwo - T.One;
             var remainder = value & mask;
             return remainder == T.Zero ? value : (value | mask) + T.One;
+        }
+
+        public static bool IsValid(this float value)
+        {
+            if (float.IsNaN(value))
+            {
+                return false;
+            }
+
+            if (float.IsInfinity(value))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         #endregion Public Members

@@ -10,6 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Replays.Loading;
 
+[NotContentImplementable]
 public interface IReplayLoadManager
 {
     public void Initialize();

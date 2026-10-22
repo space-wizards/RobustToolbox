@@ -6,22 +6,25 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class BuildInfoCommand : ToolshedCommand
+internal sealed partial class BuildInfoCommand : ToolshedCommand
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private static readonly string Gold = Color.Gold.ToHex();
 
     [CommandImplementation]
-    public void BuildInfo([CommandInvocationContext] IInvocationContext ctx)
+    public void BuildInfo(IInvocationContext ctx)
     {
         var game = _cfg.GetCVar(CVars.BuildForkId);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Game:[/color] {game}"));
         var buildCommit = _cfg.GetCVar(CVars.BuildHash);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Build commit:[/color] {buildCommit}"));
         var buildManifest = _cfg.GetCVar(CVars.BuildManifestHash);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Manifest hash:[/color] {buildManifest}"));
         var engine = _cfg.GetCVar(CVars.BuildEngineVersion);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Engine ver:[/color] {engine}"));
+
+        ctx.WriteLine(FormattedMessage.FromMarkupOrThrow($"""
+            [color={Gold}]Game:[/color] {game}
+            [color={Gold}]Build commit:[/color] {buildCommit}
+            [color={Gold}]Manifest hash:[/color] {buildManifest}
+            [color={Gold}]Engine ver:[/color] {engine}
+            """));
     }
 }

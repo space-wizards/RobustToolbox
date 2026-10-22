@@ -64,7 +64,7 @@ internal sealed partial class CollisionManager
 		    manifold.LocalNormal = normals[normalIndex];
 		    manifold.LocalPoint = (v1 + v2) * 0.5f;
 
-            ref var p0 = ref manifold.Points[0];
+            ref var p0 = ref manifold.Points._00;
 
 		    p0.LocalPoint = circleB.Position;
 		    p0.Id.Key = 0;
@@ -88,7 +88,7 @@ internal sealed partial class CollisionManager
 		    manifold.LocalNormal = (cLocal - v1).Normalized();
             manifold.LocalPoint = v1;
 
-            ref var p0 = ref manifold.Points[0];
+            ref var p0 = ref manifold.Points._00;
 
 		    p0.LocalPoint = circleB.Position;
 		    p0.Id.Key = 0;
@@ -107,7 +107,7 @@ internal sealed partial class CollisionManager
 		    manifold.LocalNormal = (cLocal - v2).Normalized();
             manifold.LocalPoint = v2;
 
-            ref var p0 = ref manifold.Points[0];
+            ref var p0 = ref manifold.Points._00;
 
 		    p0.LocalPoint = circleB.Position;
 		    p0.Id.Key = 0;
@@ -126,7 +126,7 @@ internal sealed partial class CollisionManager
 		    manifold.LocalNormal = normals[vertIndex1];
 		    manifold.LocalPoint = faceCenter;
 
-            ref var p0 = ref manifold.Points[0];
+            ref var p0 = ref manifold.Points._00;
 
 		    p0.LocalPoint = circleB.Position;
             p0.Id.Key = 0;

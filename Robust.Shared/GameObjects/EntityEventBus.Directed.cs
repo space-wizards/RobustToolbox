@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
@@ -11,10 +11,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [NotContentImplementable]
     public interface IEventBus : IDirectedEventBus, IBroadcastEventBus
     {
     }
 
+    [NotContentImplementable]
     public interface IDirectedEventBus
     {
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
@@ -67,41 +69,32 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
         /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
+        /// is because of the component network source generator.<br/>
+        /// This may be removed, modified, or pulled back internal at ANY TIME.
         /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
             where TEvent : notnull;
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="idx">Type of the component, for faster lookups.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, CompIdx idx, TEvent args)
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, TEvent args)
             where TEvent : notnull;
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component, by-ref.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
+            where TEvent : notnull;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, ref TEvent args)
             where TEvent : notnull;
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
@@ -111,15 +104,21 @@ namespace Robust.Shared.GameObjects
     {
         internal delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref Unit args);
 
-        private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args)
-            where TEvent : notnull;
+        /// <summary>
+        /// Max size of a components event subscription linked list.
+        /// Used to limit the stackalloc in <see cref="EntDispatch"/>
+        /// </summary>
+        /// <remarks>
+        /// SS14 currently requires only 18, I doubt it will ever need to exceed 256.
+        /// </remarks>
+        private const int MaxEventLinkedListSize = 256;
 
         /// <summary>
         /// Constructs a new instance of <see cref="EntityEventBus"/>.
         /// </summary>
         /// <param name="entMan">The entity manager to watch for entity/component events.</param>
         /// <param name="reflection">The reflection manager to use when finding derived types.</param>
-        public EntityEventBus(IEntityManager entMan, IReflectionManager reflection)
+        public EntityEventBus(EntityManager entMan, IReflectionManager reflection)
         {
             _entMan = entMan;
             _comFac = entMan.ComponentFactory;
@@ -131,38 +130,54 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
+            where TEvent : notnull
         {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
-
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                CompIdx.Index(component.GetType()),
-                ref unitRef);
-        }
-
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, CompIdx type, TEvent args)
-        {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
-
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                type,
-                ref unitRef);
+            RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
         }
 
         /// <inheritdoc />
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent
         {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
+            RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
+        }
 
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                CompIdx.Index(component.GetType()),
-                ref unitRef);
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, TEvent args)
+            where TEvent : notnull
+        {
+            RaiseComponentEvent(uid, component, type, ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
+            where TEvent : notnull
+        {
+            RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent
+        {
+            RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, ref TEvent args)
+            where TEvent : notnull
+        {
+            if (_compEventSubs[type.Value].TryGetValue(typeof(TEvent), out var handler))
+                handler(uid, component, ref Unsafe.As<TEvent, Unit>(ref args));
         }
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare()
@@ -229,15 +244,13 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
-                => handler(uid, (TComp)comp, args);
+            void EventHandler(EntityUid uid, IComponent comp, ref Unit ev)
+            {
+                ref var tev = ref Unsafe.As<Unit, TEvent>(ref ev);
+                handler(uid, (TComp) comp, tev);
+            }
 
-            EntSubscribe<TEvent>(
-                CompIdx.Index<TComp>(),
-                typeof(TComp),
-                typeof(TEvent),
-                EventHandler,
-                null);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(
@@ -248,71 +261,51 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
-                => handler(uid, (TComp)comp, args);
+            void EventHandler(EntityUid uid, IComponent comp, ref Unit ev)
+            {
+                ref var tev = ref Unsafe.As<Unit, TEvent>(ref ev);
+                handler(uid, (TComp) comp, tev);
+            }
 
-            var orderData = CreateOrderingData(orderType, before, after);
-
-            EntSubscribe<TEvent>(
-                CompIdx.Index<TComp>(),
-                typeof(TComp),
-                typeof(TEvent),
-                EventHandler,
-                orderData);
-
-            RegisterCommon(typeof(TEvent), orderData, out _);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler, orderType, before, after);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler)
             where TComp : IComponent where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
-                => handler(uid, (TComp)comp, ref args);
+            void EventHandler(EntityUid uid, IComponent comp, ref Unit ev)
+            {
+                ref var tev = ref Unsafe.As<Unit, TEvent>(ref ev);
+                handler(uid, (TComp) comp, ref tev);
+            }
 
-            EntSubscribe<TEvent>(
-                CompIdx.Index<TComp>(),
-                typeof(TComp),
-                typeof(TEvent),
-                EventHandler,
-                null);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler, Type orderType,
             Type[]? before = null,
             Type[]? after = null) where TComp : IComponent where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
-                => handler(uid, (TComp)comp, ref args);
+            void EventHandler(EntityUid uid, IComponent comp, ref Unit ev)
+            {
+                ref var tev = ref Unsafe.As<Unit, TEvent>(ref ev);
+                handler(uid, (TComp) comp, ref tev);
+            }
 
-            var orderData = CreateOrderingData(orderType, before, after);
-
-            EntSubscribe<TEvent>(
-                CompIdx.Index<TComp>(),
-                typeof(TComp),
-                typeof(TEvent),
-                EventHandler,
-                orderData);
-
-            RegisterCommon(typeof(TEvent), orderData, out _);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler, orderType, before, after);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(EntityEventRefHandler<TComp, TEvent> handler, Type orderType,
             Type[]? before = null,
             Type[]? after = null) where TComp : IComponent where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
-                => handler(new Entity<TComp>(uid, (TComp) comp), ref args);
+            void EventHandler(EntityUid uid, IComponent comp, ref Unit ev)
+            {
+                ref var tev = ref Unsafe.As<Unit, TEvent>(ref ev);
+                handler(new Entity<TComp>(uid, (TComp) comp), ref tev);
+            }
 
-            var orderData = CreateOrderingData(orderType, before, after);
-
-            EntSubscribe<TEvent>(
-                CompIdx.Index<TComp>(),
-                typeof(TComp),
-                typeof(TEvent),
-                EventHandler,
-                orderData);
-
-            RegisterCommon(typeof(TEvent), orderData, out _);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler, orderType, before, after);
         }
 
         /// <inheritdoc />
@@ -320,7 +313,24 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            EntUnsubscribe(CompIdx.Index<TComp>(), typeof(TEvent));
+            if (!_comFac.TryGetRegistration(typeof(TComp), out _))
+            {
+                if (!IgnoreUnregisteredComponents)
+                    throw new InvalidOperationException($"Component is not a valid reference type: {typeof(TComp).Name}");
+
+                return;
+            }
+
+            if (_subscriptionLock)
+                throw new InvalidOperationException("Subscription locked.");
+
+            var i = CompIdx.ArrayIndex<TComp>();
+
+            _eventSubsUnfrozen[i]!.Remove(typeof(TEvent));
+            _compEventSubsUnfrozen[i]!.Remove(typeof(TEvent));
+
+            if (_eventSubsInv.TryGetValue(typeof(TEvent), out var t))
+                t.Remove(CompIdx.Index<TComp>());
         }
 
         private void ComFacOnComponentsAdded(ComponentRegistration[] regs)
@@ -331,6 +341,7 @@ namespace Robust.Shared.GameObjects
             foreach (var reg in regs)
             {
                 CompIdx.RefArray(ref _eventSubsUnfrozen, reg.Idx) ??= new();
+                CompIdx.RefArray(ref _compEventSubsUnfrozen, reg.Idx) ??= new();
             }
         }
 
@@ -346,7 +357,7 @@ namespace Robust.Shared.GameObjects
 
         public void OnComponentAdded(in AddedComponentEventArgs e)
         {
-            EntAddComponent(e.BaseArgs.Owner, e.ComponentType.Idx);
+            EntAddComponent(e.BaseArgs.Owner, e.ComponentType.Idx, e.BaseArgs.Component);
         }
 
         internal void LockSubscriptions()
@@ -354,56 +365,35 @@ namespace Robust.Shared.GameObjects
             _subscriptionLock = true;
             _eventData = _eventDataUnfrozen.ToFrozenDictionary();
 
-            // Find last non-null entry.
-            var last = 0;
-            for (var i = 0; i < _eventSubsUnfrozen.Length; i++)
-            {
-                var entry = _eventSubsUnfrozen[i];
-                if (entry != null)
-                    last = i;
-            }
-
-            // TODO PERFORMANCE
-            // make this only contain events that actually use comp-events
-            // Assuming it makes the frozen dictionaries more specialized and thus faster.
-            // AFAIK currently only MapInit is both a comp-event and a general event.
-            // It should probably be changed to just be a comp event.
-            _compEventSubs = _eventSubsUnfrozen
-                .Take(last+1)
+            _eventSubs = TrimNull(_eventSubsUnfrozen)
                 .Select(dict => dict?.ToFrozenDictionary()!)
                 .ToArray();
 
-            _eventSubs = _eventSubsUnfrozen
-                .Take(last+1)
-                .Select(dict => dict?.Where(x => !IsComponentEvent(x.Key)).ToFrozenDictionary()!)
+            _compEventSubs = TrimNull(_compEventSubsUnfrozen)
+                .Select(dict => dict?.ToFrozenDictionary()!)
                 .ToArray();
 
             CalcOrdering();
         }
 
-        private bool IsComponentEvent(Type t)
-        {
-            var isCompEv = _eventData[t].ComponentEvent;
-            DebugTools.Assert(isCompEv == t.HasCustomAttribute<ComponentEventAttribute>());
-            return isCompEv;
-        }
-
         public void OnComponentRemoved(in RemovedComponentEventArgs e)
         {
-            EntRemoveComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
+            EntRemoveComponent(e.BaseArgs.Owner, e.Idx);
         }
 
         private void EntAddSubscription(
             CompIdx compType,
             Type compTypeObj,
             Type eventType,
-            DirectedRegistration registration)
+            DirectedEventHandler handler,
+            Type? orderType = null,
+            Type[]? before = null,
+            Type[]? after = null)
         {
             if (_subscriptionLock)
                 throw new InvalidOperationException("Subscription locked.");
 
-            if (compType.Value >= _eventSubsUnfrozen.Length
-                || _eventSubsUnfrozen[compType.Value] is not { } compSubs)
+            if (!_comFac.TryGetRegistration(compTypeObj, out _))
             {
                 if (IgnoreUnregisteredComponents)
                     return;
@@ -411,53 +401,25 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Component is not a valid reference type: {compTypeObj.Name}");
             }
 
-            if (compSubs.ContainsKey(eventType))
+            if (eventType.GetCustomAttribute<ComponentEventAttribute>() is { } attr)
             {
-                throw new InvalidOperationException(
-                    $"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
-            }
+                if (!_compEventSubsUnfrozen[compType.Value]!.TryAdd(eventType, handler))
+                    throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
 
-            compSubs.Add(eventType, registration);
-
-            RegisterCommon(eventType, registration.Ordering, out var data);
-            data.ComponentEvent = eventType.HasCustomAttribute<ComponentEventAttribute>();
-            if (!data.ComponentEvent)
-                _eventSubsInv.GetOrNew(eventType).Add(compType);
-        }
-
-        private void EntSubscribe<TEvent>(
-            CompIdx compType,
-            Type compTypeObj,
-            Type eventType,
-            DirectedEventHandler<TEvent> handler,
-            OrderingData? order)
-            where TEvent : notnull
-        {
-            EntAddSubscription(compType, compTypeObj, eventType, new DirectedRegistration(handler, order,
-                (EntityUid uid, IComponent comp, ref Unit ev) =>
-                {
-                    ref var tev = ref Unsafe.As<Unit, TEvent>(ref ev);
-                    handler(uid, comp, ref tev);
-                }));
-        }
-
-        private void EntUnsubscribe(CompIdx compType, Type eventType)
-        {
-            if (_subscriptionLock)
-                throw new InvalidOperationException("Subscription locked.");
-
-            if (compType.Value >= _eventSubsUnfrozen.Length
-                || _eventSubsUnfrozen[compType.Value] is not { } compSubs)
-            {
-                if (IgnoreUnregisteredComponents)
+                // An exclusive component-event is only raised via RaiseComponentEvent, hence it don't need a normal
+                // directed event subscription
+                if (attr.Exclusive)
                     return;
-
-                throw new InvalidOperationException("Trying to unsubscribe from unregistered component!");
             }
 
-            var removed = compSubs.Remove(eventType);
-            if (removed)
-                _eventSubsInv[eventType].Remove(compType);
+            var orderData = orderType == null ? null : CreateOrderingData(orderType, before, after);
+            var reg = new DirectedRegistration(orderData, handler);
+
+            if (!_eventSubsUnfrozen[compType.Value]!.TryAdd(eventType, reg))
+                throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
+
+            RegisterCommon(eventType, reg.Ordering, out _);
+            _eventSubsInv.GetOrNew(eventType).Add(compType);
         }
 
         private void EntAddEntity(EntityUid euid)
@@ -472,23 +434,22 @@ namespace Robust.Shared.GameObjects
             _entEventTables.Remove(euid);
         }
 
-        private void EntAddComponent(EntityUid euid, CompIdx compType)
+        private void EntAddComponent(EntityUid euid, CompIdx compType, IComponent component)
         {
             DebugTools.Assert(_subscriptionLock);
 
             var eventTable = _entEventTables[euid];
+            eventTable.Version++;
             var compSubs = _eventSubs[compType.Value];
 
             foreach (var evType in compSubs.Keys)
             {
-                DebugTools.Assert(!_eventData[evType].ComponentEvent);
-
                 if (eventTable.Free < 0)
                     GrowEventTable(eventTable);
 
                 DebugTools.Assert(eventTable.Free >= 0);
 
-                ref var eventStartIdx = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                ref var indices = ref CollectionsMarshal.GetValueRefOrAddDefault(
                     eventTable.EventIndices,
                     evType,
                     out var exists);
@@ -500,10 +461,14 @@ namespace Robust.Shared.GameObjects
 
                 // Set it up
                 entry.Component = compType;
-                entry.Next = exists ? eventStartIdx : -1;
+                entry.ComponentInstance = component;
+                entry.Next = exists ? indices.Start : -1;
 
                 // Assign new list entry to EventIndices dictionary.
-                eventStartIdx = entryIdx;
+                indices.Start = entryIdx;
+                indices.Count++;
+                if (indices.Count > MaxEventLinkedListSize)
+                    throw new NotSupportedException($"Exceeded maximum event linked list size. Need to implement stackalloc fallback.");
             }
         }
 
@@ -536,64 +501,144 @@ namespace Robust.Shared.GameObjects
         private void EntRemoveComponent(EntityUid euid, CompIdx compType)
         {
             var eventTable = _entEventTables[euid];
+            eventTable.Version++;
             var compSubs = _eventSubs[compType.Value];
 
             foreach (var evType in compSubs.Keys)
             {
-                DebugTools.Assert(!_eventData[evType].ComponentEvent);
-                ref var dictIdx = ref CollectionsMarshal.GetValueRefOrNullRef(eventTable.EventIndices, evType);
-                if (Unsafe.IsNullRef(ref dictIdx))
+                ref var indices = ref CollectionsMarshal.GetValueRefOrNullRef(eventTable.EventIndices, evType);
+                if (Unsafe.IsNullRef(ref indices))
                 {
                     DebugTools.Assert("This should not be possible. Were the events for this component never added?");
                     continue;
                 }
 
-                ref var updateNext = ref dictIdx;
+                var entryIdx = indices.Start;
+                ref var entry = ref eventTable.ComponentLists[entryIdx];
 
-                // Go over linked list to find index of component.
-                var entryIdx = dictIdx;
-                ref var entry = ref Unsafe.NullRef<EventTableListEntry>();
-                while (true)
-                {
-                    entry = ref eventTable.ComponentLists[entryIdx];
-                    if (entry.Component == compType)
-                    {
-                        // Found
-                        break;
-                    }
-
-                    entryIdx = entry.Next;
-                    updateNext = ref entry.Next;
-                }
-
-                if (entry.Next == -1 && Unsafe.AreSame(ref dictIdx, ref updateNext))
+                if (indices.Count == 1)
                 {
                     // Last entry for this event type, remove from dict.
+                    DebugTools.AssertEqual(entry.Next, -1);
                     eventTable.EventIndices.Remove(evType);
                 }
                 else
                 {
+                    ref var updateNext = ref indices.Start;
+
+                    // Go over linked list to find index of component.
+                    while (entry.Component != compType)
+                    {
+                        updateNext = ref entry.Next;
+                        entryIdx = entry.Next;
+                        entry = ref eventTable.ComponentLists[entryIdx];
+                    }
+
                     // Rewrite previous index to point to next in chain.
                     updateNext = entry.Next;
+                    indices.Count--;
                 }
 
                 // Push entry back onto free list.
+                entry.ComponentInstance = null!;
                 entry.Next = eventTable.Free;
                 eventTable.Free = entryIdx;
             }
         }
 
+        private readonly record struct EventTableDispatchEntry(CompIdx Component, int Entry);
+
         private void EntDispatch(EntityUid euid, Type eventType, ref Unit args)
         {
-            if (!EntTryGetSubscriptions(eventType, euid, out var enumerator))
+            if (!_entEventTables.TryGetValue(euid, out var eventTable))
                 return;
 
-            while (enumerator.MoveNext(out var component, out var reg))
-            {
-                if (component.Deleted)
-                    continue;
+            if (!eventTable.EventIndices.TryGetValue(eventType, out var indices))
+                return;
 
-                reg.Handler(euid, component, ref args);
+            DebugTools.Assert(indices.Count > 0);
+            DebugTools.Assert(indices.Start >= 0);
+
+            var version = eventTable.Version;
+
+            // Fastpath no stackalloc
+            if (indices.Count == 1)
+            {
+                ref var entry = ref eventTable.ComponentLists[indices.Start];
+                var comp = entry.ComponentInstance;
+                var compIdx = entry.Component;
+                var compSubs = _eventSubs[compIdx.Value];
+
+                if (comp.Deleted)
+                    return;
+
+#if DEBUG
+                eventTable.DirectedDispatchDepth++;
+#endif
+                try
+                {
+                    compSubs[eventType].Handler(euid, comp, ref args);
+                }
+                finally
+                {
+#if DEBUG
+                    eventTable.DirectedDispatchDepth--;
+#endif
+                }
+
+                return;
+            }
+
+            // First, collect all subscribing components.
+            // This is to avoid infinite loops over the linked list if subscription handlers add or remove components.
+            Span<EventTableDispatchEntry> dispatchEntries = stackalloc EventTableDispatchEntry[indices.Count];
+            var idx = indices.Start;
+            for (var index = 0; index < dispatchEntries.Length; index++)
+            {
+                DebugTools.Assert(idx >= 0);
+                ref var entry = ref eventTable.ComponentLists[idx];
+                dispatchEntries[index] = new EventTableDispatchEntry(entry.Component, idx);
+                idx = entry.Next;
+            }
+
+            var fallback = false;
+#if DEBUG
+            eventTable.DirectedDispatchDepth++;
+#endif
+            try
+            {
+                foreach (var (compIdx, entry) in dispatchEntries)
+                {
+                    IComponent comp;
+
+                    // If we haven't degenned then just use the indexed component.
+                    if (!fallback && eventTable.Version == version)
+                    {
+                        comp = eventTable.ComponentLists[entry].ComponentInstance;
+                    }
+                    // Debug mode do NOT change components during eventbus, however still need it work in release (even if slow).
+                    else
+                    {
+                        fallback = true;
+
+                        if (!_entMan.TryGetComponent(euid, compIdx, out var fallbackComp))
+                            continue;
+
+                        comp = fallbackComp;
+                    }
+
+                    if (comp.Deleted)
+                        continue;
+
+                    var compSubs = _eventSubs[compIdx.Value];
+                    compSubs[eventType].Handler(euid, comp, ref args);
+                }
+            }
+            finally
+            {
+#if DEBUG
+                eventTable.DirectedDispatchDepth--;
+#endif
             }
         }
 
@@ -602,50 +647,59 @@ namespace Robust.Shared.GameObjects
             Type eventType,
             ref ValueList<OrderedEventDispatch> found)
         {
-            if (!EntTryGetSubscriptions(eventType, euid, out var enumerator))
+            if (!_entEventTables.TryGetValue(euid, out var eventTable))
                 return;
 
-            while (enumerator.MoveNext(out var component, out var reg))
+            if (!eventTable.EventIndices.TryGetValue(eventType, out var indices))
+                return;
+
+            DebugTools.Assert(indices.Count > 0);
+            DebugTools.Assert(indices.Start >= 0);
+            var version = eventTable.Version;
+            var idx = indices.Start;
+            while (idx != -1)
             {
-                found.Add(new OrderedEventDispatch((ref Unit ev) =>
-                {
-                    if (!component.Deleted)
-                        reg.Handler(euid, component, ref ev);
-                }, reg.Order));
+                var entryIdx = idx;
+                ref var entry = ref eventTable.ComponentLists[idx];
+                idx = entry.Next;
+                var comp = entry.ComponentInstance;
+                var compIdx = entry.Component;
+                var compSubs = _eventSubs[compIdx.Value];
+                var reg = compSubs[eventType];
+
+                found.Add(new OrderedEventDispatch(
+                    (ref Unit ev) =>
+                    {
+                        var dispatchComp = comp;
+                        if (eventTable.Version != version)
+                        {
+                            if (!_entMan.TryGetComponent(euid, compIdx, out dispatchComp))
+                                return;
+                        }
+                        else
+                        {
+                            dispatchComp = eventTable.ComponentLists[entryIdx].ComponentInstance;
+                        }
+
+                        if (dispatchComp.Deleted)
+                            return;
+
+#if DEBUG
+                        eventTable.DirectedDispatchDepth++;
+#endif
+                        try
+                        {
+                            reg.Handler(euid, dispatchComp, ref ev);
+                        }
+                        finally
+                        {
+#if DEBUG
+                            eventTable.DirectedDispatchDepth--;
+#endif
+                        }
+                    },
+                    reg.Order));
             }
-        }
-
-        private void DispatchComponent<TEvent>(
-            EntityUid euid,
-            IComponent component,
-            CompIdx baseType,
-            ref Unit args)
-            where TEvent : notnull
-        {
-            if (_compEventSubs[baseType.Value].TryGetValue(typeof(TEvent), out var reg))
-                reg.Handler(euid, component, ref args);
-        }
-
-        /// <summary>
-        ///     Enumerates all subscriptions for an event on a specific entity, returning the component instances and registrations.
-        /// </summary>
-        private bool EntTryGetSubscriptions(Type eventType, EntityUid euid, out SubscriptionsEnumerator enumerator)
-        {
-            if (!_entEventTables.TryGetValue(euid, out var eventTable))
-            {
-                enumerator = default!;
-                return false;
-            }
-
-            // No subscriptions to this event type, return null.
-            if (!eventTable.EventIndices.TryGetValue(eventType, out var startEntry))
-            {
-                enumerator = default;
-                return false;
-            }
-
-            enumerator = new(eventType, startEntry, eventTable.ComponentLists, _eventSubs, euid, _entMan);
-            return true;
         }
 
         public void ClearSubscriptions()
@@ -658,6 +712,10 @@ namespace Robust.Shared.GameObjects
             _eventSubs = default!;
             _eventData = FrozenDictionary<Type, EventData>.Empty;
             foreach (var sub in _eventSubsUnfrozen)
+            {
+                sub?.Clear();
+            }
+            foreach (var sub in _compEventSubsUnfrozen)
             {
                 sub?.Clear();
             }
@@ -675,75 +733,14 @@ namespace Robust.Shared.GameObjects
             _compEventSubs = null!;
             _eventSubs = null!;
             _eventSubsUnfrozen = null!;
+            _compEventSubsUnfrozen = null!;
             _eventSubsInv = null!;
         }
 
-        private struct SubscriptionsEnumerator
+        internal sealed class DirectedRegistration(OrderingData? ordering, DirectedEventHandler handler)
+            : OrderedRegistration(ordering)
         {
-            private readonly Type _eventType;
-            private readonly EntityUid _uid;
-            private readonly FrozenDictionary<Type, DirectedRegistration>[] _subscriptions;
-            private readonly IEntityManager _entityManager;
-            private readonly EventTableListEntry[] _list;
-            private int _idx;
-
-            public SubscriptionsEnumerator(
-                Type eventType,
-                int startEntry,
-                EventTableListEntry[] list,
-                FrozenDictionary<Type, DirectedRegistration>[] subscriptions,
-                EntityUid uid,
-                IEntityManager entityManager)
-            {
-                _eventType = eventType;
-                _list = list;
-                _subscriptions = subscriptions;
-                _idx = startEntry;
-                _entityManager = entityManager;
-                _uid = uid;
-            }
-
-            public bool MoveNext(
-                [NotNullWhen(true)] out IComponent? component,
-                [NotNullWhen(true)] out DirectedRegistration? registration)
-            {
-                if (_idx == -1)
-                {
-                    component = null;
-                    registration = null;
-                    return false;
-                }
-
-                ref var entry = ref _list[_idx];
-                _idx = entry.Next;
-
-                var compType = entry.Component;
-                var compSubs = _subscriptions[compType.Value];
-
-                if (!compSubs.TryGetValue(_eventType, out registration))
-                {
-                    component = default;
-                    return false;
-                }
-
-                component = _entityManager.GetComponentInternal(_uid, compType);
-                return true;
-            }
-        }
-
-        internal sealed class DirectedRegistration : OrderedRegistration
-        {
-            public readonly Delegate Original;
-            public readonly DirectedEventHandler Handler;
-
-            public DirectedRegistration(
-                Delegate original,
-                OrderingData? ordering,
-                DirectedEventHandler handler) : base(ordering)
-            {
-                Original = original;
-                Handler = handler;
-            }
+            public readonly DirectedEventHandler Handler = handler;
 
             public void SetOrder(int order)
             {
@@ -760,8 +757,12 @@ namespace Robust.Shared.GameObjects
             // Free contains the first free linked list node, or -1 if there is none.
             // Free nodes form their own linked list.
             // ComponentList is the actual region of memory containing linked list nodes.
-            public readonly Dictionary<Type, int> EventIndices = new();
+            public readonly Dictionary<Type, (int Start, int Count)> EventIndices = new();
             public int Free;
+            public int Version;
+#if DEBUG
+            public int DirectedDispatchDepth;
+#endif
             public EventTableListEntry[] ComponentLists = new EventTableListEntry[InitialListSize];
 
             public EventTable()
@@ -775,6 +776,49 @@ namespace Robust.Shared.GameObjects
         {
             public int Next;
             public CompIdx Component;
+            public IComponent ComponentInstance;
+        }
+
+        /// <summary>
+        /// Return a new array with any trailing null entries removed.
+        /// </summary>
+        public static T[] TrimNull<T>(T[] input)
+        {
+            // Find last non-null entry.
+            var last = 0;
+            for (var i = 0; i < input.Length; i++)
+            {
+                var entry = input[i];
+                if (entry != null)
+                    last = i;
+            }
+
+            return input[..(last + 1)];
+        }
+
+        /// <summary>
+        /// Get an array of event handlers for a given component event, indexed by the component's net-id.
+        /// </summary>
+        /// <remarks>
+        /// For most events, this will generally be a pretty sparse array, with most entries being null.  However, for
+        /// the get and handle state events, this array will be relatively dense and helps save PVS a lot of save a
+        /// FrozenDictionary lookups.
+        /// </remarks>
+        internal DirectedEventHandler?[] GetNetCompEventHandlers<TEvent>()
+        {
+            DebugTools.Assert(_subscriptionLock);
+            DebugTools.Assert(typeof(TEvent).HasCustomAttribute<ComponentEventAttribute>());
+
+            var netComps = _comFac.NetworkedComponents!;
+            var result = new DirectedEventHandler?[netComps.Count];
+
+            for (var i = 0; i < netComps.Count; i++)
+            {
+                var reg = netComps[i];
+                result[i] = _compEventSubs[reg.Idx.Value].GetValueOrDefault(typeof(TEvent));
+            }
+
+            return result;
         }
     }
 

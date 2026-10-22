@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -17,6 +20,10 @@ namespace Robust.Server.GameStates;
 /// </summary>
 internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<PvsData> memoryRegion)
 {
+#if DEBUG
+    public HashSet<NetEntity> ToSendSet = new();
+#endif
+
     public readonly ICommonSession Session = session;
 
     public readonly ResizableMemoryRegion<PvsData> DataMemory = memoryRegion;
@@ -78,6 +85,11 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public bool RequestedFull = false;
 
     /// <summary>
+    /// The earliest time the client may request another full state.
+    /// </summary>
+    public TimeSpan FullStateRequestCooldownEnd;
+
+    /// <summary>
     /// List of entity states to send to the client.
     /// </summary>
     public readonly List<EntityState> States = new();
@@ -106,14 +118,24 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     /// </summary>
     public readonly List<NetEntity> LeftView = new();
 
+    /// <summary>
+    /// List of chunk entities that have left the player's view this tick.
+    /// </summary>
+    public readonly List<NetEntity> LeftViewChunkEntities = new();
+
     public readonly List<SessionState> PlayerStates = new();
     public uint LastMessage;
     public uint LastInput;
 
     /// <summary>
-    /// The game state for this tick,
+    /// The serialized game state object.
     /// </summary>
-    public GameState? State;
+    public MemoryStream? StateStream;
+
+    /// <summary>
+    /// Whether we should force reliable sending of the <see cref="MsgState"/>.
+    /// </summary>
+    public bool ForceSendReliably { get; set; }
 
     /// <summary>
     /// Clears all stored game state data. This should only be used after the game state has been serialized.
@@ -124,7 +146,6 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
         Chunks.Clear();
         ChunkSet.Clear();
         States.Clear();
-        State = null;
     }
 }
 
@@ -167,8 +188,27 @@ internal struct PvsMetadata
     public NetEntity NetEntity;
 
     public GameTick LastModifiedTick;
+
+    // TODO PVS maybe store as int?
+    // Theres extra space anyways, and the mask checks always need to convert to an int first, so it'd probably be faster too.
     public ushort VisMask;
-    public EntityLifeStage LifeStage;
+    private byte _flags;
+
+    /// <summary>
+    /// Flag for whether this entity is a chunk entity and should we special-case its detachment.
+    /// </summary>
+    public bool IsChunkEntity
+    {
+        get => (_flags & 0x80) != 0;
+        set => _flags = value ? (byte) (_flags | 0x80) : (byte) (_flags & ~0x80);
+    }
+
+    public EntityLifeStage LifeStage
+    {
+        get => (EntityLifeStage) (_flags & 0x7F);
+        set => _flags = (byte) (((byte) value & 0x7F) | (_flags & 0x80));
+    }
+
 #if DEBUG
     // This struct is padded to a size of 16 so it's aligned to cache boundaries nicely.
     // We have this extra space that isn't being used,
@@ -178,6 +218,15 @@ internal struct PvsMetadata
     private byte Pad0;
     public uint Marker;
 #endif
+
+    [Conditional("DEBUG")]
+    public void Validate(MetaDataComponent comp)
+    {
+        DebugTools.AssertEqual(NetEntity, comp.NetEntity);
+        DebugTools.AssertEqual(VisMask, comp.VisibilityMask);
+        DebugTools.Assert(LifeStage == comp.EntityLifeStage);
+        DebugTools.Assert(LastModifiedTick == comp.EntityLastModifiedTick || LastModifiedTick.Value == 0);
+    }
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 16)]

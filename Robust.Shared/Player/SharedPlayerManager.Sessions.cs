@@ -101,8 +101,8 @@ internal abstract partial class SharedPlayerManager
 
     public ICommonSession CreateAndAddSession(INetChannel channel)
     {
-        var session = CreateAndAddSession(channel.UserId, channel.UserName);
-        session.Channel = channel;
+        var session = (ICommonSessionInternal)CreateAndAddSession(channel.UserId, channel.UserName);
+        session.SetChannel(channel);
         return session;
     }
 
@@ -176,7 +176,7 @@ internal abstract partial class SharedPlayerManager
         if (session.AttachedEntity is not {} uid)
             return;
 
-        ((CommonSession) session).AttachedEntity = null;
+        ((ICommonSessionInternal) session).SetAttachedEntity(null);
         UpdateState(session);
 
         if (EntManager.TryGetComponent(uid, out ActorComponent? actor) && actor.LifeStage <= ComponentLifeStage.Running)
@@ -215,7 +215,7 @@ internal abstract partial class SharedPlayerManager
         if (session.AttachedEntity != null)
             Detach(session);
 
-        ((CommonSession) session).AttachedEntity = uid;
+        ((ICommonSessionInternal) session).SetAttachedEntity(uid);
         actor.PlayerSession = session;
         UpdateState(session);
         EntManager.EventBus.RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, session), true);
@@ -228,7 +228,7 @@ internal abstract partial class SharedPlayerManager
             return;
 
         var old = session.Status;
-        ((CommonSession) session).Status = status;
+        ((ICommonSessionInternal) session).SetStatus(status);
 
         UpdateState(session);
         PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, old, status));
@@ -236,13 +236,13 @@ internal abstract partial class SharedPlayerManager
 
     public void SetPing(ICommonSession session, short ping)
     {
-        ((CommonSession) session).Ping = ping;
+        ((ICommonSessionInternal) session).SetPing(ping);
         UpdateState(session);
     }
 
     public void SetName(ICommonSession session, string name)
     {
-        ((CommonSession) session).Name = name;
+        ((ICommonSessionInternal) session).SetName(name);
         UpdateState(session);
     }
 

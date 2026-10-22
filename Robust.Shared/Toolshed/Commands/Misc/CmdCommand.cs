@@ -9,7 +9,7 @@ namespace Robust.Shared.Toolshed.Commands.Misc;
 public sealed class CmdCommand : ToolshedCommand
 {
     [CommandImplementation("list")]
-    public IEnumerable<CommandSpec> List([CommandInvocationContext] IInvocationContext ctx)
+    public IEnumerable<CommandSpec> List(IInvocationContext ctx)
         => ctx.Environment.AllCommands();
 
     [CommandImplementation("moo")]
@@ -20,15 +20,15 @@ public sealed class CmdCommand : ToolshedCommand
     public string GetLocStr([PipedArgument] CommandSpec cmd) => cmd.DescLocStr();
 
     [CommandImplementation("info")]
-    public CommandSpec Info([CommandArgument] CommandSpec cmd) => cmd;
+    public CommandSpec Info(CommandSpec cmd) => cmd;
 
 #if CLIENT_SCRIPTING
     [CommandImplementation("getshim")]
-    public MethodInfo GetShim([CommandArgument] Block block)
+    public MethodInfo GetShim(Block block)
     {
 
         // this is gross sue me
-        var invocable = block.CommandRun.Commands.Last().Item1.Invocable;
+        var invocable = block.Run.Commands.Last().Item1.Invocable;
         return invocable.GetMethodInfo();
     }
 #endif

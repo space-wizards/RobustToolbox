@@ -5,16 +5,17 @@ using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-public sealed class PvsOverrideSystem : EntitySystem
+public sealed partial class PvsOverrideSystem : SharedPvsOverrideSystem
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IConsoleHost _console = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IConsoleHost _console = default!;
 
     private readonly HashSet<EntityUid> _hasOverride = new();
 
@@ -28,7 +29,8 @@ public sealed class PvsOverrideSystem : EntitySystem
         base.Initialize();
         EntityManager.EntityDeleted += OnDeleted;
         _player.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChanged);
+        SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
+        SubscribeLocalEvent<MapCreatedEvent>(OnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
 
@@ -132,10 +134,12 @@ public sealed class PvsOverrideSystem : EntitySystem
 
     /// <summary>
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations,
-    /// causing them to always be sent to all clients.
+    /// causing them to be sent to all clients. This will still respect visibility masks, it only overrides the range.
     /// </summary>
-    public void AddGlobalOverride(EntityUid uid)
+    public override void AddGlobalOverride(EntityUid uid)
     {
+        base.AddGlobalOverride(uid);
+
         if (GlobalOverride.Add(uid))
             _hasOverride.Add(uid);
     }
@@ -143,8 +147,10 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <summary>
     /// Removes an entity from the global overrides.
     /// </summary>
-    public void RemoveGlobalOverride(EntityUid uid)
+    public override void RemoveGlobalOverride(EntityUid uid)
     {
+        base.RemoveGlobalOverride(uid);
+
         GlobalOverride.Remove(uid);
         // Not bothering to clear _hasOverride, as we'd have to check all the other collections, and at that point we
         // might as well just do that when the entity gets deleted anyways.
@@ -154,8 +160,9 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// This causes an entity and all of its parents to always be sent to all players.
     /// </summary>
     /// <remarks>
-    /// This differs from <see cref="AddGlobalOverride"/> as it does not send children, and will ignore a players usual
-    /// PVS budget. You generally shouldn't use this unless an entity absolutely always needs to be sent to all clients.
+    /// This differs from <see cref="AddGlobalOverride"/> as it does not send children, will ignore a players usual
+    /// PVS budget, and ignores visibility masks. You generally shouldn't use this unless an entity absolutely always
+    /// needs to be sent to all clients.
     /// </remarks>
     public void AddForceSend(EntityUid uid)
     {
@@ -171,11 +178,12 @@ public sealed class PvsOverrideSystem : EntitySystem
     }
 
     /// <summary>
-    /// This causes an entity and all of its parents to always be sent to a player..
+    /// This causes an entity and all of its parents to always be sent to a player.
     /// </summary>
     /// <remarks>
-    /// This differs from <see cref="AddSessionOverride"/> as it does not send children, and will ignore a players usual
-    /// PVS budget. You generally shouldn't use this unless an entity absolutely always needs to be sent to a client.
+    /// This differs from <see cref="AddSessionOverride"/> as it does not send children, will ignore a players usual
+    /// PVS budget, and ignores visibility masks. You generally shouldn't use this unless an entity absolutely always
+    /// needs to be sent to a client.
     /// </remarks>
     public void AddForceSend(EntityUid uid, ICommonSession session)
     {
@@ -201,10 +209,12 @@ public sealed class PvsOverrideSystem : EntitySystem
 
     /// <summary>
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations for a
-    /// specific session.
+    /// specific session. This will still respect visibility masks, it only overrides the range.
     /// </summary>
-    public void AddSessionOverride(EntityUid uid, ICommonSession session)
+    public override void AddSessionOverride(EntityUid uid, ICommonSession session)
     {
+        base.AddSessionOverride(uid, session);
+
         if (SessionOverrides.GetOrNew(session).Add(uid))
             _hasOverride.Add(uid);
     }
@@ -212,8 +222,10 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <summary>
     /// Removes an entity from a session's overrides.
     /// </summary>
-    public void RemoveSessionOverride(EntityUid uid, ICommonSession session)
+    public override void RemoveSessionOverride(EntityUid uid, ICommonSession session)
     {
+        base.RemoveSessionOverride(uid, session);
+
         if (!SessionOverrides.TryGetValue(session, out var overrides))
             return;
 
@@ -226,53 +238,21 @@ public sealed class PvsOverrideSystem : EntitySystem
 
     /// <summary>
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations,
-    /// causing them to always be sent to all clients.
+    /// causing them to always be sent to the specified clients. This will still respect visibility masks, it only
+    /// overrides the range.
     /// </summary>
-    public void AddSessionOverrides(EntityUid uid, Filter filter)
+    public override void AddSessionOverrides(EntityUid uid, Filter filter)
     {
+        _hasOverride.Add(uid);
+        base.AddSessionOverrides(uid, filter);
+
         foreach (var session in filter.Recipients)
         {
-            AddSessionOverride(uid, session);
+            SessionOverrides.GetOrNew(session).Add(uid);
         }
     }
 
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddGlobalOverride(NetEntity entity, bool removeExistingOverride = true, bool recursive = false)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddGlobalOverride(uid.Value);
-    }
-
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddSessionOverride(NetEntity entity, ICommonSession session, bool removeExistingOverride = true)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddSessionOverride(uid.Value, session);
-    }
-
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddSessionOverrides(NetEntity entity, Filter filter, bool removeExistingOverride = true)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddSessionOverrides(uid.Value, filter);
-    }
-
-    [Obsolete("Don't use this, clear specific overrides")]
-    public void ClearOverride(NetEntity entity)
-    {
-        if (TryGetEntity(entity, out var uid))
-            Clear(uid.Value);
-    }
-
     #region Map/Grid Events
-
-    private void OnMapChanged(MapChangedEvent ev)
-    {
-        if (ev.Created)
-            OnMapCreated(ev);
-        else
-            OnMapDestroyed(ev);
-    }
 
     private void OnGridRemoved(GridRemovalEvent ev)
     {
@@ -286,12 +266,12 @@ public sealed class PvsOverrideSystem : EntitySystem
         AddForceSend(ev.EntityUid);
     }
 
-    private void OnMapDestroyed(MapChangedEvent ev)
+    private void OnMapRemoved(MapRemovedEvent ev)
     {
         RemoveForceSend(ev.Uid);
     }
 
-    private void OnMapCreated(MapChangedEvent ev)
+    private void OnMapCreated(MapCreatedEvent ev)
     {
         // TODO PVS remove this requirement.
         // I think this just required refactoring client game state logic so it doesn't sending maps/grids to nullspace.

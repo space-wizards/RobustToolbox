@@ -6,16 +6,23 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class VVPropEditorReference : VVPropEditor
+    internal sealed partial class VVPropEditorReference : VVPropEditor
     {
+        [Dependency] private IClientViewVariablesManager _vvMan = default!;
+
         private object? _localValue;
         private ViewVariablesObjectSelector? _selector;
+
+        public VVPropEditorReference()
+        {
+            IoCManager.InjectDependencies(this);
+        }
 
         protected override Control MakeUI(object? value)
         {
             if (value == null)
             {
-                return new Label {Text = "null", Align = Label.AlignMode.Right};
+                return new Label { Text = "null", Align = Label.AlignMode.Right };
             }
 
             _localValue = value;
@@ -36,14 +43,13 @@ namespace Robust.Client.ViewVariables.Editors
 
         private void ButtonOnOnPressed(BaseButton.ButtonEventArgs obj)
         {
-            var vvm = IoCManager.Resolve<IClientViewVariablesManager>();
             if (_selector != null)
             {
-                vvm.OpenVV(_selector);
+                _vvMan.OpenVV(_selector);
             }
             else if (_localValue != null)
             {
-                vvm.OpenVV(_localValue);
+                _vvMan.OpenVV(_localValue);
             }
         }
 

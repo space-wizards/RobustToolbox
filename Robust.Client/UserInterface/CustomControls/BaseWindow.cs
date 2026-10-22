@@ -1,9 +1,11 @@
 using System;
 using System.Numerics;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -17,6 +19,8 @@ namespace Robust.Client.UserInterface.CustomControls
         private DragMode CurrentDrag = DragMode.None;
         private Vector2 DragOffsetTopLeft;
         private Vector2 DragOffsetBottomRight;
+        private Control? _trackedParent;
+        private Vector2? _lastParentSize;
 
         public bool Resizable { get; set; } = true;
         public bool IsOpen => Parent != null;
@@ -37,6 +41,18 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Parent.RemoveChild(this);
             OnClose?.Invoke();
+        }
+
+        protected override void EnteredTree()
+        {
+            base.EnteredTree();
+            TrackParentResize();
+        }
+
+        protected override void ExitedTree()
+        {
+            UntrackParentResize();
+            base.ExitedTree();
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -101,6 +117,8 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var cursor = CursorShape.Arrow;
                 var previewDragMode = GetDragModeFor(args.RelativePosition);
+                previewDragMode &= ~DragMode.Move;
+
                 switch (previewDragMode)
                 {
                     case DragMode.Top:
@@ -115,12 +133,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
                     case DragMode.Bottom | DragMode.Left:
                     case DragMode.Top | DragMode.Right:
-                        cursor = CursorShape.Crosshair;
+                        cursor = CursorShape.NESWResize;
                         break;
 
                     case DragMode.Bottom | DragMode.Right:
                     case DragMode.Top | DragMode.Left:
-                        cursor = CursorShape.Crosshair;
+                        cursor = CursorShape.NWSEResize;
                         break;
                 }
 
@@ -159,15 +177,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 var rect = new UIBox2(left, top, right, bottom);
                 LayoutContainer.SetPosition(this, rect.TopLeft);
                 SetSize = rect.Size;
-
-                /*
-                var timing = IoCManager.Resolve<IGameTiming>();
-
-                var l = GetValue<float>(LayoutContainer.MarginLeftProperty);
-                var t = GetValue<float>(LayoutContainer.MarginTopProperty);
-
-                Logger.Debug($"{timing.CurFrame}: {rect.TopLeft}/({l}, {t}), {rect.Size}/{SetSize}");
-                */
             }
         }
 
@@ -228,12 +237,31 @@ namespace Robust.Client.UserInterface.CustomControls
             OnOpen?.Invoke();
         }
 
+        /// <summary>
+        /// Opens the window and places it at the specified position.
+        /// </summary>
+        public void Open(Vector2 position)
+        {
+            Measure(Vector2Helpers.Infinity);
+            Open();
+            LayoutContainer.SetPosition(this, position);
+        }
+
         public void OpenCentered() => OpenCenteredAt(new Vector2(0.5f, 0.5f));
 
         public void OpenToLeft() => OpenCenteredAt(new Vector2(0, 0.5f));
         public void OpenCenteredLeft() => OpenCenteredAt(new Vector2(0.25f, 0.5f));
         public void OpenToRight() => OpenCenteredAt(new Vector2(1, 0.5f));
         public void OpenCenteredRight() => OpenCenteredAt(new Vector2(0.75f, 0.5f));
+
+        /// <summary>
+        /// Opens a window and centers it relative to the screen position.
+        /// </summary>
+        public void OpenScreenAt(Vector2 relativePosition, IClyde clyde)
+        {
+            var adjusted = relativePosition / clyde.ScreenSize;
+            OpenCenteredAt(adjusted);
+        }
 
         /// <summary>
         ///     Opens a window, attempting to place the center of the window at some relative point on the screen.
@@ -275,6 +303,55 @@ namespace Robust.Client.UserInterface.CustomControls
         protected virtual DragMode GetDragModeFor(Vector2 relativeMousePos)
         {
             return DragMode.None;
+        }
+
+        private void TrackParentResize()
+        {
+            if (Parent == null)
+                return;
+
+            _trackedParent = Parent;
+            _trackedParent.OnResized += ParentResized;
+            _lastParentSize = _trackedParent.Size;
+        }
+
+        private void UntrackParentResize()
+        {
+            if (_trackedParent != null)
+                _trackedParent.OnResized -= ParentResized;
+
+            _trackedParent = null;
+            _lastParentSize = null;
+        }
+
+        /// <summary>
+        /// Re-locates this window if the parent re-sizes. Useful if display size changes.
+        /// </summary>
+        private void ParentResized()
+        {
+            // Sanity check
+            if (_trackedParent == null || Parent != _trackedParent)
+                return;
+
+            var newParentSize = _trackedParent.Size;
+
+            if (_lastParentSize is not { } oldParentSize ||
+                oldParentSize.X <= 0 || oldParentSize.Y <= 0 ||
+                newParentSize.X <= 0 || newParentSize.Y <= 0)
+            {
+                _lastParentSize = newParentSize;
+                return;
+            }
+
+            if (oldParentSize.EqualsApprox(newParentSize))
+                return;
+
+            var relativeCenter = (Position + Size / 2) / oldParentSize;
+            var newPosition = relativeCenter * newParentSize - Size / 2;
+            var maxPosition = Vector2.Max(newParentSize - Size, Vector2.Zero);
+
+            _lastParentSize = newParentSize;
+            LayoutContainer.SetPosition(this, Vector2.Clamp(newPosition, Vector2.Zero, maxPosition));
         }
 
         [Flags]

@@ -16,15 +16,8 @@ internal sealed class DeleteCommand : ToolshedCommand
     }
 
     [CommandImplementation]
-    public void Delete([CommandInvocationContext] IInvocationContext ctx, [CommandArgument] int entityInt)
+    public void Delete(EntityUid entity)
     {
-        if (!EntityManager.TryGetEntity(new NetEntity(entityInt), out var entity) ||
-            !EntityManager.EntityExists(entity))
-        {
-            ctx.WriteLine("That entity does not exist.");
-            return;
-        }
-
-        Del(entity.Value);
+        Del(entity);
     }
 }

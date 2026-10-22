@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
@@ -53,7 +54,7 @@ public sealed class ColorSelectorStyleBox : StyleBoxTexture
         var old = handle.GetShader();
         handle.UseShader(_shader);
 
-        var globalPixelPos = handle.GetTransform().Transform(default);
+        var globalPixelPos = Vector2.Transform(default, handle.GetTransform());
         _shader.SetParameter("size", box.Size);
         _shader.SetParameter("offset", globalPixelPos);
         _shader.SetParameter("xAxis", XAxis);

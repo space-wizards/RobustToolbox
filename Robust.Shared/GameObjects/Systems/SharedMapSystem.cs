@@ -1,39 +1,63 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    /// <summary>
+    ///     Manages all the grids and maps in the ECS, providing methods to create and modify them.
+    /// </summary>
     public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] private readonly ITileDefinitionManager _tileMan = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] protected readonly IMapManager MapManager = default!;
-        [Dependency] private readonly IMapManagerInternal _mapInternal = default!;
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly FixtureSystem _fixtures = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly IComponentFactory _factory = default!;
-        [Dependency] private readonly MetaDataSystem _meta = default!;
+        [Dependency] private ITileDefinitionManager _tileMan = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IManifoldManager _manifolds = default!;
+        [Dependency] private INetManager _netManager = default!;
+        [Dependency] private FixtureSystem _fixtures = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private MetaDataSystem _meta = default!;
 
+        private EntityQuery<FixturesComponent> _fixturesQuery;
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+        [Dependency] EntityQuery<GridTreeComponent> _gridTreeQuery;
 
         internal Dictionary<MapId, EntityUid> Maps { get; } = new();
+
+        /// <summary>
+        /// If set, this prevents the <see cref="TileChangedEvent"/> from being raised when modifying grids.
+        /// </summary>
+        /// <remarks>
+        /// Useful if you want to create a new grid, delete an existing grid, or bulk-modify tiles and don't want to spam ten billion individual tile-changed events.
+        /// </remarks>
+        internal bool SuppressOnTileChanged { get; set; }
+
+        /// <summary>
+        /// This hashset is used to try prevent MapId re-use. This is mainly for auto-assigned map ids.
+        /// Loading a map with a specific id (e.g., the various mapping commands) may still result in an id being
+        /// reused.
+        /// </summary>
+        protected HashSet<MapId> UsedIds = new();
 
         public override void Initialize()
         {
             base.Initialize();
 
+            _fixturesQuery = GetEntityQuery<FixturesComponent>();
             _mapQuery = GetEntityQuery<MapComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -45,11 +69,33 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
             SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);
         }
+
+        /// <summary>
+        /// Converts the specified index to a bitmask with the specified chunksize.
+        /// </summary>
+        [Pure]
+        public static ulong ToBitmask(Vector2i index, byte chunkSize = 8)
+        {
+            DebugTools.Assert(chunkSize <= 8);
+            DebugTools.Assert((index.X + index.Y * chunkSize) < 64);
+
+            return (ulong) 1 << (index.X + index.Y * chunkSize);
+        }
+
+        /// <returns>True if the specified bitflag is set for this index.</returns>
+        [Pure]
+        public static bool FromBitmask(Vector2i index, ulong bitmask, byte chunkSize = 8)
+        {
+            var flag = ToBitmask(index, chunkSize);
+
+            return (flag & bitmask) == flag;
+        }
     }
 
     /// <summary>
     ///     Arguments for when a map is created or deleted.
     /// </summary>
+    [Obsolete("Use map creation or deletion events")]
     public sealed class MapChangedEvent : EntityEventArgs
     {
         public EntityUid Uid;
@@ -80,6 +126,16 @@ namespace Robust.Shared.GameObjects
         public bool Destroyed => !Created;
     }
 
+    /// <summary>
+    ///     Event raised whenever a map is created.
+    /// </summary>
+    public readonly record struct MapCreatedEvent(EntityUid Uid, MapId MapId);
+
+    /// <summary>
+    ///     Event raised whenever a map is removed.
+    /// </summary>
+    public readonly record struct MapRemovedEvent(EntityUid Uid, MapId MapId);
+
 #pragma warning disable CS0618
     public sealed class GridStartupEvent : EntityEventArgs
     {
@@ -107,10 +163,12 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        public MapGridComponent Grid { get; }
 
-        public GridInitializeEvent(EntityUid uid)
+        public GridInitializeEvent(EntityUid uid, MapGridComponent grid)
         {
             EntityUid = uid;
+            Grid = grid;
         }
     }
 #pragma warning restore CS0618
@@ -129,45 +187,61 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Arguments for when a single tile on a grid is changed locally or remotely.
+    /// Raised directed at the grid when tiles are changed locally or remotely.
     /// </summary>
     [ByRefEvent]
     public readonly record struct TileChangedEvent
     {
+        /// <inheritdoc cref="TileChangedEvent(Entity{MapGridComponent}, Tile, Tile, Vector2i, Vector2i)"/>
+        public TileChangedEvent(Entity<MapGridComponent> entity, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
+            : this(entity, newTile.Tile, oldTile, chunkIndex, newTile.GridIndices) { }
+
         /// <summary>
-        ///     Creates a new instance of this class.
+        /// Creates a new instance of this event for a single changed tile.
         /// </summary>
-        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
+        /// <param name="entity">The grid entity containing the changed tile(s)</param>
+        /// <param name="newTile">New tile that replaced the old one.</param>
+        /// <param name="oldTile">Old tile that was replaced.</param>
+        /// <param name="chunkIndex">The index of the grid-chunk that this tile belongs to.</param>
+        /// <param name="gridIndices">The positional indices of this tile on the grid.</param>
+        public TileChangedEvent(Entity<MapGridComponent> entity, Tile newTile, Tile oldTile, Vector2i chunkIndex, Vector2i gridIndices)
         {
-            Entity = uid;
-            NewTile = newTile;
-            OldTile = oldTile;
-            ChunkIndex = chunkIndex;
+            Entity = entity;
+            Changes = [new TileChangedEntry(newTile, oldTile, chunkIndex, gridIndices)];
         }
 
         /// <summary>
+        /// Creates a new instance of this event for multiple changed tiles.
+        /// </summary>
+        public TileChangedEvent(Entity<MapGridComponent> entity, TileChangedEntry[] changes)
+        {
+            Entity = entity;
+            Changes = changes;
+        }
+
+        /// <summary>
+        /// Entity of the grid with the tile-change. TileRef stores the GridId.
+        /// </summary>
+        public readonly Entity<MapGridComponent> Entity;
+
+        /// <summary>
+        /// An array of all the tiles that were changed.
+        /// </summary>
+        public readonly TileChangedEntry[] Changes;
+    }
+
+    /// <summary>
+    /// Data about a single tile that was changed as part of a <see cref="TileChangedEvent"/>.
+    /// </summary>
+    /// <param name="NewTile">New tile that replaced the old one.</param>
+    /// <param name="OldTile">Old tile that was replaced.</param>
+    /// <param name="ChunkIndex">The index of the grid-chunk that this tile belongs to.</param>
+    /// <param name="GridIndices">The positional indices of this tile on the grid.</param>
+    public readonly record struct TileChangedEntry(Tile NewTile, Tile OldTile, Vector2i ChunkIndex, Vector2i GridIndices)
+    {
+        /// <summary>
         /// Was the tile previously empty or is it now empty.
         /// </summary>
-        public bool EmptyChanged => OldTile.IsEmpty != NewTile.Tile.IsEmpty;
-
-        /// <summary>
-        ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
-        /// </summary>
-        public readonly EntityUid Entity;
-
-        /// <summary>
-        ///     New tile that replaced the old one.
-        /// </summary>
-        public readonly TileRef NewTile;
-
-        /// <summary>
-        ///     Old tile that was replaced.
-        /// </summary>
-        public readonly Tile OldTile;
-
-        /// <summary>
-        ///     The index of the grid-chunk that this tile belongs to.
-        /// </summary>
-        public readonly Vector2i ChunkIndex;
+        public bool EmptyChanged => OldTile.IsEmpty != NewTile.IsEmpty;
     }
 }

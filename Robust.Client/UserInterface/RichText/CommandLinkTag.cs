@@ -8,14 +8,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class CommandLinkTag : IMarkupTag
+public sealed partial class CommandLinkTag : IMarkupTagHandler
 {
-    [Dependency] private readonly IClientConsoleHost _clientConsoleHost = default!;
+    [Dependency] private IClientConsoleHost _clientConsoleHost = default!;
 
     public string Name => "cmdlink";
 
     /// <inheritdoc/>
-    public bool TryGetControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
+    public bool TryCreateControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
     {
         if (!node.Value.TryGetString(out var text)
             || !node.Attributes.TryGetValue("command", out var commandParameter)
@@ -35,6 +35,9 @@ public sealed class CommandLinkTag : IMarkupTag
         label.OnMouseEntered += _ => label.FontColorOverride = Color.Blue;
         label.OnMouseExited += _ => label.FontColorOverride = Color.LightBlue;
         label.OnKeyBindDown += args => OnKeybindDown(args, command);
+
+        if (node.Attributes.TryGetValue("title", out var titleArg))
+            label.ToolTip = titleArg.StringValue;
 
         control = label;
         return true;

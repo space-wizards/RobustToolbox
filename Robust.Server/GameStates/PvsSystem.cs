@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Configuration;
@@ -17,8 +16,6 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -31,23 +28,25 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Dependency] private readonly INetworkedMapManager _mapManager = default!;
-    [Dependency] private readonly IServerEntityNetworkManager _netEntMan = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IParallelManager _parallelManager = default!;
-    [Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
-    [Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly InputSystem _input = default!;
-    [Dependency] private readonly IServerNetManager _netMan = default!;
-    [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
-    [Dependency] private readonly PvsOverrideSystem _pvsOverride = default!;
-    [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
+    [Dependency] private IConfigurationManager _configManager = default!;
+    [Dependency] private IServerEntityNetworkManager _netEntMan = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IParallelManager _parallelManager = default!;
+    [Dependency] private IServerGameStateManager _serverGameStateManager = default!;
+    [Dependency] private IServerNetConfigurationManager _netConfigManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private InputSystem _input = default!;
+    [Dependency] private IServerNetManager _netMan = default!;
+    [Dependency] private IParallelManagerInternal _parallelMgr = default!;
+    [Dependency] private PvsOverrideSystem _pvsOverride = default!;
+    [Dependency] private IServerReplayRecordingManager _replay = default!;
+    [Dependency] private SharedMapSystem _maps = default!;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
     public const int DirtyBufferSize = 20;
+
+    private static readonly TimeSpan FullStateRequestCooldown = TimeSpan.FromSeconds(1);
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
 
@@ -81,6 +80,8 @@ internal sealed partial class PvsSystem : EntitySystem
     private PvsChunkJob _chunkJob;
     private PvsLeaveJob _leaveJob;
     private PvsDeletionsJob _deletionJob;
+    private PvsSendJob _sendJob;
+    private GameTick _sendTick;
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -99,11 +100,18 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
+    private readonly HashSet<EntityUid> _toDelete = new();
+
+    /// <summary>
+    /// The sessions that are currently being processed. Note that this is in general used by parallel & async tasks.
+    /// Hence player disconnection processing is deferred and only run via <see cref="ProcessDisconnections"/>.
+    /// </summary>
     private PvsSession[] _sessions = default!;
 
     private bool _async;
 
     private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
+    private EntityEventBus.DirectedEventHandler?[]? _getStateHandlers;
 
     private static readonly Histogram Histogram = Metrics.CreateHistogram("robust_game_state_update_usage",
         "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
@@ -120,6 +128,7 @@ internal sealed partial class PvsSystem : EntitySystem
             throw new Exception($"Pvs struct sizes must match");
 
         _deletionJob = new PvsDeletionsJob(this);
+        _sendJob = new PvsSendJob(this);
         _leaveJob = new PvsLeaveJob(this);
         _chunkJob = new PvsChunkJob(this);
         _ackJob = new PvsAckJob(this);
@@ -128,16 +137,17 @@ internal sealed partial class PvsSystem : EntitySystem
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
 
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChanged);
+        SubscribeLocalEvent<MapRemovedEvent>(OnMapChanged);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
-        SubscribeLocalEvent<EntityTerminatingEvent>(OnEntityTerminating);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
-
+        SubscribeLocalEvent<ChunkEntityAddedEvent>(OnChunkEntityAdded);
+        SubscribeLocalEvent<ChunkEntityRemovedEvent>(OnChunkEntityRemoved);
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         _transform.OnBeforeMoveEvent += OnEntityMove;
         EntityManager.EntityAdded += OnEntityAdded;
         EntityManager.EntityDeleted += OnEntityDeleted;
         EntityManager.AfterEntityFlush += AfterEntityFlush;
+        EntityManager.BeforeEntityTerminating += OnEntityTerminating;
 
         Subs.CVar(_configManager, CVars.NetPVS, SetPvs, true);
         Subs.CVar(_configManager, CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
@@ -163,6 +173,7 @@ internal sealed partial class PvsSystem : EntitySystem
         EntityManager.EntityAdded -= OnEntityAdded;
         EntityManager.EntityDeleted -= OnEntityDeleted;
         EntityManager.AfterEntityFlush -= AfterEntityFlush;
+        EntityManager.BeforeEntityTerminating -= OnEntityTerminating;
 
         _parallelMgr.ParallelCountChanged -= ResetParallelism;
 
@@ -171,6 +182,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         ClearPvsData();
         ShutdownDirty();
+        _getStateHandlers = null;
     }
 
     public override void Update(float frameTime)
@@ -183,52 +195,33 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     internal void SendGameStates(ICommonSession[] players)
     {
+        _getStateHandlers ??= EntityManager.EventBusInternal.GetNetCompEventHandlers<ComponentGetState>();
+
+        // Wait for pending jobs and process disconnected players
+        ProcessDisconnections();
+
         // Ensure each session has a PvsSession entry before starting any parallel jobs.
         CacheSessionData(players);
 
         // Get visible chunks, and update any dirty chunks.
-        BeforeSendState();
+        BeforeSerializeStates();
 
-        // Construct & send the game state to each player.
-        SendStates(players);
+        // Construct & serialize the game state for each player (and update the replay).
+        SerializeStates();
 
-        // Cull deletion history
-        AfterSendState(players);
-
-        ProcessLeavePvs(players);
-    }
-
-    private void SendStates(ICommonSession[] players)
-    {
-        using var _ = Histogram.WithLabels("Send States").NewTimer();
-
-        var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
-        _oldestAck = GameTick.MaxValue.Value;
-
-        // Replays process game states in parallel with players
-        Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
-
-        PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
+        foreach (var uid in _toDelete)
         {
-            try
-            {
-                var guid = i >= 0 ? players[i].UserId.UserId : default;
-                ServerGameStateManager.PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
-
-                if (i >= 0)
-                    SendStateUpdate(players[i], resource);
-                else
-                    _replay.Update();
-
-                ServerGameStateManager.PvsEventSource.Log.WorkStop(_gameTiming.CurTick.Value, i, guid);
-            }
-            catch (Exception e) // Catch EVERY exception
-            {
-                var source = i >= 0 ? players[i].ToString() : "replays";
-                Log.Log(LogLevel.Error, e, $"Caught exception while generating mail for {source}.");
-            }
-            return resource;
+            QueueDel(uid);
         }
+        _toDelete.Clear();
+
+        // Compress & send the states.
+        SendStates();
+
+        // Cull deletion history.
+        AfterSerializeStates();
+
+        ProcessLeavePvs();
     }
 
     private void ResetParallelism(int _) => ResetParallelism();
@@ -244,11 +237,18 @@ internal sealed partial class PvsSystem : EntitySystem
         _async = value;
     }
 
-    // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
             return;
+
+        // A full state rebuild is expensive and the request is sent reliably.
+        // Coalesce requests while one is pending and rate limit subsequent ones.
+        var realTime = _gameTiming.RealTime;
+        if (pvsSession.RequestedFull || pvsSession.FullStateRequestCooldownEnd > realTime)
+            return;
+
+        pvsSession.FullStateRequestCooldownEnd = realTime + FullStateRequestCooldown;
 
         var lastAcked = pvsSession.LastReceivedAck;
 
@@ -257,8 +257,15 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if (missingEntity != null)
         {
-            var (entity, meta) = GetEntityData(missingEntity.Value);
-            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity)}.");
+            if (TryGetEntityData(missingEntity.Value, out var uid, out _))
+            {
+                sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(uid)}.");
+            }
+            else
+            {
+                sb.Append($" Apparently they received an entity without metadata (No entity found).");
+            }
+
             //sb.Append($" Entity last seen: {meta.PvsData[sessionData.Index].EntityLastAcked}");
         }
 
@@ -268,8 +275,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void ForceFullState(PvsSession session)
     {
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
+        WaitSendTask();
+        WaitLeaveTask();
         session.LastReceivedAck = _gameTiming.CurTick;
         session.RequestedFull = true;
         ClearSendHistory(session);
@@ -302,7 +309,7 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         using var _ = Histogram.WithLabels("Cull History").NewTimer();
         CullDeletionHistoryUntil(oldestAck);
-        _mapManager.CullDeletionHistory(oldestAck);
+        _maps.CullDeletionHistory(oldestAck);
     }
 
     private void GetEntityStates(PvsSession session)
@@ -329,7 +336,9 @@ internal sealed partial class PvsSystem : EntitySystem
         // Process all entities in visible PVS chunks
         AddPvsChunks(session);
 
+#if DEBUG
         VerifySessionData(session);
+#endif
 
         var toSend = session.ToSend!;
         session.ToSend = null;
@@ -359,11 +368,12 @@ internal sealed partial class PvsSystem : EntitySystem
         session.Overflow = oldEntry.Value;
     }
 
-    [Conditional("DEBUG")]
+#if DEBUG
     private void VerifySessionData(PvsSession pvsSession)
     {
-        var toSend = pvsSession.ToSend;
-        var toSendSet = new HashSet<NetEntity>(toSend!.Count);
+        var toSend = pvsSession.ToSend!;
+        var toSendSet = pvsSession.ToSendSet;
+        toSendSet.Clear();
 
         foreach (var intPtr in toSend)
         {
@@ -387,11 +397,23 @@ internal sealed partial class PvsSystem : EntitySystem
                               || data.LastSeen == _gameTiming.CurTick - 1);
         }
     }
+#endif
 
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
     {
-        var size = Math.Max(eye.Comp2?.PvsSize ?? _priorityViewSize, 1);
-        return (_transform.GetWorldPosition(eye.Comp1), size / 2f, eye.Comp1.MapUid);
+        var size = _priorityViewSize;
+        var worldPos = _transform.GetWorldPosition(eye.Comp1);
+
+        if (eye.Comp2 is not null)
+        {
+            // not using EyeComponent.Eye.Position, because it's updated only on the client's side
+            worldPos += eye.Comp2.Offset;
+            size *= eye.Comp2.PvsScale;
+        }
+
+        size = Math.Max(size, 1);
+
+        return (worldPos, size / 2f, eye.Comp1.MapUid);
     }
 
     private void CullDeletionHistoryUntil(GameTick tick)
@@ -414,22 +436,10 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private void BeforeSendState()
+    private void BeforeSerializeStates()
     {
         DebugTools.Assert(_chunks.Values.All(x => Exists(x.Map) && Exists(x.Root)));
         DebugTools.Assert(_chunkSets.Keys.All(Exists));
-
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
-
-        foreach (var session in _disconnected)
-        {
-            if (PlayerData.Remove(session, out var pvsSession))
-            {
-                ClearSendHistory(pvsSession);
-                FreeSessionDataMemory(pvsSession);
-            }
-        }
 
         var ackJob = ProcessQueuedAcks();
 
@@ -443,6 +453,41 @@ internal sealed partial class PvsSystem : EntitySystem
         ackJob?.WaitOne();
     }
 
+    internal void ProcessDisconnections()
+    {
+        WaitSendTask();
+        WaitLeaveTask();
+
+        foreach (var session in _disconnected)
+        {
+            if (PlayerData.Remove(session, out var pvsSession))
+            {
+                ClearSendHistory(pvsSession);
+                FreeSessionDataMemory(pvsSession);
+            }
+        }
+    }
+
+    private WaitHandle? _sendTask;
+
+    private void WaitSendTask()
+    {
+        _sendTask?.WaitOne();
+        _sendTask = null;
+    }
+
+    private void WaitLeaveTask()
+    {
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
+    }
+
+    private void WaitDeletionTask()
+    {
+        _deletionTask?.WaitOne();
+        _deletionTask = null;
+    }
+
     internal void CacheSessionData(ICommonSession[] players)
     {
         Array.Resize(ref _sessions, players.Length);
@@ -452,9 +497,9 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private void AfterSendState(ICommonSession[] players)
+    private void AfterSerializeStates()
     {
-        CleanupDirty(players);
+        CleanupDirty();
 
         if (_oldestAck == GameTick.MaxValue.Value)
         {
@@ -474,18 +519,27 @@ internal sealed partial class PvsSystem : EntitySystem
 }
 
 [ByRefEvent]
-public struct ExpandPvsEvent(ICommonSession session)
+public struct ExpandPvsEvent(ICommonSession session, int mask)
 {
     public readonly ICommonSession Session = session;
 
     /// <summary>
-    /// List of entities that will get added to this session's PVS set.
+    /// List of entities that will get added to this session's PVS set. This will still respect visibility masks.
     /// </summary>
     public List<EntityUid>? Entities;
 
     /// <summary>
     /// List of entities that will get added to this session's PVS set. Unlike <see cref="Entities"/> this will also
-    /// recursively add all children of the given entity.
+    /// recursively add all children of the given entity. This will still respect visibility masks.
     /// </summary>
     public List<EntityUid>? RecursiveEntities;
+
+    /// <summary>
+    /// Visibility mask to use when adding entities. Defaults to the usual visibility mask for that client.
+    /// </summary>
+    /// <remarks>
+    /// Note that this mask will affect all global & session overrides from <see cref="PvsOverrideSystem"/> for this
+    /// client, not just the entities in <see cref="Entities"/> and <see cref="RecursiveEntities"/>.
+    /// </remarks>
+    public int VisMask = mask;
 }

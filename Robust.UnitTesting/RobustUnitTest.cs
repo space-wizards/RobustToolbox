@@ -8,22 +8,25 @@ using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Controllers;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Testing;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
+using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 
@@ -48,12 +51,10 @@ namespace Robust.UnitTesting
                 typeof(MetaDataComponent),
                 typeof(TransformComponent),
                 typeof(PhysicsComponent),
-                typeof(PhysicsMapComponent),
                 typeof(BroadphaseComponent),
                 typeof(FixturesComponent),
                 typeof(JointComponent),
                 typeof(GridTreeComponent),
-                typeof(MovedGridsComponent),
                 typeof(JointRelayTargetComponent),
                 typeof(OccluderComponent),
                 typeof(OccluderTreeComponent),
@@ -61,7 +62,6 @@ namespace Robust.UnitTesting
                 typeof(LightTreeComponent),
                 typeof(CollisionWakeComponent),
                 typeof(CollideOnAnchorComponent),
-                typeof(Gravity2DComponent),
                 typeof(ActorComponent)
             };
 
@@ -109,7 +109,7 @@ namespace Robust.UnitTesting
                 configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
-            configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
+            configurationManager.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
             var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems
@@ -120,14 +120,14 @@ namespace Robust.UnitTesting
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
-            systems.LoadExtraSystemType<Gravity2DController>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
+            systems.LoadExtraSystemType<RecursiveMoveSystem>();
 
             if (Project == UnitTestProject.Client)
             {
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
-                systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
-                systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<ContainerSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.TransformSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
@@ -135,6 +135,12 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.PointLightSystem>();
+                systems.LoadExtraSystemType<LightTreeSystem>();
+                systems.LoadExtraSystemType<SpriteSystem>();
+                systems.LoadExtraSystemType<SpriteTreeSystem>();
+                systems.LoadExtraSystemType<AppearanceSystem>();
+                systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
             }
             else
             {
@@ -148,14 +154,18 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
-                systems.LoadExtraSystemType<MapLoaderSystem>();
                 systems.LoadExtraSystemType<InputSystem>();
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
+                systems.LoadExtraSystemType<Robust.Server.ComponentTrees.LightTreeSystem>();
+                systems.LoadExtraSystemType<Robust.Server.GameObjects.PointLightSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();
-            var mapMan = deps.Resolve<IMapManager>();
+
+            // Avoid discovering EntityCommands since they may depend on systems
+            // that aren't available in a unit test context.
+            deps.Resolve<EntityConsoleHost>().DiscoverCommands = false;
 
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
@@ -166,10 +176,17 @@ namespace Robust.UnitTesting
             if (ExtraComponents != null)
                 compFactory.RegisterTypes(ExtraComponents);
 
-            if (Project == UnitTestProject.Server)
+            compFactory.RegisterClass<MapSaveTileMapComponent>();
+            compFactory.RegisterClass<YamlUidComponent>();
+
+            if (Project != UnitTestProject.Server)
             {
-                compFactory.RegisterClass<MapSaveTileMapComponent>();
-                compFactory.RegisterClass<MapSaveIdComponent>();
+                compFactory.RegisterClass<Robust.Client.GameObjects.PointLightComponent>();
+                compFactory.RegisterClass<SpriteComponent>();
+            }
+            else
+            {
+                compFactory.RegisterClass<Robust.Server.GameObjects.PointLightComponent>();
             }
 
             deps.Resolve<IParallelManagerInternal>().Initialize();
@@ -180,7 +197,6 @@ namespace Robust.UnitTesting
             // RobustUnitTest is complete hot garbage.
             // This makes EventTables ignore *all* the screwed up component abuse it causes.
             entMan.EventBus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();  // The nightmare never ends
-            mapMan.Initialize();
             systems.Initialize();
 
             deps.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
@@ -190,7 +206,6 @@ namespace Robust.UnitTesting
             modLoader.TryLoadModulesFrom(ResPath.Root, "");
 
             entMan.Startup();
-            mapMan.Startup();
         }
 
         [OneTimeTearDown]

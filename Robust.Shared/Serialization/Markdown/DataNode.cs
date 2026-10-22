@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Robust.Shared.Serialization.Manager;
 using YamlDotNet.Core;
@@ -20,6 +21,11 @@ namespace Robust.Shared.Serialization.Markdown
         public abstract bool IsEmpty { get; }
         public virtual bool IsNull { get; init; } = false;
 
+        internal virtual int GetCanonicalHashCode()
+        {
+            return 0;
+        }
+
         public abstract DataNode Copy();
 
         /// <summary>
@@ -28,6 +34,7 @@ namespace Robust.Shared.Serialization.Markdown
         /// </summary>
         public abstract DataNode? Except(DataNode node);
 
+        [Obsolete("Use SerializationManager.PushComposition()")]
         public abstract DataNode PushInheritance(DataNode parent);
 
         public T CopyCast<T>() where T : DataNode
@@ -60,6 +67,7 @@ namespace Robust.Shared.Serialization.Markdown
 
         public abstract T? Except(T node);
 
+        [Obsolete("Use SerializationManager.PushComposition()")]
         public abstract T PushInheritance(T node);
 
         public override DataNode? Except(DataNode node)
@@ -67,6 +75,7 @@ namespace Robust.Shared.Serialization.Markdown
             return node is not T tNode ? throw new InvalidNodeTypeException() : Except(tNode);
         }
 
+        [Obsolete("Use SerializationManager.PushComposition()")]
         public override DataNode PushInheritance(DataNode parent)
         {
             return parent is not T tNode ? throw new InvalidNodeTypeException() : PushInheritance(tNode);

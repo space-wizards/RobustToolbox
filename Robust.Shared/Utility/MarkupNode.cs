@@ -7,12 +7,14 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Utility;
 
 [Serializable, NetSerializable]
-public sealed class MarkupNode : IComparable<MarkupNode>
+public sealed class MarkupNode : IComparable<MarkupNode>, IEquatable<MarkupNode>
 {
     public readonly string? Name;
     public readonly MarkupParameter Value;
-    public readonly Dictionary<string, MarkupParameter> Attributes = new();
+    public readonly Dictionary<string, MarkupParameter> Attributes;
     public readonly bool Closing;
+
+    public bool IsPlainText => Name == null;
 
     /// <summary>
     /// Creates a nameless tag for plaintext
@@ -20,6 +22,7 @@ public sealed class MarkupNode : IComparable<MarkupNode>
     /// <param name="text">The plaintext the tag will consist of</param>
     public MarkupNode(string text)
     {
+        Attributes = new Dictionary<string, MarkupParameter>();
         Value = new MarkupParameter(text);
     }
 
@@ -34,15 +37,15 @@ public sealed class MarkupNode : IComparable<MarkupNode>
     public override string ToString()
     {
         if(Name == null)
-            return Value.StringValue ?? "";
+            return FormattedMessage.EscapeText(Value.StringValue ?? "");
 
         var attributesString = "";
         foreach (var (k, v) in Attributes)
         {
-            attributesString += $"{k}{v}";
+            attributesString += $" {k}{v}";
         }
 
-        return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n") ?? ""}{attributesString}]";
+        return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n")}{attributesString}]";
     }
 
     public override bool Equals(object? obj)
@@ -50,14 +53,38 @@ public sealed class MarkupNode : IComparable<MarkupNode>
         return obj is MarkupNode node && Equals(node);
     }
 
-    public bool Equals(MarkupNode node)
+    public bool Equals(MarkupNode? node)
     {
-        var equal = Name == node.Name;
-        equal &= Value.Equals(node.Value);
-        equal &= Attributes.Count == 0 && node.Attributes.Count == 0 || Attributes.Equals(node.Attributes);
-        equal &= Closing == node.Closing;
+        if (node is null)
+            return false;
 
-        return equal;
+        if (Name != node.Name)
+            return false;
+
+        if (!Value.Equals(node.Value))
+            return false;
+
+        if (Closing != node.Closing)
+            return false;
+
+        if (Attributes.Count != node.Attributes.Count)
+            return false;
+
+        foreach (var (key, value) in Attributes)
+        {
+            if (!node.Attributes.TryGetValue(key, out var nodeValue))
+                return false;
+
+            if (!value.Equals(nodeValue))
+                return false;
+        }
+
+        return true;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Name, Value, Closing);
     }
 
     public int CompareTo(MarkupNode? other)
@@ -68,7 +95,10 @@ public sealed class MarkupNode : IComparable<MarkupNode>
             return 1;
 
         var nameComparison = string.Compare(Name, other.Name, StringComparison.Ordinal);
-        return nameComparison != 0 ? nameComparison : Closing.CompareTo(other.Closing);
+        if (nameComparison != 0)
+            return nameComparison;
+
+        return Closing.CompareTo(other.Closing);
     }
 }
 
@@ -109,7 +139,7 @@ public readonly record struct MarkupParameter(string? StringValue = null, long? 
     public override string ToString()
     {
         if (StringValue != null)
-            return $"=\"{StringValue}\"";
+            return $"=\"{FormattedMessage.EscapeStringParameter(StringValue)}\"";
 
         if (LongValue.HasValue)
             return LongValue?.ToString().Insert(0, "=") ?? "";

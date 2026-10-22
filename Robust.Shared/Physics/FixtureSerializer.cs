@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -28,11 +29,9 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
 
         foreach (var subNode in node)
         {
-            var key = (ValueDataNode)subNode.Key;
-
-            if (!keys.Add(key.Value))
+            if (!keys.Add(subNode.Key))
             {
-                seq.Add(new ErrorNode(subNode.Key, $"Found duplicate fixture ID {key.Value}"));
+                seq.Add(new ErrorNode(new ValueDataNode(subNode.Key), $"Found duplicate fixture ID {subNode.Key}"));
                 continue;
             }
 
@@ -49,10 +48,8 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
 
         foreach (var subNode in node)
         {
-            var key = (ValueDataNode)subNode.Key;
-
             var fixture = serializationManager.Read<Fixture>(subNode.Value, hookCtx, context, notNullableOverride: true);
-            value.Add(key.Value, fixture);
+            value.Add(subNode.Key, fixture);
         }
 
         return value;
@@ -78,13 +75,11 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
         if (value.Count == 0)
             return seq;
 
-        if (context is MapSerializationContext mapContext)
+        if (context is EntitySerializer ctx)
         {
             // Don't serialize mapgrid fixtures because it's bloat and we'll just generate them at runtime.
-            if (dependencies.Resolve<IEntityManager>().HasComponent<MapGridComponent>(mapContext.CurrentWritingEntity))
-            {
+            if (ctx.EntMan.HasComponent<MapGridComponent>(ctx.CurrentEntity))
                 return seq;
-            }
         }
 
         foreach (var (id, fixture) in value)

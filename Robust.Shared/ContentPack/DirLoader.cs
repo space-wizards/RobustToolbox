@@ -60,7 +60,7 @@ namespace Robust.Shared.ContentPack
 
             internal string GetPath(ResPath relPath)
             {
-                return Path.GetFullPath(Path.Combine(_directory.FullName, relPath.ToRelativeSystemPath()));
+                return PathHelpers.SafeGetResourcePath(_directory.FullName, relPath);
             }
 
             /// <inheritdoc />

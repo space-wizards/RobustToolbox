@@ -37,48 +37,29 @@ internal static class InternalReflectionUtils
         }
     }
 
-    internal static object EmitFieldAccessor(Type obj, FieldDefinition fieldDefinition)
+    internal static object EmitFieldAssigner(Type objType, AbstractFieldInfo backingField, bool boxing = false)
     {
-        var method = new DynamicMethod(
-            "AccessField",
-            fieldDefinition.BackingField.FieldType,
-            new[] {obj.MakeByRefType()},
-            true);
-
-        method.DefineParameter(1, ParameterAttributes.Out, "target");
-
-        var generator = method.GetILGenerator();
-
-        generator.Emit(OpCodes.Ldarg_0);
-
-        if(!obj.IsValueType)
-            generator.Emit(OpCodes.Ldind_Ref);
-
-        switch (fieldDefinition.BackingField)
+        if (!boxing)
         {
-            case SpecificFieldInfo field:
-                generator.Emit(OpCodes.Ldfld, field.FieldInfo);
-                break;
-            case SpecificPropertyInfo property:
-                var getter = property.PropertyInfo.GetGetMethod(true) ?? throw new NullReferenceException();
-                var opCode = fieldDefinition.BackingField.FieldType.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
-                generator.Emit(opCode, getter);
-                break;
+            if (backingField is SpecificFieldInfo { FieldInfo.IsInitOnly: false } fieldInfo)
+                return fieldInfo.FieldInfo;
+
+            if (backingField is SpecificPropertyInfo propertyInfo)
+            {
+                if (propertyInfo.TryGetBackingField(out var propertyBackingField) && !propertyBackingField.FieldInfo.IsInitOnly)
+                    return propertyBackingField.FieldInfo;
+
+                if (propertyInfo.PropertyInfo.GetSetMethod(true) is { } setMethod)
+                    return setMethod;
+            }
         }
 
-        generator.Emit(OpCodes.Ret);
-
-        return method.CreateDelegate(typeof(AccessField<,>).MakeGenericType(obj, fieldDefinition.BackingField.FieldType));
-    }
-
-    internal static object EmitFieldAssigner<TObj>(AbstractFieldInfo backingField, bool boxing = false)
-    {
         var fieldType = backingField.FieldType;
 
         var method = new DynamicMethod(
             "AssignField",
             typeof(void),
-            new[] {typeof(TObj).MakeByRefType(), boxing ? typeof(object) : fieldType},
+            new[] {objType.MakeByRefType(), boxing ? typeof(object) : fieldType},
             true);
 
         method.DefineParameter(1, ParameterAttributes.Out, "target");
@@ -88,7 +69,7 @@ internal static class InternalReflectionUtils
 
         generator.Emit(OpCodes.Ldarg_0);
 
-        if(!typeof(TObj).IsValueType)
+        if(!objType.IsValueType)
             generator.Emit(OpCodes.Ldind_Ref);
 
         generator.Emit(OpCodes.Ldarg_1);
@@ -102,6 +83,6 @@ internal static class InternalReflectionUtils
 
         generator.Emit(OpCodes.Ret);
 
-        return method.CreateDelegate(typeof(AssignField<,>).MakeGenericType(typeof(TObj), boxing ? typeof(object) : fieldType));
+        return method.CreateDelegate(typeof(AssignField<,>).MakeGenericType(objType, boxing ? typeof(object) : fieldType));
     }
 }

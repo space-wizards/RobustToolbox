@@ -92,7 +92,7 @@ namespace Robust.Server.ServerStatus
             {
                 context.ResponseHeaders.Add("Content-Encoding", "zstd");
 
-                await context.RespondAsync(result.ManifestData, HttpStatusCode.OK);
+                await context.RespondAsync(result.ManifestData, HttpStatusCode.OK, "text/plain; charset=utf-8");
             }
             else
             {
@@ -110,7 +110,7 @@ namespace Robust.Server.ServerStatus
                 }
                 else
                 {
-                    await context.RespondAsync(result.ManifestData, HttpStatusCode.OK);
+                    await context.RespondAsync(result.ManifestData, HttpStatusCode.OK, "text/plain; charset=utf-8");
                 }
             }
 
@@ -312,14 +312,14 @@ namespace Robust.Server.ServerStatus
         }
 
         // Only call this if the download URL is not available!
-        private async Task<AczManifestInfo?> PrepareAcz()
+        private async Task<AczManifestInfo?> PrepareAcz(bool optional = false)
         {
             // Take the ACZ lock asynchronously
             await _aczLock.WaitAsync();
             try
             {
                 // Setting this now ensures that it won't fail repeatedly on exceptions/etc.
-                if (_aczPrepareAttempted)
+                if (_aczPrepareAttempted || optional)
                     return _aczPrepared;
 
                 _aczPrepareAttempted = true;

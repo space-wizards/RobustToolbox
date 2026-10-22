@@ -13,7 +13,8 @@ namespace Robust.Shared.Serialization.Markdown
             Column = column;
         }
 
-        public NodeMark(Mark mark) : this(mark.Line, mark.Column)
+        // TODO: Make Line/Column longs
+        public NodeMark(Mark mark) : this((int)mark.Line, (int)mark.Column)
         {
         }
 

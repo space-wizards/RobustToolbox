@@ -8,14 +8,14 @@ namespace Robust.Shared.Toolshed.Commands.Vfs;
 internal sealed class LsCommand : VfsCommand
 {
     [CommandImplementation("here")]
-    public IEnumerable<ResPath> LsHere([CommandInvocationContext] IInvocationContext ctx)
+    public IEnumerable<ResPath> LsHere(IInvocationContext ctx)
     {
         var curPath = CurrentPath(ctx);
         return Resources.ContentGetDirectoryEntries(curPath).Select(x => curPath/x);
     }
 
     [CommandImplementation("in")]
-    public IEnumerable<ResPath> LsIn([CommandInvocationContext] IInvocationContext ctx, [CommandArgument] ResPath @in)
+    public IEnumerable<ResPath> LsIn(IInvocationContext ctx, ResPath @in)
     {
         var curPath = CurrentPath(ctx);
         if (@in.IsRooted)

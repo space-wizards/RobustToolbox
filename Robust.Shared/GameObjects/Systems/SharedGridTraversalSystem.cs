@@ -1,3 +1,5 @@
+using System.Numerics;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -9,16 +11,20 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 ///     Handles moving entities between grids as they move around.
 /// </summary>
-internal sealed class SharedGridTraversalSystem : EntitySystem
+public sealed partial class SharedGridTraversalSystem : EntitySystem
 {
-    [Dependency] private readonly IMapManagerInternal _mapManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private EntityUid _recursionGuard;
 
     /// <summary>
     /// Enables or disables changing grid / map uid upon moving.
+    /// WARNING: If you do this in a live-game. You need to make sure that the parented entity
+    /// doesn't move too far away from the grid. As it will cause Entity Lookups to not see it
+    /// (because the grid its parented to is not close enough and all parented entities are assumed
+    /// to be on the grid through the broadphase component)
     /// </summary>
     public bool Enabled = true;
 
@@ -30,13 +36,16 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 
     private void OnStartup(ref TransformStartupEvent ev)
     {
-        CheckTraverse(ev.Entity.Owner, ev.Entity.Comp);
+        CheckTraverse(ev.Entity);
     }
 
-    internal void CheckTraverse(EntityUid uid, TransformComponent xform)
+    internal void CheckTraverse(Entity<TransformComponent> entity)
     {
         if (!Enabled || _timing.ApplyingState)
             return;
+
+        var uid = entity.Owner;
+        var xform = entity.Comp;
 
         // Grid-traversal can result in a stack overflow. This is probably because of rounding errors when checking
         // grid intersections using the map vs grid coordinates.
@@ -53,7 +62,8 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             || xform.Anchored
             || uid == xform.GridUid
             || uid == xform.MapUid
-            || xform.MapUid is not {} map)
+            || xform.MapUid is not {} map
+            || !xform.GridTraversal)
         {
             return;
         }
@@ -78,18 +88,19 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 
     public void CheckTraversal(EntityUid entity, TransformComponent xform, EntityUid map)
     {
+        // TODO: This should probably check center of mass.
         DebugTools.Assert(!HasComp<MapGridComponent>(entity));
         DebugTools.Assert(!HasComp<MapComponent>(entity));
 
         var mapPos = xform.ParentUid == xform.MapUid
             ? xform.LocalPosition
-            : Transform(xform.ParentUid).LocalMatrix.Transform(xform.LocalPosition);
+            : Vector2.Transform(xform.LocalPosition, Transform(xform.ParentUid).LocalMatrix);
 
         // Change parent if necessary
-        if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))
+        if (_mapSystem.TryFindGridAt(map, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-            if (gridUid != xform.GridUid)
+            if (gridUid != xform.GridUid && !TerminatingOrDeleted(gridUid))
                 _transform.SetParent(entity, xform, gridUid);
             return;
         }
@@ -99,4 +110,3 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             _transform.SetParent(entity, xform, map);
     }
 }
-

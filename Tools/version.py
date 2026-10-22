@@ -28,7 +28,7 @@ def main():
 
 
 def verify_version(version: str):
-    parts = version.split(".")
+    parts = version.split("-")[0].split(".")
     if len(parts) != 3:
         print("Version must be split into three parts with '.'")
         sys.exit(1)
@@ -45,14 +45,19 @@ def write_version(version: str, file_only: bool):
     # Verify
     verify_version(version)
 
+    if tag_exists(version):
+        print(f"Version tag already exists: v{version}")
+        sys.exit(1)
+
     update_release_notes(version)
 
     # Update
     with open("MSBuild/Robust.Engine.Version.props", "w") as file:
-        file.write("<Project>" + os.linesep)
-        file.write("    <!-- This file automatically reset by Tools/version.py -->"  + os.linesep)
-        file.write("    <PropertyGroup><Version>" + version + "</Version></PropertyGroup>" + os.linesep)
-        file.write("</Project>" + os.linesep)
+        file.write(
+            "<Project>\n"
+            "    <!-- This file automatically reset by Tools/version.py -->\n"
+            f"    <PropertyGroup><Version>{version}</Version></PropertyGroup>\n"
+            "</Project>\n")
 
     if not file_only:
         # Commit
@@ -110,5 +115,9 @@ def undo_version(version: str):
     # *Outright eliminate the commit from the branch!* - Dangerous if we get rid of the wrong commit, hence backup
     subprocess.run(["git", "reset", "--keep", "HEAD^"], check=True)
     print("Done (deleted commit saved as " + savename + ")")
+
+def tag_exists(version: str):
+    result = subprocess.run(["git", "tag", "-l", "v" + version], stdout=subprocess.PIPE, encoding="utf-8")
+    return bool(result.stdout.strip())
 
 main()

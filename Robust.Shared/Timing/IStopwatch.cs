@@ -4,8 +4,11 @@ namespace Robust.Shared.Timing
 {
     /// <summary>
     ///     Provides a set of methods and properties that you can use to accurately
-    ///     measure elapsed time.
+    ///     measure elapsed time.<br/>
+    ///     <br/>
+    ///     This is legacy and of low utility (it's for mocking), prefer using <see cref="RStopwatch"/>.
     /// </summary>
+    /// <seealso cref="Stopwatch"/>
     public interface IStopwatch
     {
         /// <summary>

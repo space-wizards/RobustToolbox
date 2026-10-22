@@ -61,7 +61,7 @@ namespace Robust.Client.ViewVariables.Editors
 
         private async void OnListButtonPressed(BaseButton.ButtonEventArgs obj)
         {
-            _addWindow?.Dispose();
+            _addWindow?.Close();
 
             if (_selector == null)
             {
@@ -77,7 +77,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-            if (!protoMan.TryGetVariantFrom(typeof(T), out var variant)) return;
+            if (!protoMan.TryGetKindFrom(typeof(T), out var variant)) return;
 
             var list = new List<string>();
 
@@ -110,7 +110,7 @@ namespace Robust.Client.ViewVariables.Editors
         private void OnAddButtonPressed(ViewVariablesAddWindow.AddButtonPressedEventArgs obj)
         {
             _lineEdit.Text = obj.Entry;
-            _addWindow?.Dispose();
+            _addWindow?.Close();
             SetNewValue(obj.Entry);
         }
 

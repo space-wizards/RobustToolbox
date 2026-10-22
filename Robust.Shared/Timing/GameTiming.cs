@@ -86,6 +86,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
 
+        public TimeSpan FrameStartTime => _lastRealTime;
+
         public virtual TimeSpan ServerTime => TimeSpan.Zero;
 
         /// <summary>
@@ -123,17 +125,19 @@ namespace Robust.Shared.Timing
         /// </summary>
         public TimeSpan LastTick { get; set; }
 
-        private byte _tickRate;
+        private ushort _tickRate;
         private TimeSpan _tickRemainder;
 
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        public byte TickRate
+        public ushort TickRate
         {
             get => _tickRate;
             set => SetTickRateAt(value, CurTick);
         }
+
+        public float TimeScale { get; set; } = 1;
 
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
@@ -154,13 +158,15 @@ namespace Robust.Shared.Timing
             }
         }
 
+        public TimeSpan TickRemainderRealtime => TickRemainder * TimeScale;
+
         public TimeSpan CalcAdjustedTickPeriod()
         {
             // ranges from -1 to 1, with 0 being 'default'
             var ratio = MathHelper.Clamp(TickTimingAdjustment, -0.99f, 0.99f);
 
             // Final period ranges from near 0 (runs very fast to catch up) or 2 * tick period (runs at half speed).
-            return TickPeriod * (1-ratio);
+            return TickPeriod * (1-ratio) * TimeScale;
         }
 
         /// <summary>
@@ -215,7 +221,7 @@ namespace Robust.Shared.Timing
         }
 
         /// <summary>
-        /// Resets the simulation time.
+        ///     Resets the simulation time.
         /// </summary>
         public void ResetSimTime()
         {
@@ -230,7 +236,7 @@ namespace Robust.Shared.Timing
             Paused = true;
         }
 
-        public void SetTickRateAt(byte tickRate, GameTick atTick)
+        public void SetTickRateAt(ushort tickRate, GameTick atTick)
         {
             // Check this, because TickRate is a divisor in the cache calculation
             // The first time TickRate is set, no time will have passed anyways
@@ -299,6 +305,11 @@ namespace Robust.Shared.Timing
 
             var variance = devSquared / (count - 1);
             return TimeSpan.FromTicks((long)Math.Sqrt(variance));
+        }
+
+        internal static bool IsTimescaleValid(float scale)
+        {
+            return scale > 0 && float.IsNormal(scale) && float.IsFinite(scale);
         }
     }
 }

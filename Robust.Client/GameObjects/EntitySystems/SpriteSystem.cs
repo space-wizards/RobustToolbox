@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
@@ -13,10 +12,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
@@ -29,28 +26,31 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed partial class SpriteSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IEyeManager _eye = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private IPrototypeManager _prototypes = default!;
+
+        // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
+        [Dependency] private SharedTransformSystem _xforms = default!;
+        [Dependency] private SpriteTreeSystem _tree = default!;
+        [Dependency] private AppearanceSystem _appearance = default!;
+
+        private HashSet<string> _postShaderIds = new();
+
+        public static readonly ProtoId<ShaderPrototype> UnshadedId = "unshaded";
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
+
+        public static readonly ResPath TextureRoot = SpriteSpecifierSerializer.TextureRoot;
 
         /// <summary>
         ///     Entities that require a sprite frame update.
         /// </summary>
         private readonly HashSet<EntityUid> _queuedFrameUpdate = new();
 
-        private ISawmill _sawmill = default!;
-
-        internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
-        {
-            if (!sprite.IsInert)
-                _queuedFrameUpdate.Add(uid);
-
-            sprite.RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, sprite.EnableDirectionOverride ? sprite.DirectionOverride : null);
-        }
+        private EntityQuery<SpriteComponent> _query;
 
         public override void Initialize()
         {
@@ -59,34 +59,93 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-            SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
-            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
-            _sawmill = _logManager.GetSawmill("sprite");
+            _query = GetEntityQuery<SpriteComponent>();
         }
 
+        public bool IsVisible(Layer layer)
+        {
+            return layer.Visible && layer.CopyToShaderParameters == null;
+        }
+
+        [SubscribeLocalEvent]
+        private void OnAdd(EntityUid uid, SpriteComponent component, ComponentAdd args)
+        {
+            LoadPrototypeData((uid, component));
+        }
+
+        private void LoadPrototypeData(Entity<SpriteComponent> sprite)
+        {
+            LoadBaseRsi(sprite, sprite);
+            LoadLayers(sprite);
+        }
+
+        private void LoadBaseRsi(EntityUid uid, SpriteComponent component)
+        {
+            _resourceCache.LoadBaseRsi(uid, component);
+        }
+
+        private void LoadLayers(Entity<SpriteComponent> sprite)
+        {
+            if (sprite.Comp.layerDatums.Count == 0)
+                return;
+
+            sprite.Comp.LayerMap.Clear();
+            sprite.Comp.Layers.Clear();
+            foreach (var datum in sprite.Comp.layerDatums)
+            {
+                var layer = new Layer(sprite, sprite.Comp.Layers.Count);
+                sprite.Comp.Layers.Add(layer);
+                LayerSetData(layer, datum);
+            }
+        }
+        [SubscribeLocalEvent]
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {
+            try
+            {
+                for (var i = 0; i < component.PostShaders.Count; i++)
+                {
+                    var postShader = component.PostShaders[i];
+                    if (!_postShaderIds.Add(postShader.Id))
+                    {
+                        Log.Error("Duplicate post-shader id '{0}'.", postShader.Id);
+                        component.PostShaders.RemoveAt(i--);
+                        continue;
+                    }
+
+                    postShader.InsertionIndex = i;
+                    if (postShader.Shader != null)
+                    {
+                        Log.Warning("Post-shader '{0}' already has a shader instance during component initialization.", postShader.Id);
+                        continue;
+                    }
+
+                    if (!_prototypes.TryIndex(postShader.Prototype, out var prototype))
+                    {
+                        Log.Error("Shader prototype '{0}' does not exist.", postShader.Prototype);
+                        component.PostShaders.RemoveAt(i--);
+                        continue;
+                    }
+
+                    postShader.Shader = postShader.Mutable ? prototype.InstanceUnique() : prototype.Instance();
+                }
+            }
+            finally
+            {
+                _postShaderIds.Clear();
+            }
+
+            component.PostShaderOrderDirty = component.PostShaders.Count > 1;
+
             // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
-            QueueUpdateInert(uid, component);
+            QueueUpdateIsInert((uid, component));
         }
 
         private void OnBiasChanged(double value)
         {
             SpriteComponent.DirectionBias = value;
-        }
-
-        private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
-            => QueueUpdateInert(uid, sprite);
-
-        public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)
-        {
-            if (sprite._inertUpdateQueued)
-                return;
-
-            sprite._inertUpdateQueued = true;
-            _inertUpdateQueue.Enqueue(sprite);
         }
 
         private void DoUpdateIsInert(SpriteComponent component)
@@ -184,7 +243,8 @@ namespace Robust.Client.GameObjects
         /// <summary>
         /// Gets the specified frame for this sprite at the specified time.
         /// </summary>
-        public Texture GetFrame(SpriteSpecifier spriteSpec, TimeSpan curTime)
+        /// <param name="loop">Should we clamp on the last frame and not loop</param>
+        public Texture GetFrame(SpriteSpecifier spriteSpec, TimeSpan curTime, bool loop = true)
         {
             Texture? sprite = null;
 
@@ -196,25 +256,35 @@ namespace Robust.Client.GameObjects
                     var frames = state!.GetFrames(RsiDirection.South);
                     var delays = state.GetDelays();
                     var totalDelay = delays.Sum();
-                    var time = curTime.TotalSeconds % totalDelay;
-                    var delaySum = 0f;
 
-                    for (var i = 0; i < delays.Length; i++)
+                    // No looping
+                    if (!loop && curTime.TotalSeconds >= totalDelay)
                     {
-                        var delay = delays[i];
-                        delaySum += delay;
+                        sprite = frames[^1];
+                    }
+                    // Loopable
+                    else
+                    {
+                        var time = curTime.TotalSeconds % totalDelay;
+                        var delaySum = 0f;
 
-                        if (time > delaySum)
-                            continue;
+                        for (var i = 0; i < delays.Length; i++)
+                        {
+                            var delay = delays[i];
+                            delaySum += delay;
 
-                        sprite = frames[i];
-                        break;
+                            if (time > delaySum)
+                                continue;
+
+                            sprite = frames[i];
+                            break;
+                        }
                     }
 
                     sprite ??= Frame0(spriteSpec);
                     break;
                 case SpriteSpecifier.Texture texture:
-                    sprite = texture.GetTexture(_resourceCache);
+                    sprite = GetTexture(texture);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -225,17 +295,12 @@ namespace Robust.Client.GameObjects
     }
 
     /// <summary>
-    ///     This event gets raised before a sprite gets drawn using it's post-shader.
+    ///     This event gets raised before a sprite gets drawn using a post-shader that requests it.
     /// </summary>
-    public sealed class BeforePostShaderRenderEvent : EntityEventArgs
-    {
-        public readonly SpriteComponent Sprite;
-        public readonly IClydeViewport Viewport;
-
-        public BeforePostShaderRenderEvent(SpriteComponent sprite, IClydeViewport viewport)
-        {
-            Sprite = sprite;
-            Viewport = viewport;
-        }
-    }
+    [ByRefEvent]
+    public readonly record struct BeforePostShaderRenderEvent(
+        string Id,
+        ShaderInstance Shader,
+        SpriteComponent Sprite,
+        IClydeViewport Viewport);
 }

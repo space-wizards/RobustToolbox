@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.ViewVariables
@@ -36,6 +37,17 @@ namespace Robust.Shared.ViewVariables
         }
 
         public int Index { get; set; }
+    }
+
+    /// <summary>
+    /// Used within <see cref="ViewVariablesSessionRelativeSelector.PropertyIndex"/>
+    /// to refer to an index of a tuple. This should match what would be used
+    /// with <see cref="ITuple.get_Item"/>.
+    /// </summary>
+    [Serializable, NetSerializable]
+    public sealed class ViewVariablesTupleIndexSelector(int index)
+    {
+        public int Index { get; set; } = index;
     }
 
     [Serializable, NetSerializable]

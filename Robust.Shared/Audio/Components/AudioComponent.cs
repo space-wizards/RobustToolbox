@@ -16,10 +16,10 @@ namespace Robust.Shared.Audio.Components;
 /// <summary>
 /// Stores the audio data for an audio entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true), Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, fieldDeltas: true), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
-    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
+    [AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
     public AudioFlags Flags = AudioFlags.None;
 
     #region Filter
@@ -51,6 +51,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     // We can't just start playing on audio creation as we don't have the correct position yet.
     // As such we'll wait for FrameUpdate before we start playing to avoid the position being cooked.
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public bool Started = false;
 
     [AutoNetworkedField]
@@ -85,12 +86,15 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     #region Source
 
+    [Access(Other = AccessPermissions.Execute)]
     public void Pause() => Source.Pause();
 
     /// <inheritdoc />
+    [Access(Other = AccessPermissions.Execute)]
     public void StartPlaying() => Source.StartPlaying();
 
     /// <inheritdoc />
+    [Access(Other = AccessPermissions.Execute)]
     public void StopPlaying()
     {
         PlaybackPosition = 0f;
@@ -98,6 +102,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 
     /// <inheritdoc />
+    [Access(Other = AccessPermissions.Execute)]
     public void Restart() => Source.Restart();
 
     [DataField, AutoNetworkedField]
@@ -179,6 +184,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// Not replicated as audio always tracks the entity's position.
     /// </remarks>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public Vector2 Position
     {
         get => Source.Position;
@@ -236,6 +242,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// Not replicated.
     /// </remarks>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public Vector2 Velocity
     {
         get => Source.Velocity;
@@ -255,6 +262,12 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 }
 
+/// <summary>
+/// An event raised against an AudioComponent's parent when it is despawned.
+/// </summary>
+[ByRefEvent]
+public readonly record struct AttachedAudioDespawnedEvent;
+
 [Serializable, NetSerializable]
 public enum AudioState : byte
 {
@@ -272,4 +285,6 @@ public enum AudioFlags : byte
     /// Should the audio act as if attached to a grid?
     /// </summary>
     GridAudio = 1 << 0,
+
+    NoOcclusion = 1 << 1,
 }

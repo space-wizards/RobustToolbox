@@ -133,7 +133,8 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return newSequence;
         }
 
-        public IEnumerator<DataNode> GetEnumerator() => _nodes.GetEnumerator();
+        public List<DataNode>.Enumerator GetEnumerator() => _nodes.GetEnumerator();
+        IEnumerator<DataNode> IEnumerable<DataNode>.GetEnumerator() => _nodes.GetEnumerator();
 
         public override int GetHashCode()
         {
@@ -144,6 +145,19 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             }
 
             return code.ToHashCode();
+        }
+
+        internal override int GetCanonicalHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(typeof(SequenceDataNode));
+            hash.Add(Tag);
+            foreach (var child in _nodes)
+            {
+                hash.Add(child.GetCanonicalHashCode());
+            }
+
+            return hash.ToHashCode();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -192,6 +206,7 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return true;
         }
 
+        [Obsolete("Use SerializationManager.PushComposition()")]
         public override SequenceDataNode PushInheritance(SequenceDataNode node)
         {
             var newNode = Copy();

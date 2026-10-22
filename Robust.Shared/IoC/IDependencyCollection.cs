@@ -162,6 +162,9 @@ namespace Robust.Shared.IoC
         [Pure]
         T ResolveInject<T>(Type owningType);
 
+        [Pure]
+        public T? TryResolveInject<T>(Type owningType);
+
         /// <inheritdoc cref="Resolve{T}()"/>
         void Resolve<T>([NotNull] ref T? instance);
 

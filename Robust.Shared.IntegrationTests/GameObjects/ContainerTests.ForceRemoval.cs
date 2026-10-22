@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using Robust.UnitTesting;
 using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Timing;
@@ -8,7 +7,6 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 
@@ -18,14 +16,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
     {
         /// <summary>
         /// Creates a situation where an unremovable item is created and tries to remove it from the container
-        /// heavily based on ContainerTests.TestContainerExpectedEntityDeleted (now deleted).
+        /// originally based on ContainerTests.TestContainerExpectedEntityDeleted (now deleted).
         /// <br/>
         /// could probably cut down on a lot of the boilerplate here
         /// </summary>
         [Test]
         public async Task TestForceRemovalOfUnremovableItem()
         {
-            // Start a server and a client, registering a system to provide functionality for making an item unremovable from a container 
+            // Start a server and a client, registering a system to provide functionality for making an item unremovable from a container by normal means
             await using var pair = await StartConnectedPair(
                 UnremovableFromContainerIntegrationOptions(new ServerIntegrationOptions()),
                 UnremovableFromContainerIntegrationOptions(new ClientIntegrationOptions())
@@ -33,12 +31,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var server = pair.Server;
             var client = pair.Client;
 
-            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
             // give the server and client a moment to fully initialize (so we can obtain systems)
+            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
             await RunTicksSync(server, client, 5);
 
             var cEntManager = client.ResolveDependency<IEntityManager>();
-            var cClientEntManager = (ClientEntityManager) cEntManager;
             var cContainerSys = cEntManager.System<ContainerSystem>();
             var clientTime = client.ResolveDependency<IClientGameTiming>();
 
@@ -46,21 +43,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sPlayerManager = server.ResolveDependency<IPlayerManager>();
             var sContainerSys = sEntManager.System<SharedContainerSystem>();
             var sMetadataSys = sEntManager.System<MetaDataSystem>();
-            var sVisibilitySys = sEntManager.System<SharedVisibilitySystem>();
             var serverTime = server.ResolveDependency<IGameTiming>();
 
-            // Setup
             var containerEntName = "ContainerEnt";
             var containerId = "testContainer";
             var itemName = "TheItem";
 
+            // setup
             MapId mapId;
             var mapPos = MapCoordinates.Nullspace;
-    
+
             EntityUid sContainerUid = default!;
             EntityUid sItemUid = default!;
             NetEntity itemNetEnt = default;
-    
+
             await server.WaitAssertion(() =>
             {
                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
@@ -84,13 +80,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 sItemUid = sEntManager.Spawn(null, mapPos);
                 itemNetEnt = sEntManager.GetNetEntity(sItemUid);
                 sMetadataSys.SetEntityName(sItemUid, itemName);
-                // make the item unremovable
+                // make the item unremovable, and put it in the container.
                 sEntManager.AddComponent<UnremovableFromContainerComponent>(sItemUid);
                 var container = sContainerSys.GetContainer(sContainerUid, containerId);
                 Assume.That(sContainerSys.Insert(sItemUid, container), Is.True, "Unable to insert the item into the container via sContainerSys.Insert, tests are invalid.");
-
-                // Modify visibility layer so that the item does not get sent to the player
-                //sEntManager.System<SharedVisibilitySystem>().AddLayer(sItemUid, 10 );
             });
 
             // let the client catch up to the server
@@ -100,16 +93,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 await client.WaitRunTicks(1);
             }
 
-            // obtain client uids/components for later
+            // obtain client uids/components
             var cItemUid = cEntManager.GetEntity(itemNetEnt);
             var cContainerUid = cEntManager.GetEntity(sEntManager.GetNetEntity(sContainerUid));
             if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cContainerUid, out var cContainerManagerComp))
             {
-                Assert.Fail("Unable to get client's ContainerManagerComponent, cannot perform subsequent tests");
+                Assert.Fail("Unable to get client's ContainerManagerComponent, cannot make sure the client is working correctly");
                 return;
             }
             var cBaseContainer = cContainerSys.GetContainer(cContainerUid, containerId, cContainerManagerComp);
 
+            // clientside assumptions (make sure the item exists and is in the container)
             await client.WaitAssertion(() =>
             {
                 Assume.That(cEntManager.EntityExists(cItemUid), Is.True, "Item does not exist in client :(");
@@ -119,32 +113,48 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 Assume.That(cBaseContainer.Contains(cItemUid), Is.True, "Clientside BaseContainer does not contain the item!");
             });
 
+            await RunTicksSync(server, client, 1);
+
+            // attempt removing the unremovable item from the container (it should remain in the container)
             await server.WaitAssertion(() =>
             {
-                Assume.That(sEntManager.EntityExists(sItemUid), Is.True, "Item does not exist on server :(");
-                Assume.That(sContainerSys.TryGetContainingContainer(sItemUid, out _), Is.True, "Item does not have containing container on server :(");
-
-                Assert.That(sContainerSys.TryRemoveFromContainer(sItemUid, force: false), Is.False, "Unremovable item was removed from container without being forced! (TryRemoveFromContainer should have returned false)");
-                Assert.That(sContainerSys.IsEntityInContainer(sItemUid), Is.True, "Unremovable item still in container after unforced removal (it should still be in the container)");
+                Assume.That(sContainerSys.TryRemoveFromContainer(sItemUid, force: false), Is.False, "Unremovable item was removed from container without being forced! (TryRemoveFromContainer should have returned false)");
+                Assume.That(sContainerSys.IsEntityInContainer(sItemUid), Is.True, "Unremovable item still in container after unforced removal (it should still be in the container)");
             });
 
-            await server.WaitAssertion(() =>
-            {    
-                Assert.That(sContainerSys.TryRemoveFromContainer(sItemUid, force: true), Is.True, "Unremovable item wasn't removed from container despite being forced out! (TryRemoveFromContainer should have returned true)");
-                Assert.That(sContainerSys.IsEntityInContainer(sItemUid), Is.False, "Unremovable item still in container after forced removal (it should not be in the container)");
-            });
+            await RunTicksSync(server, client, 1);
 
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(4);
-
+            // just making sure the unforced removal didn't remove the item from the container on the client side
             await client.WaitAssertion(() =>
             {
-                Assert.That(cContainerSys.IsEntityInContainer(cItemUid), Is.False, "The item was still in a container on the client after forced removal! (IsEntityInContainer)");
-                Assert.That(cBaseContainer.Contains(cItemUid), Is.False, "The item was still in the clientside BaseContainer after forced removal! (cBaseContaner.Contains returned true)");
-                Assert.That(cBaseContainer.ContainedEntities.Count, Is.EqualTo(0), "There was still an item in the container in the client after forced removal! (ContainedEntities.Count != 0)");
-                Assert.That(cBaseContainer.PvsDetachedEntities.Count, Is.EqualTo(0), "There was still an item in the client's PvsDetachedEntities after forced removal! (PvsDetachedEntities.Count != 0)");
+                Assume.That(cBaseContainer.Contains(cItemUid), Is.True, "Clientside BaseContainer does not contain the item after an unforced removal (it should still be in the container!)");
+            });
 
-                Assert.That(cContainerSys.PvsDetachedEntities.ContainsKey(itemNetEnt), Is.False, "The item is still registered as a PVS-detached contained entity on the client despite no longer being a contained entity!");
+            await RunTicksSync(server, client, 1);
+
+            // and now, we finally forcibly remove the item from the container.
+            await server.WaitAssertion(() =>
+            {
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(sContainerSys.TryRemoveFromContainer(sItemUid, force: true), Is.True, "Unremovable item wasn't removed from container despite being forced out! (TryRemoveFromContainer should have returned true)");
+                    Assert.That(sContainerSys.IsEntityInContainer(sItemUid), Is.False, "Unremovable item still in container after forced removal (it should not be in the container)");
+                }
+            });
+
+            await RunTicksSync(server, client, 1);
+
+            // make sure that it was removed from the container on the client side as well
+            await client.WaitAssertion(() =>
+            {
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(cContainerSys.IsEntityInContainer(cItemUid), Is.False, "The item was still in a container on the client after forced removal! (IsEntityInContainer)");
+                    Assert.That(cBaseContainer.Contains(cItemUid), Is.False, "The item was still in the clientside BaseContainer after forced removal! (cBaseContaner.Contains returned true)");
+                    Assert.That(cBaseContainer.ContainedEntities.Count, Is.EqualTo(0), "There was still an item in the container in the client after forced removal! (ContainedEntities.Count != 0)");
+                    Assert.That(cBaseContainer.PvsDetachedEntities.Count, Is.EqualTo(0), "There was still an item in the client's PvsDetachedEntities after forced removal! (PvsDetachedEntities.Count != 0)");
+                    Assert.That(cContainerSys.PvsDetachedEntities.ContainsKey(itemNetEnt), Is.False, "The item is still registered as a PVS-detached contained entity on the client despite no longer being a contained entity!");
+                }
             });
 
             await DisconnectClient(server, client);

@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.Controls
         private RichTextEntry? _entry;
         private float _lineHeightScale = 1;
         private bool _lineHeightOverride;
-        private readonly MarkupDrawingContext _drawingContext = new();
+        private readonly MarkupDrawingContext _drawingContext;
         private Font? _actualFont;
         private bool _fontCacheValid;
         private float? _outlineThicknessOverride;
@@ -86,6 +86,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             IoCManager.InjectDependencies(this);
             VerticalAlignment = VAlignment.Center;
+            _drawingContext = new MarkupDrawingContext(this);
         }
 
         /// <summary>

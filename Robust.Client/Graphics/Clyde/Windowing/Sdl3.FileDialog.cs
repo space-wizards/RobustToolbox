@@ -13,17 +13,19 @@ internal partial class Clyde
 {
     private sealed partial class Sdl3WindowingImpl : IFileDialogManagerImplementation
     {
-        public async Task<string?> OpenFile(FileDialogFilters? filters)
+        private const string SdlFileDialogLocationProperty = "SDL.filedialog.location";
+
+        public async Task<string?> OpenFile(FileDialogFilters? filters, string? defaultLocation)
         {
-            return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_OPENFILE, filters);
+            return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_OPENFILE, filters, defaultLocation);
         }
 
-        public async Task<string?> SaveFile(FileDialogFilters? filters)
+        public async Task<string?> SaveFile(FileDialogFilters? filters, string? defaultLocation)
         {
-            return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_SAVEFILE, filters);
+            return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_SAVEFILE, filters, defaultLocation);
         }
 
-        private unsafe Task<string?> ShowFileDialogOfType(int type, FileDialogFilters? filters)
+        private unsafe Task<string?> ShowFileDialogOfType(int type, FileDialogFilters? filters, string? defaultLocation)
         {
             var props = SDL.SDL_CreateProperties();
 
@@ -49,6 +51,8 @@ internal partial class Clyde
             // NOTE: Giving a parent window is required to avoid the file dialog being blocking on macOS.
             var mainWindow = (Sdl3WindowReg)_clyde._mainWindow!;
             SDL.SDL_SetPointerProperty(props, SDL.SDL_PROP_FILE_DIALOG_WINDOW_POINTER, mainWindow.Sdl3Window);
+            if (!string.IsNullOrWhiteSpace(defaultLocation))
+                SDL.SDL_SetStringProperty(props, SdlFileDialogLocationProperty, defaultLocation);
 
             var task = ShowFileDialogWithProperties(type, props);
 

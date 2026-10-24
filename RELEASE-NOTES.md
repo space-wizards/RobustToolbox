@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 294.0.0
+
+### Breaking changes
+
 - `MarkupDrawingContext.Tags` are now a `List<IMarkupTagHandler>` instead of `List<IMarkupTag>`, as `IMarkupTag` is obsolete.
 
 ### New features
@@ -50,10 +73,6 @@ END TEMPLATE-->
 ### Other
 
 - `MarkupDrawingContext` constructors without an `owner` parameter are now obsolete (use the new variants that take a `Control owner` parameter).
-
-### Internal
-
-*None yet*
 
 
 ## 293.0.1

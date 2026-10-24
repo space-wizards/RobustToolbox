@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-- `lsmap` and `lsgrid` no longer throw an exception when there are no maps or grids
+*None yet*
 
 ### Other
 
@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- `MarkupDrawingContext.Tags` are now a `List<IMarkupTagHandler>` instead of `List<IMarkupTag>`, as `IMarkupTag` is obsolete.
 
 ### New features
 
-*None yet*
+- `MarkupDrawingContext` now provides a `TryGetStyleProperty{T}` method and a `MarkupDrawingContext(Control? owner, int capacity = 0)` constructor, which exposes `Control.TryGetStyleProperty{T}` to rich text markup tags. This lets you write tags that can read style properties set on their parents via stylesheets, just like any Control could.
 
 ### Bugfixes
 
@@ -49,7 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+- `MarkupDrawingContext` constructors without an `owner` parameter are now obsolete (use the new variants that take a `Control owner` parameter).
 
 ### Internal
 

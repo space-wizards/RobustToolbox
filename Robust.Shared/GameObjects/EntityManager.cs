@@ -302,10 +302,14 @@ namespace Robust.Shared.GameObjects
             _componentCullHistogram = histogram?.WithLabels("ComponentCull");
         }
 
-        internal virtual void ProcessQueueudDeletions()
+        internal void ProcessQueueudDeletions()
         {
             while (QueuedDeletions.TryDequeue(out var uid))
             {
+                // The deletion may have been canceled since it was queued.
+                if (!QueuedDeletionsSet.Remove(uid))
+                    continue;
+
                 DeleteEntity(uid);
             }
 
@@ -355,9 +359,7 @@ namespace Robust.Shared.GameObjects
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
-#pragma warning disable CS0618 // AnchorEntity/Unanchor only work on initialized entities
-                transform.Anchored = false;
-#pragma warning restore CS0618
+                _xforms.SetAnchored((newEntity, transform), false);
                 return newEntity;
             }
 
@@ -434,7 +436,7 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta = null,
             bool isUnclassifiedChange = true)
         {
-            DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(component.Networked,
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
             DebugTools.AssertOwner(uid, component);
 
@@ -454,7 +456,7 @@ namespace Robust.Shared.GameObjects
         internal void DirtyInternal<T>(Entity<T> ent, MetaDataComponent? meta = null, bool isUnclassifiedChange = true)
             where T : IComponent
         {
-            DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
 
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
@@ -469,9 +471,9 @@ namespace Robust.Shared.GameObjects
             where T1 : IComponent
             where T2 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -487,11 +489,11 @@ namespace Robust.Shared.GameObjects
             where T2 : IComponent
             where T3 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -509,13 +511,13 @@ namespace Robust.Shared.GameObjects
             where T3 : IComponent
             where T4 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
-            DebugTools.Assert(ent.Comp4.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp4.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp4.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -537,7 +539,7 @@ namespace Robust.Shared.GameObjects
             if (Deleted(uid.Value))
                 return false;
 
-            if (QueuedDeletionsSet.Contains(uid.Value))
+            if (IsQueuedForDeletion(uid.Value))
                 return false;
 
             QueueDeleteEntity(uid);
@@ -573,8 +575,10 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
+        /// On the client this predicts the deletion: a networked entity is detached to nullspace and then either
+        /// restored or actually deleted by state handling.
         /// </summary>
-        public void DeleteEntity(EntityUid e, MetaDataComponent meta, TransformComponent xform)
+        public virtual void DeleteEntity(EntityUid e, MetaDataComponent meta, TransformComponent xform)
         {
             // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
             if (!Started)
@@ -753,60 +757,44 @@ namespace Robust.Shared.GameObjects
         public virtual bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
 
         /// <inheritdoc />
-        public virtual void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
-        {
-            DeleteEntity(ent.Owner);
-        }
+        [Obsolete("Use DeleteEntity")]
+        public void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+            => DeleteEntity(ent.Owner);
 
         /// <inheritdoc />
+        [Obsolete("Use DeleteEntity")]
         public void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
-        {
-            if (ent == null)
-                return;
-
-            PredictedDeleteEntity(ent.Value);
-        }
+            => DeleteEntity(ent?.Owner);
 
         /// <inheritdoc />
-        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
-        {
-            QueueDeleteEntity(ent);
-        }
+        [Obsolete("Use QueueDeleteEntity")]
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
+            => QueueDeleteEntity(ent.Owner);
 
         /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
         public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?>? ent)
-        {
-            if (ent != null)
-                PredictedQueueDeleteEntity(ent.Value);
-        }
+            => QueueDeleteEntity(ent?.Owner);
 
         /// <inheritdoc />
-        [Obsolete("use variant without TransformComponent")]
+        [Obsolete("Use QueueDeleteEntity")]
         public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
-        {
-            PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(ent.Owner, ent.Comp1));
-        }
+            => QueueDeleteEntity(ent.Owner);
 
         /// <inheritdoc />
-        [Obsolete("use variant without TransformComponent")]
+        [Obsolete("Use QueueDeleteEntity")]
         public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
-        {
-            if (ent != null)
-                PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(ent.Value.Owner, ent.Value.Comp1));
-        }
+            => QueueDeleteEntity(ent?.Owner);
 
         /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
         public void PredictedQueueDeleteEntity(EntityUid uid)
-        {
-            PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(uid, null));
-        }
+            => QueueDeleteEntity(uid);
 
         /// <inheritdoc />
+        [Obsolete("Use QueueDeleteEntity")]
         public void PredictedQueueDeleteEntity(EntityUid? uid)
-        {
-            if (uid != null)
-                PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(uid.Value, null));
-        }
+            => QueueDeleteEntity(uid);
 
         public bool EntityExists(EntityUid uid)
         {

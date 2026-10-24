@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     /// <seealso cref="SharedTransformSystem"/>
     [RegisterComponent, NetworkedComponent]
-    public sealed partial class TransformComponent : Component, IComponentDebug
+    public sealed partial class TransformComponent : Component, IComponentDebug, IComponentDelta
     {
         [Dependency] private IEntityManager _entMan = default!;
 
@@ -39,6 +39,12 @@ namespace Robust.Shared.GameObjects
 
         [DataField("anchored")]
         internal bool _anchored;
+
+        /// <inheritdoc />
+        public GameTick LastUnclassifiedDirty { get; set; }
+
+        /// <inheritdoc />
+        public GameTick[] LastModifiedFields { get; set; } = default!;
 
         /// <summary>
         /// Indicates this entity can traverse grids.
@@ -157,7 +163,7 @@ namespace Robust.Shared.GameObjects
                 var oldRotation = _localRotation;
                 _localRotation = value;
                 var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.Dirty(Owner, this, meta);
+                _entMan.DirtyField(Owner, this, nameof(LocalRotation), meta);
                 MatricesDirty = true;
 
                 if (!Initialized)
@@ -237,30 +243,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Is this transform anchored to a grid tile?
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables]
         public bool Anchored
         {
             get => _anchored;
-            [Obsolete("Use the SharedTransformSystem.AnchorEntity/Unanchor methods instead.")]
-            set
-            {
-                // This will be set again when the transform initializes, actually anchoring it.
-                if (!Initialized)
-                {
-                    _anchored = value;
-                }
-                else if (value && !_anchored && _entMan.System<SharedMapSystem>().TryFindGridAt(_entMan.System<SharedTransformSystem>().GetMapCoordinates(this), out _, out var grid))
-                {
-                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
-                }
-                else if (!value && _anchored)
-                {
-                    // An anchored entity is always parented to the grid.
-                    // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
-                    // then this will be false.
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(Owner, this);
-                }
-            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        internal bool VVAnchored
+        {
+            get => Anchored;
+            set => _entMan.System<SharedTransformSystem>().TryAnchor((Owner, this, null), value);
         }
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
@@ -362,32 +355,6 @@ namespace Robust.Shared.GameObjects
         ///     If true, the entity is being detached to null-space
         /// </summary>
         public readonly bool Detaching = detaching;
-    }
-
-    /// <summary>
-    /// Raised when an entity is re-anchored to another grid.
-    /// </summary>
-    [ByRefEvent]
-    public readonly struct ReAnchorEvent
-    {
-        public readonly EntityUid Entity;
-        public readonly EntityUid OldGrid;
-        public readonly EntityUid Grid;
-        public readonly TransformComponent Xform;
-
-        /// <summary>
-        /// Tile on both the old and new grid being re-anchored.
-        /// </summary>
-        public readonly Vector2i TilePos;
-
-        public ReAnchorEvent(EntityUid uid, EntityUid oldGrid, EntityUid grid, Vector2i tilePos, TransformComponent xform)
-        {
-            Entity = uid;
-            OldGrid = oldGrid;
-            Grid = grid;
-            TilePos = tilePos;
-            Xform = xform;
-        }
     }
 
     /// <summary>

@@ -71,7 +71,7 @@ internal sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
-            player = sEntMan.SpawnEntity(null, coords);
+            player = sEntMan.SpawnAttachedTo(null, coords);
 
             // Enable physics
             var physics = sEntMan.AddComponent<PhysicsComponent>(player);

@@ -26,11 +26,14 @@ internal sealed partial class PvsSystem
         if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
 
-        if (ackedTick <= sessionData.LastReceivedAck)
-            return;
+        lock (PendingAcks)
+        {
+            if (ackedTick <= sessionData.LastReceivedAck)
+                return;
 
-        sessionData.LastReceivedAck = ackedTick;
-        PendingAcks.Add(session);
+            sessionData.LastReceivedAck = ackedTick;
+            PendingAcks.Add(session);
+        }
     }
 
     /// <summary>
@@ -39,6 +42,8 @@ internal sealed partial class PvsSystem
     /// <param name="histogram"></param>
     private WaitHandle? ProcessQueuedAcks()
     {
+        // ProcessDisconnections has already waited for the send job and this runs on the game thread too sooo.
+        // ReSharper disable InconsistentlySynchronizedField
         if (PendingAcks.Count == 0)
             return null;
 
@@ -51,6 +56,7 @@ internal sealed partial class PvsSystem
         }
 
         PendingAcks.Clear();
+        // ReSharper restore InconsistentlySynchronizedField
 
         if (!_async)
         {

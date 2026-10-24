@@ -24,7 +24,7 @@ internal sealed class PendingComponentRemovalSerializationTest : RobustIntegrati
         await server.WaitPost(() =>
         {
             mapSystem.CreateMap(out mapId);
-            var uid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var uid = entMan.Spawn(null, new MapCoordinates(0, 0, mapId));
             var component = entMan.AddComponent<PendingRemovalTestComponent>(uid);
 
             // Deferred removals are processed at the end of the tick. Saving before then used to serialize the

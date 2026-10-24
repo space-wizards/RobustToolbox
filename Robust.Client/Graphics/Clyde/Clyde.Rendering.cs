@@ -61,6 +61,15 @@ namespace Robust.Client.Graphics.Clyde
         // Some is applied while the batch is being created (e.g. simple texture draw calls).
         // For DrawPrimitives OTOH the model matrix is passed along with the render command so is applied in the shader.
         private Matrix3x2 _currentMatrixModel = Matrix3x2.Identity;
+        private Vector2 _currentMatrixModelTranslation;
+        private ModelTransformType _currentMatrixModelTransformType = ModelTransformType.Identity;
+
+        private enum ModelTransformType : byte
+        {
+            Identity,
+            Translation,
+            General,
+        }
 
         // Buffers and data for the batching system. Written into during (queue) and processed during (submit).
         private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchQuads * 4];
@@ -79,6 +88,9 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeHandle _queuedShader => _queuedShaderInstance.Handle;
 
         private ClydeShaderInstance _queuedShaderInstance = default!;
+
+        private static readonly Vector4 DefaultScreenUvRect = new(0, 0, 1, 1);
+        private Vector4 _queuedScreenUvRect = DefaultScreenUvRect;
 
         // Current projection & view matrices that are being used ot render.
         // This gets updated to keep track during (queue) and (misc), but not during (submit).
@@ -296,6 +308,7 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniIScreenUvRect, command.ScreenUvRect);
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
@@ -365,8 +378,9 @@ namespace Robust.Client.Graphics.Clyde
             FlushBatchQueue();
 
             // Reset renderer state.
-            _currentMatrixModel = Matrix3x2.Identity;
+            DrawSetModelTransform(Matrix3x2.Identity);
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
             SetScissorFull(null);
         }
 
@@ -575,6 +589,13 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawSetModelTransform(in Matrix3x2 matrix)
         {
             _currentMatrixModel = matrix;
+            _currentMatrixModelTranslation = new Vector2(matrix.M31, matrix.M32);
+            _currentMatrixModelTransformType = matrix.M11 == 1f && matrix.M12 == 0f &&
+                                               matrix.M21 == 0f && matrix.M22 == 1f
+                ? _currentMatrixModelTranslation == Vector2.Zero
+                    ? ModelTransformType.Identity
+                    : ModelTransformType.Translation
+                : ModelTransformType.General;
         }
 
         private Matrix3x2 DrawGetModelTransform()
@@ -611,11 +632,21 @@ namespace Robust.Client.Graphics.Clyde
             EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
             EnsureBatchState(texture, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
-            // TODO RENDERING
-            // It's probably better to do this on the GPU.
-            bl = Vector2.Transform(bl, _currentMatrixModel);
-            br = Vector2.Transform(br, _currentMatrixModel);
-            tr = Vector2.Transform(tr, _currentMatrixModel);
+            if (_currentMatrixModelTransformType == ModelTransformType.Translation)
+            {
+                bl += _currentMatrixModelTranslation;
+                br += _currentMatrixModelTranslation;
+                tr += _currentMatrixModelTranslation;
+            }
+            else if (_currentMatrixModelTransformType == ModelTransformType.General)
+            {
+                // TODO RENDERING
+                // It's probably better to do this on the GPU.
+                bl = Vector2.Transform(bl, _currentMatrixModel);
+                br = Vector2.Transform(br, _currentMatrixModel);
+                tr = Vector2.Transform(tr, _currentMatrixModel);
+            }
+
             tl = tr + bl - br;
 
             // TODO: split batch if necessary.
@@ -661,6 +692,9 @@ namespace Robust.Client.Graphics.Clyde
             var primitiveType = GetQuadBatchPrimitiveType();
             var indexCount = GetQuadBatchIndexCount();
             var rectIndex = 0;
+            var modelMatrix = _currentMatrixModel;
+            var modelTransformType = _currentMatrixModelTransformType;
+            var modelTranslation = _currentMatrixModelTranslation;
 
             while (rectIndex < rects.Length)
             {
@@ -692,14 +726,45 @@ namespace Robust.Client.Graphics.Clyde
                     if (applyModulation)
                         color *= modulate;
 
-                    // Can probably SIMD this more somehow but future concern.
                     var quad = rect.Quad;
-                    var transform = quad.Transform * _currentMatrixModel;
+                    var box = quad.Box;
+                    Vector2 bl;
+                    Vector2 br;
+                    Vector2 tl;
+                    Vector2 tr;
+                    if (modelTransformType != ModelTransformType.General && quad.Rotation == Angle.Zero)
+                    {
+                        bl = box.BottomLeft;
+                        br = box.BottomRight;
+                        tl = box.TopLeft;
+                        tr = box.TopRight;
 
-                    var bl = Vector2.Transform(quad.Box.BottomLeft, transform);
-                    var br = Vector2.Transform(quad.Box.BottomRight, transform);
-                    var tr = Vector2.Transform(quad.Box.TopRight, transform);
-                    var tl = tr + bl - br;
+                        if (modelTransformType == ModelTransformType.Translation)
+                        {
+                            bl += modelTranslation;
+                            br += modelTranslation;
+                            tl += modelTranslation;
+                            tr += modelTranslation;
+                        }
+                    }
+                    else
+                    {
+                        var transform = quad.Transform;
+                        if (modelTransformType == ModelTransformType.Translation)
+                        {
+                            transform.M31 += modelTranslation.X;
+                            transform.M32 += modelTranslation.Y;
+                        }
+                        else if (modelTransformType == ModelTransformType.General)
+                        {
+                            transform *= modelMatrix;
+                        }
+
+                        bl = Vector2.Transform(box.BottomLeft, transform);
+                        br = Vector2.Transform(box.BottomRight, transform);
+                        tr = Vector2.Transform(box.TopRight, transform);
+                        tl = tr + bl - br;
+                    }
 
                     var vIdx = BatchVertexIndex;
                     BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
@@ -745,6 +810,9 @@ namespace Robust.Client.Graphics.Clyde
             var primitiveType = GetQuadBatchPrimitiveType();
             var indexCount = GetQuadBatchIndexCount();
             var rectIndex = 0;
+            var modelMatrix = _currentMatrixModel;
+            var modelTransformType = _currentMatrixModelTransformType;
+            var modelTranslation = _currentMatrixModelTranslation;
 
             while (rectIndex < rects.Length)
             {
@@ -778,10 +846,31 @@ namespace Robust.Client.Graphics.Clyde
 
                     var box = rect.Rect;
 
-                    var bl = Vector2.Transform(box.BottomLeft, _currentMatrixModel);
-                    var br = Vector2.Transform(box.BottomRight, _currentMatrixModel);
-                    var tr = Vector2.Transform(box.TopRight, _currentMatrixModel);
-                    var tl = tr + bl - br;
+                    Vector2 bl;
+                    Vector2 br;
+                    Vector2 tl;
+                    Vector2 tr;
+                    if (modelTransformType == ModelTransformType.Translation)
+                    {
+                        bl = box.BottomLeft + modelTranslation;
+                        br = box.BottomRight + modelTranslation;
+                        tl = box.TopLeft + modelTranslation;
+                        tr = box.TopRight + modelTranslation;
+                    }
+                    else if (modelTransformType == ModelTransformType.General)
+                    {
+                        bl = Vector2.Transform(box.BottomLeft, modelMatrix);
+                        br = Vector2.Transform(box.BottomRight, modelMatrix);
+                        tr = Vector2.Transform(box.TopRight, modelMatrix);
+                        tl = tr + bl - br;
+                    }
+                    else
+                    {
+                        bl = box.BottomLeft;
+                        br = box.BottomRight;
+                        tl = box.TopLeft;
+                        tr = box.TopRight;
+                    }
 
                     var vIdx = BatchVertexIndex;
                     BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
@@ -893,8 +982,16 @@ namespace Robust.Client.Graphics.Clyde
             EnsureBatchSpaceAvailable(2, 0);
             EnsureBatchState(_stockTextureWhite.TextureId, false, BatchPrimitiveType.LineList, _queuedShader);
 
-            a = Vector2.Transform(a, _currentMatrixModel);
-            b = Vector2.Transform(b, _currentMatrixModel);
+            if (_currentMatrixModelTransformType == ModelTransformType.Translation)
+            {
+                a += _currentMatrixModelTranslation;
+                b += _currentMatrixModelTranslation;
+            }
+            else if (_currentMatrixModelTransformType == ModelTransformType.General)
+            {
+                a = Vector2.Transform(a, _currentMatrixModel);
+                b = Vector2.Transform(b, _currentMatrixModel);
+            }
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
@@ -931,6 +1028,15 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawUseShader(ClydeShaderInstance instance)
         {
             _queuedShaderInstance = instance;
+        }
+
+        private void DrawSetScreenUvRect(in Vector4 screenUvRect)
+        {
+            if (_queuedScreenUvRect == screenUvRect)
+                return;
+
+            BreakBatch();
+            _queuedScreenUvRect = screenUvRect;
         }
 
         private void DrawClear(Color color, int stencil, ClearBufferMask mask)
@@ -977,7 +1083,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (metaData.TextureId == textureId &&
                     indexed == metaData.Indexed &&
                     metaData.PrimitiveType == primitiveType &&
-                    metaData.ShaderInstance == shaderInstance)
+                    metaData.ShaderInstance == shaderInstance &&
+                    metaData.ScreenUvRect == _queuedScreenUvRect)
                 {
                     // Data matches, don't have to do anything.
                     return;
@@ -989,7 +1096,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, indexed, primitiveType,
-                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
+                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance, _queuedScreenUvRect);
 
             /*
             if (textureId != default)
@@ -1022,6 +1129,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
             command.DrawBatch.TextureId = metaData.TextureId;
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
+            command.DrawBatch.ScreenUvRect = metaData.ScreenUvRect;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
             command.DrawBatch.ModelMatrix = Matrix3x2.Identity;
@@ -1079,6 +1187,7 @@ namespace Robust.Client.Graphics.Clyde
                 _currentBoundRenderTarget,
                 _currentRenderTarget,
                 _queuedShaderInstance,
+                _queuedScreenUvRect,
                 _currentScissorState,
                 _glCaps);
         }
@@ -1089,6 +1198,7 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetImmediate(state.BoundRenderTarget);
 
             _queuedShaderInstance = state.QueuedShaderInstance;
+            _queuedScreenUvRect = state.ScreenUvRect;
             _currentRenderTarget = state.RenderTarget;
             var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
@@ -1116,11 +1226,12 @@ namespace Robust.Client.Graphics.Clyde
             _queuedRenderCommands.Clear();
             _currentViewport = null;
             _lightingReady = false;
-            _currentMatrixModel = Matrix3x2.Identity;
+            DrawSetModelTransform(Matrix3x2.Identity);
             SetScissorFull(null);
             BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
@@ -1197,6 +1308,8 @@ namespace Robust.Client.Graphics.Clyde
             public bool Indexed;
             public BatchPrimitiveType PrimitiveType;
 
+            public Vector4 ScreenUvRect;
+
             // TODO: this makes the render commands so much more large please remove.
             public Matrix3x2 ModelMatrix;
         }
@@ -1268,15 +1381,17 @@ namespace Robust.Client.Graphics.Clyde
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
             public BatchMetaData(ClydeHandle textureId, bool indexed, BatchPrimitiveType primitiveType,
-                int startIndex, ClydeHandle shaderInstance)
+                int startIndex, ClydeHandle shaderInstance, Vector4 screenUvRect)
             {
                 TextureId = textureId;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;
                 ShaderInstance = shaderInstance;
+                ScreenUvRect = screenUvRect;
             }
         }
 
@@ -1298,6 +1413,7 @@ namespace Robust.Client.Graphics.Clyde
             public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
             public readonly ClydeShaderInstance QueuedShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
             public readonly UIBox2i? ScissorState;
 
@@ -1309,6 +1425,7 @@ namespace Robust.Client.Graphics.Clyde
                 LoadedRenderTarget boundRenderTarget,
                 LoadedRenderTarget renderTarget,
                 ClydeShaderInstance queuedShaderInstance,
+                Vector4 screenUvRect,
                 UIBox2i? scissorState,
                 GLCaps glcaps
                 )
@@ -1318,6 +1435,7 @@ namespace Robust.Client.Graphics.Clyde
                 BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
                 QueuedShaderInstance = queuedShaderInstance;
+                ScreenUvRect = screenUvRect;
 
                 ScissorState = scissorState;
                 GLCaps = glcaps;

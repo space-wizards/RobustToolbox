@@ -80,10 +80,17 @@ namespace Robust.Client.ResourceManagement
 
         public void AfterDeserialization()
         {
-            foreach (var sprite in _toDeserialize)
-            {
-                LoadBaseRsi(default, sprite);
+            try
+			{
+        		foreach (var sprite in _toDeserialize)
+        		{
+            		LoadBaseRsi(default, sprite);
+        		}
             }
+			finally
+			{
+				_toDeserialize.Clear();
+			}
         }
 
         private void PreloadTextures(ISawmill sawmill)

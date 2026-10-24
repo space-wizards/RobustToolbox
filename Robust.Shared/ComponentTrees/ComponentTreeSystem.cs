@@ -311,24 +311,30 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
 
     internal ValueList<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTreesInternal(MapId mapId, Box2 worldAABB)
     {
+        var trees = new ValueList<(EntityUid Uid, TTreeComp Comp)>();
+        GetIntersectingTrees(mapId, worldAABB, ref trees);
+        return trees;
+    }
+
+    public void GetIntersectingTrees<TCollection>(MapId mapId, Box2 worldAABB, ref TCollection trees) where TCollection : ICollection<(EntityUid Uid, TTreeComp Comp)>
+    {
         if (!CheckEnabled())
-            return default;
+            return;
+
         // Anything that queries these trees should only do so if there are no queued updates, otherwise it can lead to
         // errors. Currently, there is no easy way to enforce this, but this should work as long as nothing queries the
         // trees directly:
         UpdateTreePositions();
 
-        var trees = new ValueList<(EntityUid Uid, TTreeComp Comp)>();
-
         if (mapId == MapId.Nullspace)
-            return trees;
+            return;
 
         // TODO LOOKUPS pass in entity query, not entity manager.
         var state = (EntityManager, trees);
 
         _mapSystem.FindGridsIntersecting(mapId, worldAABB, ref state,
-            (EntityUid uid, MapGridComponent grid,
-                ref (EntityManager EntityManager, ValueList<(EntityUid, TTreeComp)> trees) tuple) =>
+            static (EntityUid uid, MapGridComponent grid,
+                ref (EntityManager EntityManager, TCollection trees) tuple) =>
             {
                 if (tuple.EntityManager.TryGetComponent<TTreeComp>(uid, out var treeComp))
                 {
@@ -345,7 +351,7 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
             state.trees.Add((mapUid.Value, mapTreeComp));
         }
 
-        return state.trees;
+        trees = state.trees;
     }
 
     #region HashSet

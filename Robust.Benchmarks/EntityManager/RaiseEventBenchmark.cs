@@ -9,6 +9,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.Benchmarks.EntityManager;
 
 [Virtual]
+[MemoryDiagnoser]
 public partial class RaiseEventBenchmark
 {
     private ISimulation _simulation = default!;

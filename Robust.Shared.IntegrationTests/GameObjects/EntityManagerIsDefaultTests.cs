@@ -43,7 +43,7 @@ internal sealed partial class EntityManagerIsDefaultTests
         var entMan = (EntityManager) sim.Resolve<IEntityManager>();
         var map = sim.CreateMap().Uid;
         var coords = new EntityCoordinates(map, default);
-        var entity = entMan.SpawnEntity(PrototypeId, coords);
+        var entity = entMan.SpawnAttachedTo(PrototypeId, coords);
 
         Assert.That(entMan.IsDefault(entity), Is.True);
 

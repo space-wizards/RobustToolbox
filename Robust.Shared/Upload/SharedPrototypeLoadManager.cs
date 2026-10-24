@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
@@ -15,6 +16,7 @@ namespace Robust.Shared.Upload;
 /// </summary>
 public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadManager
 {
+    [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IReplayRecordingManager _replay = default!;
     [Dependency] private IPrototypeManagerInternal _prototypeManager = default!;
     [Dependency] private ILocalizationManager _localizationManager = default!;
@@ -64,7 +66,10 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     {
         var changed = new Dictionary<Type, HashSet<string>>();
         _prototypeManager.LoadString(data, true, changed);
-        _prototypeManager.ReloadPrototypesOrThrow(changed);
+        if (_cfg.GetCVar(CVars.ResValidatePrototypeUpload))
+            _prototypeManager.ReloadPrototypesOrThrow(changed);
+        else
+            _prototypeManager.ReloadPrototypes(changed);
         _localizationManager.ReloadLocalizations();
     }
 

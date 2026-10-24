@@ -801,7 +801,7 @@ namespace Robust.Shared
             CVarDef.Create("build.manifest_url", string.Empty);
 
         /// <summary>
-        /// URL of the game repository fork (e.g. "https://github.com/MyFork/space-station-14")
+        /// URL of the game repository fork (e.g. "https://github.com/space-wizards/space-station-14")
         /// or original game repository.
         /// </summary>
         public static readonly CVarDef<string> SourceUrl =

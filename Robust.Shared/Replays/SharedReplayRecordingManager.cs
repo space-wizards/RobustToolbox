@@ -170,7 +170,9 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         UpdateWriteTasks();
 
         name ??= DefaultReplayFileName();
-        var filePath = new ResPath(name).Clean();
+        var filePath = new ResPath(name);
+        if (!filePath.IsValidFilePath(rooted: false))
+            throw new ArgumentException("Replay file name must be relative, point to a file, and not contain relative traversal.", nameof(name));
 
         if (filePath.Extension != "zip")
             filePath = filePath.WithName(filePath.Filename + ".zip");

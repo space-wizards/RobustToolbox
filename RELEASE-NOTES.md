@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
 * Fix model transforms not being reset fully in RenderInRenderTarget.
 
 ### Other

@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-- `lsmap` and `lsgrid` no longer throw an exception when there are no maps or grids
+*None yet*
 
 ### Other
 
@@ -43,9 +43,6 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* The default AnchorEntity method now snaps to tile center again.
-* Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
-* Fixed the `MapId` overloads of `RayCastSystem.CastRayClosest` and `CastShape` returning a grid-local hit point when a hit on a grid replaced a farther hit already found on the map or another grid.
 * The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
 
 ### Other
@@ -55,6 +52,27 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 294.0.0
+
+### Breaking changes
+
+- `MarkupDrawingContext.Tags` are now a `List<IMarkupTagHandler>` instead of `List<IMarkupTag>`, as `IMarkupTag` is obsolete.
+
+### New features
+
+- `MarkupDrawingContext` now provides a `TryGetStyleProperty{T}` method and a `MarkupDrawingContext(Control? owner, int capacity = 0)` constructor, which exposes `Control.TryGetStyleProperty{T}` to rich text markup tags. This lets you write tags that can read style properties set on their parents via stylesheets, just like any Control could.
+
+### Bugfixes
+
+* The default AnchorEntity method now snaps to tile center again.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRayClosest` and `CastShape` returning a grid-local hit point when a hit on a grid replaced a farther hit already found on the map or another grid.
+
+### Other
+
+- `MarkupDrawingContext` constructors without an `owner` parameter are now obsolete (use the new variants that take a `Control owner` parameter).
 
 
 ## 293.0.1

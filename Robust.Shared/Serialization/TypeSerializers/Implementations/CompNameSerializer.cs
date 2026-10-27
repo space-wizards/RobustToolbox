@@ -14,14 +14,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 /// Serializer used automatically for <see cref="CompName"/> types.
 /// </summary>
 [TypeSerializer]
-public sealed class CompNameSerializer : ITypeSerializer<CompName, ValueDataNode>, ITypeCopyCreator<CompName>
+public sealed partial class CompNameSerializer : ITypeSerializer<CompName, ValueDataNode>, ITypeCopyCreator<CompName>
 {
-    private IComponentFactory? _factory;
+    [Dependency] private IComponentFactory _factory = default!;
 
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
         var name = node.Value;
-        _factory ??= dependencies.Resolve<IComponentFactory>();
         if (_factory.HasRegistration(name))
             return new ValidatedValueNode(node);
 
@@ -29,7 +28,7 @@ public sealed class CompNameSerializer : ITypeSerializer<CompName, ValueDataNode
     }
 
     public CompName Read(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, InstantiationDelegate<CompName>? instanceProvider = null)
-        => new CompName(node.Value, _factory ??= dependencies.Resolve<IComponentFactory>());
+        => new CompName(node.Value, _factory);
 
     public DataNode Write(ISerializationManager serialization, CompName value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext? context = null)
         => new ValueDataNode(value.Name);

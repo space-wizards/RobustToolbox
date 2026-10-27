@@ -32,6 +32,7 @@ namespace Robust.Shared.Physics.Systems
         private EntityQuery<TransformComponent> _xformQuery;
 
         private readonly HashSet<FixtureProxy> _gridMoveBuffer = new();
+        private readonly HashSet<EntityUid> _gridSundriesMoveBuffer = new();
 
         private float _frameTime;
 
@@ -42,7 +43,7 @@ namespace Robust.Shared.Physics.Systems
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        private BroadphaseContactJob _contactJob;
+        private BroadphaseContactJob _contactJob = default!;
 
         public override void Initialize()
         {
@@ -105,6 +106,7 @@ namespace Robust.Shared.Physics.Systems
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
             var moveBuffer = _physicsSystem.MoveBuffer;
             _gridMoveBuffer.Clear();
+            _gridSundriesMoveBuffer.Clear();
 
             foreach (var gridUid in movedGrids)
             {
@@ -121,6 +123,10 @@ namespace Robust.Shared.Physics.Systems
 
                 QueryMapBroadphase(mapBroadphase.DynamicTree, ref state, enlargedAABB);
                 QueryMapBroadphase(mapBroadphase.StaticTree, ref state, enlargedAABB);
+
+                var sundriesState = _gridSundriesMoveBuffer;
+                QueryMapSundries(mapBroadphase.SundriesTree, ref sundriesState, enlargedAABB);
+                QueryMapSundries(mapBroadphase.StaticSundriesTree, ref sundriesState, enlargedAABB);
             }
 
             foreach (var proxy in _gridMoveBuffer)
@@ -128,6 +134,11 @@ namespace Robust.Shared.Physics.Systems
                 moveBuffer.Add(proxy);
                 // If something is in our AABB then try grid traversal for it
                 _traversal.CheckTraverse((proxy.Entity, _xformQuery.GetComponent(proxy.Entity)));
+            }
+
+            foreach (var uid in _gridSundriesMoveBuffer)
+            {
+                _traversal.CheckTraverse((uid, _xformQuery.GetComponent(uid)));
             }
         }
 
@@ -155,6 +166,15 @@ namespace Robust.Shared.Physics.Systems
                 // To avoid updating during iteration.
                 // Don't need to transform as it's already in map terms.
                 tuple.gridMoveBuffer.Add(value);
+                return true;
+            }, enlargedAABB, true);
+        }
+
+        private void QueryMapSundries(DynamicTree<EntityUid> sundriesTree, ref HashSet<EntityUid> state, Box2 enlargedAABB)
+        {
+            sundriesTree.QueryAabb(ref state, static (ref HashSet<EntityUid> moveBuffer, in EntityUid value) =>
+            {
+                moveBuffer.Add(value);
                 return true;
             }, enlargedAABB, true);
         }
@@ -565,8 +585,9 @@ namespace Robust.Shared.Physics.Systems
             if (!_map.TryGetMap(mapId, out var map))
                 return;
 
+            // Use the same copy as the grids, as that is what gets written back to the caller's state.
             if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
-                callback((map.Value, mapBroadphase), ref state);
+                callback((map.Value, mapBroadphase), ref internalState.state);
 
             _map.FindGridsIntersecting(map.Value,
                 aabb,
@@ -591,7 +612,7 @@ namespace Robust.Shared.Physics.Systems
 
         internal delegate void BroadphaseCallback<TState>(Entity<BroadphaseComponent> entity, ref TState state);
 
-        private record struct BroadphaseContactJob() : IParallelRobustJob
+        private sealed class BroadphaseContactJob : IParallelRobustJob
         {
             public SharedBroadphaseSystem System = default!;
             public SharedTransformSystem TransformSys = default!;

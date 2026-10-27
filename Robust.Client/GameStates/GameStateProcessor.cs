@@ -20,7 +20,7 @@ namespace Robust.Client.GameStates
 
         private readonly List<GameState> _stateBuffer = new();
 
-        private readonly Dictionary<GameTick, List<NetEntity>> _pvsDetachMessages = new();
+        private readonly List<(GameTick Tick, List<NetEntity> Entities)> _pvsDetachMessages = new();
         public GameState? LastFullState { get; private set; }
         public bool WaitingForFull => LastFullStateRequested.HasValue;
         public (GameTick Tick, DateTime Time)? LastFullStateRequested { get; private set; } = (GameTick.Zero, DateTime.MaxValue);
@@ -55,7 +55,11 @@ namespace Robust.Client.GameStates
         {
             get => _maxBufferSize;
             // We place a lower bound on the maximum size to avoid spamming servers with full game state requests.
-            set => _maxBufferSize = Math.Max(value, MinimumMaxBufferSize);
+            set
+            {
+                _maxBufferSize = Math.Max(value, MinimumMaxBufferSize);
+                _stateBuffer.EnsureCapacity(value);
+            }
         }
 
         /// <inheritdoc />
@@ -131,7 +135,7 @@ namespace Robust.Client.GameStates
 
         public void TryAdd(GameState state)
         {
-            if (_stateBuffer.Count <= MaxBufferSize)
+            if (_stateBuffer.Count < MaxBufferSize)
             {
                 _stateBuffer.Add(state);
                 return;
@@ -199,6 +203,7 @@ Had full state: {LastFullState != null}"
             {
                 // Full state.
                 _lastStateFullRep.Clear();
+                _lastStateFullRep.EnsureCapacity(state.EntityStates.Span.Length);
             }
             else
             {
@@ -210,29 +215,37 @@ Had full state: {LastFullState != null}"
 
             foreach (var entityState in state.EntityStates.Span)
             {
-                if (!_lastStateFullRep.TryGetValue(entityState.NetEntity, out var compData))
+                ref var compDataRef = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    _lastStateFullRep,
+                    entityState.NetEntity,
+                    out var compDataExists);
+
+                if (!compDataExists)
                 {
-                    compData = new();
-                    _lastStateFullRep.Add(entityState.NetEntity, compData);
+                    var componentCount = entityState.NetComponents?.Count ?? entityState.ComponentChanges.Span.Length;
+                    compDataRef = new(componentCount);
                 }
 
+                var compData = compDataRef!;
                 foreach (var change in entityState.ComponentChanges.Span)
                 {
                     var compState = change.State;
+                    ref var old = ref CollectionsMarshal.GetValueRefOrAddDefault(compData, change.NetID, out var oldExists);
 
                     if (compState is not IComponentDeltaState delta)
                     {
-                        compData[change.NetID] = compState;
+                        old = compState;
                         continue;
                     }
 
-                    if (!compData.TryGetValue(change.NetID, out var old))
+                    if (!oldExists)
                     {
                         // Either the server needs to ensure that the initial state it sends to a client is a full
                         // state, or the client needs to be able to construct an implicit full state (i.e., get-state
                         // code needs to be in shared code).
                         //
                         // Without this, the client won't be able to reset predicted changes made to this component.
+                        compData.Remove(change.NetID);
                         DebugTools.Assert("Received delta state without having received or constructed an implicit full state");
                         continue;
                     }
@@ -246,7 +259,7 @@ Had full state: {LastFullState != null}"
                     }
 
                     var newFull = delta.CreateNewFullState(old!);
-                    compData[change.NetID] = newFull;
+                    old = newFull;
                     DebugTools.Assert(newFull is not IComponentDeltaState, "constructed state is not a full state");
                 }
 
@@ -260,7 +273,6 @@ Had full state: {LastFullState != null}"
                 }
             }
         }
-
         private bool TryGetFullState([NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
             nextState = null;
@@ -308,7 +320,38 @@ Had full state: {LastFullState != null}"
         {
             // Late message may still need to be processed,
             DebugTools.Assert(entities.Count > 0);
-            _pvsDetachMessages.TryAdd(tick, entities);
+
+            // Typically detaches are sorted by tick.
+            var count = _pvsDetachMessages.Count;
+            if (count == 0)
+            {
+                _pvsDetachMessages.Add((tick, entities));
+                return;
+            }
+
+            var lastTick = _pvsDetachMessages[count - 1].Tick;
+            if (tick == lastTick)
+            {
+                _pvsDetachMessages[count - 1].Entities.AddRange(entities);
+                return;
+            }
+
+            // Normal path of new tick so just add to the end.
+            if (tick > lastTick)
+            {
+                _pvsDetachMessages.Add((tick, entities));
+                return;
+            }
+
+            // This is the slow path if the message is out of order
+            var index = FindDetachMessageIndex(tick);
+            if (index >= 0)
+            {
+                _pvsDetachMessages[index].Entities.AddRange(entities);
+                return;
+            }
+
+            _pvsDetachMessages.Insert(~index, (tick, entities));
         }
 
         public void ClearDetachQueue() => _pvsDetachMessages.Clear();
@@ -316,15 +359,24 @@ Had full state: {LastFullState != null}"
         public List<(GameTick Tick, List<NetEntity> Entities)> GetEntitiesToDetach(GameTick toTick, int budget)
         {
             var result = new List<(GameTick Tick, List<NetEntity> Entities)>();
-            foreach (var (tick, entities) in _pvsDetachMessages)
+
+            if (budget <= 0)
+                return result;
+
+            var removeCount = 0;
+            for (var i = 0; i < _pvsDetachMessages.Count; i++)
             {
+                if (budget <= 0)
+                    break;
+
+                var (tick, entities) = _pvsDetachMessages[i];
                 if (tick > toTick)
-                    continue;
+                    break;
 
                 if (budget >= entities.Count)
                 {
                     budget -= entities.Count;
-                    _pvsDetachMessages.Remove(tick);
+                    removeCount++;
                     result.Add((tick, entities));
                     continue;
                 }
@@ -334,9 +386,38 @@ Had full state: {LastFullState != null}"
                 entities.RemoveRange(index, budget);
                 break;
             }
+
+            if (removeCount > 0)
+                _pvsDetachMessages.RemoveRange(0, removeCount);
+
             return result;
         }
 
+        private int FindDetachMessageIndex(GameTick tick)
+        {
+            // Bad binary search if we need to scrape ticks.
+            var low = 0;
+            var high = _pvsDetachMessages.Count - 1;
+            while (low <= high)
+            {
+                var mid = low + ((high - low) / 2);
+                var midTick = _pvsDetachMessages[mid].Tick;
+                if (midTick < tick)
+                {
+                    low = mid + 1;
+                }
+                else if (midTick > tick)
+                {
+                    high = mid - 1;
+                }
+                else
+                {
+                    return mid;
+                }
+            }
+
+            return ~low;
+        }
         private bool TryGetDeltaState(out GameState? curState, out GameState? nextState)
         {
             curState = null;
@@ -405,6 +486,7 @@ Had full state: {LastFullState != null}"
             foreach (var (netEntity, implicitEntState) in implicitData)
             {
                 var fullRep = _lastStateFullRep[netEntity];
+                fullRep.EnsureCapacity(implicitEntState.Count);
 
                 foreach (var (netId, implicitCompState) in implicitEntState)
                 {
@@ -450,9 +532,9 @@ Had full state: {LastFullState != null}"
         public bool IsQueuedForDetach(NetEntity entity)
         {
             // This isn't fast, but its just meant for use in tests & debug asserts.
-            foreach (var msg in _pvsDetachMessages.Values)
+            foreach (var (_, entities) in _pvsDetachMessages)
             {
-                if (msg.Contains(entity))
+                if (entities.Contains(entity))
                     return true;
             }
 

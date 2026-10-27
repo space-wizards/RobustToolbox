@@ -59,7 +59,7 @@ public sealed partial class SpriteSystem
         if (!ProtoMan.TryIndex<EntityPrototype>(prototype, out var entityPrototype))
         {
             // The specified prototype doesn't exist, return the fallback "error" sprite.
-            _sawmill.Error("Failed to load PrototypeIcon {0}", prototype);
+            Log.Error("Failed to load PrototypeIcon {0}", prototype);
             return GetFallbackState();
         }
 
@@ -179,7 +179,7 @@ public sealed partial class SpriteSystem
             return state;
         }
 
-        _sawmill.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);
+        Log.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);
         return GetFallbackState();
     }
 

@@ -40,7 +40,7 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
             var fixtures = entManager.GetComponent<FixturesComponent>(grid);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 
-            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid, 0.5f, 0.5f ));
+            var onGrid = entManager.SpawnAttachedTo(null, new EntityCoordinates(grid, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
             physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();
@@ -51,7 +51,7 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.WakeBody(onGrid, body: onGridBody);
             Assert.That(onGridBody.Awake);
 
-            var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
+            var offGrid = entManager.Spawn(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
             physSystem.SetBodyType(offGrid, BodyType.Dynamic, body: offGridBody);
             var shapeB = new PolygonShape();
@@ -72,6 +72,47 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.Update(0.001f);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(1));
+        });
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestMovingGridAttachesMapEntity(bool canCollide)
+    {
+        var server = StartServer();
+
+        await server.WaitIdleAsync();
+
+        var systems = server.ResolveDependency<IEntitySystemManager>();
+        var fixtureSystem = systems.GetEntitySystem<FixtureSystem>();
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var physSystem = systems.GetEntitySystem<SharedPhysicsSystem>();
+        var transformSystem = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            mapSystem.CreateMap(out var mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
+            mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
+
+            var entity = entManager.Spawn(null, new MapCoordinates(new Vector2(10.5f, 10.5f), mapId));
+            var body = entManager.AddComponent<PhysicsComponent>(entity);
+            physSystem.SetBodyType(entity, BodyType.Dynamic, body: body);
+
+            var shape = new PolygonShape();
+            shape.SetAsBox(0.25f, 0.25f);
+            fixtureSystem.CreateFixture(entity, "fix1", new Fixture(shape, 0, 0, false), body: body);
+            physSystem.SetCanCollide(entity, canCollide, body: body);
+
+            var xform = entManager.GetComponent<TransformComponent>(entity);
+            Assert.That(xform.ParentUid, Is.Not.EqualTo(grid.Owner));
+
+            physSystem.Update(0.001f);
+            transformSystem.SetLocalPosition(grid.Owner, new Vector2(10f, 10f));
+            physSystem.Update(0.001f);
+
+            Assert.That(xform.ParentUid, Is.EqualTo(grid.Owner));
         });
     }
 }

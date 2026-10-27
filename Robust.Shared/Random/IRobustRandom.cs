@@ -19,70 +19,82 @@ public interface IRobustRandom
     /// <summary> Set seed for underlying <see cref="Random"/>. </summary>
     void SetSeed(int seed);
 
-    /// <summary> Get random <see cref="float"/> value between 0 (included) and 1 (excluded). </summary>
+    /// <summary> Get random <see langword="float"/> value between 0 (included) and 1 (excluded). </summary>
     float NextFloat();
 
-    /// <summary> Get random <see cref="float"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="float"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="minValue">Random value will be greater or equal to this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     public float NextFloat(float minValue, float maxValue)
         => NextFloat() * (maxValue - minValue) + minValue;
 
-    /// <summary> Get random <see cref="float"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="float"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     public float NextFloat(float maxValue) => NextFloat() * maxValue;
 
-    /// <summary> Get random <see cref="int"/> value. </summary>
+    /// <summary> Get random <see langword="int"/> value. </summary>
     int Next();
 
-    /// <summary> Get random <see cref="int"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="int"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     int Next(int maxValue);
 
-    /// <summary> Get random <see cref="int"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="int"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="minValue">Random value will be greater or equal to this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     int Next(int minValue, int maxValue);
 
-    /// <summary> Get random <see cref="byte"/> value between 0 (included) and <see cref="byte.MaxValue"/> (excluded). </summary>
+    /// <summary> Get random <see langword="long"/> value. </summary>
+    long NextLong();
+
+    /// <summary> Get random <see langword="long"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="maxValue">Random value will be less than this value.</param>
+    long NextLong(long maxValue);
+
+    /// <summary> Get random <see langword="long"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="minValue">Random value will be greater or equal to this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
+    long NextLong(long minValue, long maxValue);
+
+    /// <summary> Get random <see langword="byte"/> value between 0 (included) and <see cref="byte.MaxValue"/> (excluded). </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte NextByte()
         => NextByte(byte.MaxValue);
 
-    /// <summary> Get random <see cref="byte"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="byte"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte NextByte(byte maxValue)
         => NextByte(0, maxValue);
 
-    /// <summary> Get random <see cref="byte"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="byte"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="minValue">Random value will be greater or equal to this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte NextByte(byte minValue, byte maxValue)
         => (byte)Next(minValue, maxValue);
 
-    /// <summary> Get random <see cref="double"/> value between 0 (included) and 1 (excluded). </summary>
+    /// <summary> Get random <see langword="double"/> value between 0 (included) and 1 (excluded). </summary>
     double NextDouble();
 
-    /// <summary> Get random <see cref="double"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="double"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     double Next(double maxValue)
         => NextDouble() * maxValue;
 
-    /// <summary> Get random <see cref="double"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary> Get random <see langword="double"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="minValue">Random value will be greater or equal to this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     double NextDouble(double minValue, double maxValue)
         => NextDouble() * (maxValue - minValue) + minValue;
 
     /// <summary> Get random <see cref="TimeSpan"/> value in range of <see cref="TimeSpan.Zero"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
-    /// <param name="maxTime">Random value should be less then this value.</param>
+    /// <param name="maxTime">Random value will be less than this value.</param>
     TimeSpan Next(TimeSpan maxTime);
 
     /// <summary> Get random <see cref="TimeSpan"/> value in range of <paramref name="minTime"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
-    /// <param name="minTime">Random value should be greater or equal to this value.</param>
-    /// <param name="maxTime">Random value should be less then this value.</param>
+    /// <param name="minTime">Random value will be greater or equal to this value.</param>
+    /// <param name="maxTime">Random value will be less than this value.</param>
     TimeSpan Next(TimeSpan minTime, TimeSpan maxTime);
 
     /// <summary> Fill buffer with random bytes (values). </summary>
@@ -93,13 +105,13 @@ public interface IRobustRandom
         => NextFloat() * MathF.Tau;
 
     /// <summary> Get random <see cref="Angle"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     public Angle NextAngle(Angle maxValue)
         => NextFloat() * maxValue;
 
     /// <summary> Get random <see cref="Angle"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <param name="minValue">Random value will be greater or equal to this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     public Angle NextAngle(Angle minValue, Angle maxValue)
         => NextFloat() * (maxValue - minValue) + minValue;
 

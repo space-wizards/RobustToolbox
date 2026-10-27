@@ -147,10 +147,10 @@ namespace Robust.Server.Placement
                     if (_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
                     {
                         var replacementQuery = _entityManager.GetEntityQuery<PlacementReplacementComponent>();
-                        var anc = _maps.GetAnchoredEntitiesEnumerator(gridUid.Value, grid, _maps.LocalToTile(gridUid.Value, grid, coordinates));
+                        var anc = _maps.GetAnchoredEntities(gridUid.Value, grid, _maps.LocalToTile(gridUid.Value, grid, coordinates));
                         var toDelete = new ValueList<EntityUid>();
 
-                        while (anc.MoveNext(out var ent))
+                        foreach (var ent in anc)
                         {
                             if (!replacementQuery.TryGetComponent(ent, out var repl) ||
                                 repl.Key != key)
@@ -158,7 +158,7 @@ namespace Robust.Server.Placement
                                 continue;
                             }
 
-                            toDelete.Add(ent.Value);
+                            toDelete.Add(ent);
                         }
 
                         foreach (var ent in toDelete)
@@ -245,10 +245,13 @@ namespace Robust.Server.Placement
         /// <param name="msg"></param>
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
-            var start = _entityManager.GetCoordinates(msg.NetCoordinates);
-            var rectSize = msg.RectSize;
+            var centerCoords = _xformSystem.ToMapCoordinates(msg.NetCoordinates);
+            var centerPos = centerCoords.Position;
 
-            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start), new Box2(start.Position, start.Position + rectSize)))
+            var box = Box2.CenteredAround(centerPos, msg.RectSize);
+            var boxRotated = new Box2Rotated(box, msg.RectRotation, centerPos);
+
+            foreach (var entity in _lookup.GetEntitiesIntersecting(centerCoords.MapId, boxRotated))
             {
                 if (_entityManager.Deleted(entity)
                     || _entityManager.HasComponent<MapGridComponent>(entity)

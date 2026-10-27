@@ -9,6 +9,7 @@ namespace Robust.Shared.Utility
     ///     Data structure for storing prototype IDs, and ensuring that all stored IDs resolve to valid prototypes.
     /// </summary>
     /// <typeparam name="T">The prototype variant.</typeparam>
+    [Obsolete("Use a hashset of ProtoId instead")]
     public sealed class PrototypeFlags<T> : IReadOnlyPrototypeFlags<T>
         where T : class, IPrototype
     {

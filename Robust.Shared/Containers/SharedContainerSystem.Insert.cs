@@ -40,7 +40,7 @@ public abstract partial class SharedContainerSystem
 
         DebugTools.AssertOwner(container.Owner, containerXform);
         DebugTools.AssertOwner(toInsert, physics);
-        DebugTools.Assert(!container.ExpectedEntities.Contains(GetNetEntity(toInsert)), "entity is expected");
+        DebugTools.Assert(!container.PvsDetachedEntities.Contains(GetNetEntity(toInsert)), "entity is PVS-detached");
         DebugTools.Assert(container.Manager.Containers.ContainsKey(container.ID), "manager does not own the container");
 
         // If someone is attempting to insert an entity into a container that is getting deleted, then we will

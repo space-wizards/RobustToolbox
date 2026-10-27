@@ -64,7 +64,7 @@ internal sealed class GridReparentVelocity_Test
     // Spawn a bullet-like test object at the given position.
     public EntityUid SetupTestObject(EntityCoordinates coords)
     {
-        var obj = _entManager.SpawnEntity(null, coords);
+        var obj = _entManager.SpawnAttachedTo(null, coords);
 
         var objPhys = _entManager.EnsureComponent<PhysicsComponent>(obj);
         var objFix = _entManager.EnsureComponent<FixturesComponent>(obj);

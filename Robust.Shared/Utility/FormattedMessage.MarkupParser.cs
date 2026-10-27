@@ -272,6 +272,10 @@ public sealed partial class FormattedMessage
         if (Color.TryFromName(nameOrHex, out var nameColor))
             return nameColor;
 
-        return Color.TryFromHex(nameOrHex) ?? Color.Black;
+        // ReSharper disable once ConvertIfStatementToReturnStatement
+        if (Color.TryFromHex(nameOrHex, out var hexColor))
+            return hexColor;
+
+        return Color.Black;
     }
 }

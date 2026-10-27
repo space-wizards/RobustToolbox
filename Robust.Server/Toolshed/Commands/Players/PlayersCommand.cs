@@ -34,26 +34,17 @@ public sealed partial class PlayerCommand : ToolshedCommand
         return ctx.Session!;
     }
 
+    /*
+     * Pass in ICommonSession to get the... passed... ICommonSession...
+     * Look that seems really stupid (because it is) but the Toolshed parser doesn't let you just type in a session
+     * name at the start of a command, so immediate IS required in order to pipe to other commands. Luckily, Toolshed
+     * DOES have a parser for ICommonSession that even comes with autocomplete. So as insane as it looks here to just
+     * have a function that returns the exact thing you're passing to it, it's more efficient (and convenient)
+     * than parsing a username string. Toolshed is fucking weird, man.
+     */
     [CommandImplementation("imm")]
-    public ICommonSession Immediate(IInvocationContext ctx, string username)
-    {
-        _playerManager.TryGetSessionByUsername(username, out var session);
-
-        if (session is null)
-        {
-            if (Guid.TryParse(username, out var guid))
-            {
-                _playerManager.TryGetSessionById(new NetUserId(guid), out session);
-            }
-        }
-
-        if (session is null)
-        {
-            ctx.ReportError(new NoSuchPlayerError(username));
-        }
-
-        return session!;
-    }
+    public ICommonSession Immediate(IInvocationContext ctx, ICommonSession session) =>
+        session;
 
     [CommandImplementation("entity")]
     public IEnumerable<EntityUid> GetPlayerEntity([PipedArgument] IEnumerable<ICommonSession> sessions)
@@ -68,9 +59,9 @@ public sealed partial class PlayerCommand : ToolshedCommand
     }
 
     [CommandImplementation("entity")]
-    public EntityUid GetPlayerEntity(IInvocationContext ctx, string username)
+    public EntityUid GetPlayerEntity(IInvocationContext ctx, ICommonSession sessions)
     {
-        return GetPlayerEntity(Immediate(ctx, username));
+        return sessions.AttachedEntity ?? default;
     }
 }
 

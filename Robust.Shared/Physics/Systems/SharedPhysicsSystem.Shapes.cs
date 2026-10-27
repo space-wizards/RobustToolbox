@@ -27,9 +27,9 @@ public abstract partial class SharedPhysicsSystem
         shape.Radius = radius;
 
         if (body.CanCollide &&
-            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
+            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out _))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.ReleaseProxies(fixture);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -57,9 +57,9 @@ public abstract partial class SharedPhysicsSystem
         shape.Radius = radius;
 
         if (body.CanCollide &&
-            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
+            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out _))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.ReleaseProxies(fixture);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -82,9 +82,9 @@ public abstract partial class SharedPhysicsSystem
         circle.Position = position;
 
         if (body.CanCollide &&
-            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
+            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out _))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.ReleaseProxies(fixture);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -117,9 +117,9 @@ public abstract partial class SharedPhysicsSystem
         edge.Vertex3 = vertex3;
 
         if (body.CanCollide &&
-            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
+            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out _))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.ReleaseProxies(fixture);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -146,9 +146,9 @@ public abstract partial class SharedPhysicsSystem
         poly.Set(vertices, vertices.Length);
 
         if (body.CanCollide &&
-            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
+            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out _))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.ReleaseProxies(fixture);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 

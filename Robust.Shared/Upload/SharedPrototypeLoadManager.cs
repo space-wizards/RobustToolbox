@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
@@ -15,8 +16,9 @@ namespace Robust.Shared.Upload;
 /// </summary>
 public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadManager
 {
+    [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IReplayRecordingManager _replay = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IPrototypeManagerInternal _prototypeManager = default!;
     [Dependency] private ILocalizationManager _localizationManager = default!;
     [Dependency] protected INetManager NetManager = default!;
 
@@ -36,19 +38,53 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
 
     protected virtual void LoadPrototypeData(GamePrototypeLoadMessage message)
     {
-        var data = message.PrototypeData;
+        TryLoadPrototypeData(message.PrototypeData);
+    }
 
-        // TODO validate yaml before loading?
-
-        var changed = new Dictionary<Type, HashSet<string>>();
-        _prototypeManager.LoadString(data, true, changed);
-        _prototypeManager.ReloadPrototypes(changed);
-        _localizationManager.ReloadLocalizations();
+    protected bool TryLoadPrototypeData(string data)
+    {
+        try
+        {
+            LoadPrototypeData(data);
+        }
+        catch (Exception e)
+        {
+            _sawmill.Error($"Failed to load prototype data. Dropping upload.\n{e}");
+            // LoadString can leave partial prototype data behind before failing.
+            TryReloadLoadedPrototypeData();
+            return false;
+        }
 
         // Add to replay recording after we have loaded the file, in case it contains bad yaml that throws exceptions.
         LoadedPrototypes.Add(data);
         _replay.RecordReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = data });
         _sawmill.Info("Loaded adminbus prototype data.");
+        return true;
+    }
+
+    private void LoadPrototypeData(string data)
+    {
+        var changed = new Dictionary<Type, HashSet<string>>();
+        _prototypeManager.LoadString(data, true, changed);
+        if (_cfg.GetCVar(CVars.ResValidatePrototypeUpload))
+            _prototypeManager.ReloadPrototypesOrThrow(changed);
+        else
+            _prototypeManager.ReloadPrototypes(changed);
+        _localizationManager.ReloadLocalizations();
+    }
+
+    private void TryReloadLoadedPrototypeData()
+    {
+        try
+        {
+            _prototypeManager.Reset();
+            if (LoadedPrototypes.Count != 0)
+                LoadPrototypeData(string.Join("\n\n", LoadedPrototypes));
+        }
+        catch (Exception e)
+        {
+            _sawmill.Error($"Failed to reload accepted prototype data.\n{e}");
+        }
     }
 
     private void OnStartReplayRecording(MappingDataNode metadata, List<object> events)

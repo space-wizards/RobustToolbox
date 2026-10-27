@@ -24,23 +24,45 @@ namespace Robust.Server.IntegrationTests.GameObjects
             var msgE = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 7};
             var msgF = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 4};
 
-            var pq = new PriorityQueue<MsgEntity>(new ServerEntityManager.MessageSequenceComparer())
+            var pq = new PriorityQueue<(ulong, MsgEntity)>(new ServerEntityManager.MessageSequenceComparer())
             {
-                msgA,
-                msgB,
-                msgC,
-                msgD,
-                msgE,
-                msgF
+                (1, msgA),
+                (2, msgB),
+                (3, msgC),
+                (4, msgD),
+                (5, msgE),
+                (6, msgF)
             };
 
 
-            Assert.That(pq.Take(), Is.EqualTo(msgF));
-            Assert.That(pq.Take(), Is.EqualTo(msgE));
-            Assert.That(pq.Take(), Is.EqualTo(msgA));
-            Assert.That(pq.Take(), Is.EqualTo(msgC));
-            Assert.That(pq.Take(), Is.EqualTo(msgB));
-            Assert.That(pq.Take(), Is.EqualTo(msgD));
+            Assert.That(pq.Take().Item2, Is.EqualTo(msgF));
+            Assert.That(pq.Take().Item2, Is.EqualTo(msgE));
+            Assert.That(pq.Take().Item2, Is.EqualTo(msgA));
+            Assert.That(pq.Take().Item2, Is.EqualTo(msgC));
+            Assert.That(pq.Take().Item2, Is.EqualTo(msgB));
+            Assert.That(pq.Take().Item2, Is.EqualTo(msgD));
+        }
+
+        /// <summary>
+        /// Non-predicted messages share sequence 0, so same-tick ones must keep their arrival order.
+        /// </summary>
+        [Test]
+        public void TestUnsequencedMessagesKeepArrivalOrder()
+        {
+            var channel = new Mock<INetChannel>().Object;
+            var pq = new PriorityQueue<(ulong, MsgEntity)>(new ServerEntityManager.MessageSequenceComparer());
+            var msgs = new MsgEntity[64];
+
+            for (var i = 0; i < msgs.Length; i++)
+            {
+                msgs[i] = new MsgEntity {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = new GameTick(5)};
+                pq.Add(((ulong) i + 1, msgs[i]));
+            }
+
+            foreach (var msg in msgs)
+            {
+                Assert.That(pq.Take().Item2, Is.EqualTo(msg));
+            }
         }
     }
 }

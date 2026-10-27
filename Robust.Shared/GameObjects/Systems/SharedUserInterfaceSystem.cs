@@ -123,11 +123,11 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         {
             var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
 
-            RaiseLocalEvent(attempt);
+            RaiseLocalEvent(ref attempt);
             if (attempt.Cancelled)
                 return;
 
-            RaiseLocalEvent(uid, attempt);
+            RaiseLocalEvent(uid, ref attempt);
             if (attempt.Cancelled)
                 return;
         }
@@ -306,12 +306,14 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        if (args.FromTick > ent.Comp.CreationTick && ent.Comp.LastFieldUpdate >= args.FromTick)
+        if (args.FromTick > ent.Comp.CreationTick)
         {
-            var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
+            var aspects = EntityManager.GetModifiedAspects(ent.Comp, args.FromTick);
 
-            switch (fields)
+            switch (aspects)
             {
+                case >= DeltaAspect.Unclassified:
+                    break;
                 case 1 << 0:
                 {
                     var state = new UserInterfaceActorsDeltaState();

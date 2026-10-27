@@ -65,8 +65,8 @@ public sealed class MissingParentTest : RobustIntegrationTest
             var map = server.System<SharedMapSystem>().CreateMap();
             coords = new(map, default);
 
-            var playerUid = sEntMan.SpawnEntity(null, coords);
-            var entUid = sEntMan.SpawnEntity(null, coords);
+            var playerUid = sEntMan.SpawnAttachedTo(null, coords);
+            var entUid = sEntMan.SpawnAttachedTo(null, coords);
             entity = sEntMan.GetNetEntity(entUid);
             player = sEntMan.GetNetEntity(playerUid);
             nCoords = sEntMan.GetNetCoordinates(coords);
@@ -96,12 +96,12 @@ public sealed class MissingParentTest : RobustIntegrationTest
         NetEntity last = default;
         await server.WaitPost(() =>
         {
-            first = sEntMan.GetNetEntity(sEntMan.SpawnEntity(null, coords));
+            first = sEntMan.GetNetEntity(sEntMan.SpawnAttachedTo(null, coords));
             for (var i = 0; i < 18; i++)
             {
-                sEntMan.SpawnEntity(null, coords);
+                sEntMan.SpawnAttachedTo(null, coords);
             }
-            last = sEntMan.GetNetEntity(sEntMan.SpawnEntity(null, coords));
+            last = sEntMan.GetNetEntity(sEntMan.SpawnAttachedTo(null, coords));
         });
 
         // Wait for the client to receive some, but not all, of the entities

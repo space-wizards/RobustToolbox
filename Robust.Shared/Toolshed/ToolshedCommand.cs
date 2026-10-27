@@ -227,8 +227,10 @@ public abstract partial class ToolshedCommand
                 throw new InvalidCommandImplementation("The combination of subcommand and piped parameter type must be unique");
 
             var key = subCmd ?? string.Empty;
+            var attributeDescription = impl.GetCustomAttribute<CommandDescriptionAttribute>()?.Description;
+            var attributeHelp = impl.GetCustomAttribute<CommandHelpAttribute>()?.Help;
             if (!CommandImplementors.ContainsKey(key))
-                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, this, Toolshed, Loc);
+                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, attributeDescription, attributeHelp, this, Toolshed, Loc);
         }
     }
 

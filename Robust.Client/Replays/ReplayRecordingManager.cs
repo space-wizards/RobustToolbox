@@ -122,6 +122,7 @@ internal sealed partial class ReplayRecordingManager : SharedReplayRecordingMana
             deletions);
 
         var detached = new List<NetEntity>();
+        var detachedChunks = new List<NetEntity>();
         var query = _entMan.AllEntityQueryEnumerator<MetaDataComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {
@@ -131,10 +132,17 @@ internal sealed partial class ReplayRecordingManager : SharedReplayRecordingMana
             var nent = comp.NetEntity;
             DebugTools.Assert(fullRep.ContainsKey(nent));
             if ((comp.Flags & MetaDataFlags.Detached) != 0)
-                detached.Add(nent);
+            {
+                if ((comp.Flags & MetaDataFlags.ChunkEntity) != 0)
+                    detachedChunks.Add(nent);
+                else
+                    detached.Add(nent);
+            }
         }
 
-        var detachMsg = detached.Count > 0 ? new ReplayMessage.LeavePvs(detached, tick) : null;
+        var detachMsg = detached.Count > 0 || detachedChunks.Count > 0
+            ? new ReplayMessage.LeavePvs(detached, tick, detachedChunks)
+            : null;
         return (state, detachMsg);
     }
 

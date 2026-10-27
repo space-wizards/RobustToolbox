@@ -90,19 +90,67 @@ internal sealed class UIBox2i_Test
     }
 
     [Test]
-    public void Box2iValidatesProperties()
+    public void Box2iInvalidConstruction()
     {
+#if DEBUG
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(() => new UIBox2i(3, 4, -1, -2), Throws.Exception);
+            Assert.That(() => new UIBox2i(new Vector2i(3, 4), new Vector2i(-1, -2)), Throws.Exception);
+        }
+#else
+        var expected = new UIBox2i(3, 4, 3, 4);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(new UIBox2i(3, 4, -1, -2), Is.EqualTo(expected));
+            Assert.That(new UIBox2i(new Vector2i(3, 4), new Vector2i(-1, -2)), Is.EqualTo(expected));
+        }
+#endif
+    }
+
+    [Test]
+    public void Box2iInvalidProperties()
+    {
+#if DEBUG
         var box = new UIBox2i(-1, -2, 3, 4);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => box.Left = 4);
-            Assert.Throws<ArgumentOutOfRangeException>(() => box.Top = 5);
-            Assert.Throws<ArgumentOutOfRangeException>(() => box.Right = -2);
-            Assert.Throws<ArgumentOutOfRangeException>(() => box.Bottom = -3);
-            Assert.Throws<ArgumentOutOfRangeException>(() => box.TopLeft = new Vector2i(4, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => box.BottomRight = new Vector2i(0, -3));
+            Assert.That(() => box.Left = 4, Throws.Exception);
+            Assert.That(() => box.Top = 5, Throws.Exception);
+            Assert.That(() => box.Right = -2, Throws.Exception);
+            Assert.That(() => box.Bottom = -3, Throws.Exception);
+            Assert.That(() => box.TopLeft = new Vector2i(4, 0), Throws.Exception);
+            Assert.That(() => box.BottomRight = new Vector2i(0, -3), Throws.Exception);
         }
+#else
+        var expected = new UIBox2i(-1, -2, 3, 4);
+
+        var left = expected;
+        left.Left = 4;
+        Assert.That(left, Is.EqualTo(new UIBox2i(3, -2, 3, 4)));
+
+        var top = expected;
+        top.Top = 5;
+        Assert.That(top, Is.EqualTo(new UIBox2i(-1, 4, 3, 4)));
+
+        var right = expected;
+        right.Right = -2;
+        Assert.That(right, Is.EqualTo(new UIBox2i(-1, -2, -1, 4)));
+
+        var bottom = expected;
+        bottom.Bottom = -3;
+        Assert.That(bottom, Is.EqualTo(new UIBox2i(-1, -2, 3, -2)));
+
+        var topLeft = expected;
+        topLeft.TopLeft = new Vector2i(4, 0);
+        Assert.That(topLeft, Is.EqualTo(new UIBox2i(3, 0, 3, 4)));
+
+        var bottomRight = expected;
+        bottomRight.BottomRight = new Vector2i(0, -3);
+        Assert.That(bottomRight, Is.EqualTo(new UIBox2i(-1, -2, 0, -2)));
+#endif
     }
 
     [Test]

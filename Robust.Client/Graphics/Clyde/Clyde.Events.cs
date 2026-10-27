@@ -75,6 +75,9 @@ namespace Robust.Client.Graphics.Clyde
                     OnWindowScaleChanged?.Invoke(args);
                     break;
                 case DEventWindowFocus(var args):
+                    if (!args.Focused && args.Window == _mainWindow?.Handle)
+                        _inputManager.ReleaseAllKeys();
+
                     OnWindowFocused?.Invoke(args);
                     break;
                 case DEventWindowResized(var reg, var args):

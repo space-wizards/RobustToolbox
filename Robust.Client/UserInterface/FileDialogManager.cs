@@ -9,28 +9,60 @@ namespace Robust.Client.UserInterface;
 
 internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManager
 {
-    public async Task<Stream?> OpenFile(
-        FileDialogFilters? filters = null,
-        FileAccess access = FileAccess.ReadWrite,
-        FileShare? share = null)
+    private static FileShare Validate(FileAccess access, FileShare? share)
     {
         if ((access & FileAccess.ReadWrite) != access)
             throw new ArgumentException("Invalid file access specified");
 
         var realShare = share ?? (access == FileAccess.Read ? FileShare.Read : FileShare.None);
+
         if ((realShare & (FileShare.ReadWrite | FileShare.Delete)) != realShare)
             throw new ArgumentException("Invalid file share specified");
 
-        string? name;
-        if (clyde.FileDialogImpl is { } clydeImpl)
-            name = await clydeImpl.OpenFile(filters);
-        else
-            return null;
+        return realShare;
+    }
 
-        if (name == null)
-            return null;
+    private async Task<string?> Prompt(bool isSave, FileDialogFilters? filters)
+    {
+        if (clyde.FileDialogImpl is { } impl)
+            return isSave ? await impl.SaveFile(filters) : await impl.OpenFile(filters);
 
-        return File.Open(name, FileMode.Open, access, realShare);
+        return null;
+    }
+
+    public async Task<(Stream?, string?)> GetFileAndName(
+        FileDialogFilters? filters = null,
+        FileAccess access = FileAccess.ReadWrite,
+        FileShare? share = null)
+    {
+        var name = await Prompt(false, filters);
+
+        if (name == null) return (null, null);
+
+        var path = Path.GetFileName(name);
+        return (File.Open(name, FileMode.Open, access, Validate(access, share)), path);
+    }
+
+    public async Task<string?> GetName(
+        FileDialogFilters? filters = null,
+        FileAccess access = FileAccess.ReadWrite,
+        FileShare? share = null)
+    {
+        Validate(access, share);
+        var name = await Prompt(false, filters);
+
+        return name == null ? null : Path.GetFileName(name);
+    }
+
+    public async Task<Stream?> OpenFile(
+        FileDialogFilters? filters = null,
+        FileAccess access = FileAccess.ReadWrite,
+        FileShare? share = null)
+    {
+        var realShare = Validate(access, share);
+        var name = await Prompt(false, filters);
+
+        return name == null ? null : File.Open(name, FileMode.Open, access, realShare);
     }
 
     public async Task<(Stream, bool)?> SaveFile(
@@ -39,20 +71,10 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         FileAccess access = FileAccess.ReadWrite,
         FileShare share = FileShare.None)
     {
-        if ((access & FileAccess.ReadWrite) != access)
-            throw new ArgumentException("Invalid file access specified");
+        Validate(access, share);
+        var name = await Prompt(true, filters);
 
-        if ((share & (FileShare.ReadWrite | FileShare.Delete)) != share)
-            throw new ArgumentException("Invalid file share specified");
-
-        string? name;
-        if (clyde.FileDialogImpl is { } clydeImpl)
-            name = await clydeImpl.SaveFile(filters);
-        else
-            return null;
-
-        if (name == null)
-            return null;
+        if (name == null) return null;
 
         try
         {

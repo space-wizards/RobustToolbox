@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix Windows Robust.Packaging not using correct path separators for zip archives.
 
 ### Other
 

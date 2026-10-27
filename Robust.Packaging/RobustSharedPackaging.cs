@@ -73,6 +73,9 @@ public sealed class RobustSharedPackaging
                 continue;
 
             var targetPath = Path.Combine(targetDir, filename);
+            if (Path.DirectorySeparatorChar != '/')
+                targetPath = targetPath.Replace(Path.DirectorySeparatorChar, '/');
+
             if (Directory.Exists(path))
                 CopyDirIntoZip(path, targetPath, pass);
             else

@@ -43,8 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
-* Fix model transforms not being reset fully in RenderInRenderTarget.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,19 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 294.0.1
+
+### New features
+
+* build.* CVars now include source information.
+
+### Bugfixes
+
+* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
+* Fix model transforms not being reset fully in RenderInRenderTarget.
+* Fix the debug connection screen throwing if the connect button is hit twice.
 
 
 ## 294.0.0

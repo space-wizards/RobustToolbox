@@ -40,14 +40,18 @@ namespace Robust.Client.ViewVariables
                 Orientation = LayoutOrientation.Vertical,
             };
 
-            var docLabel = new RichTextLabel();
-            docLabel.SetMessage(FormattedMessage.FromMarkupOrThrow($"[bold]{Loc.GetString("view-variables-property-documentation")}[/bold]"), Color.White);
+            var docLabel = new Label
+            {
+                Text = Loc.GetString("view-variables-property-documentation")
+            };
             container.AddChild(docLabel);
 
             container.AddChild(_documentationLabel);
 
-            var typeLabel = new RichTextLabel();
-            typeLabel.SetMessage(FormattedMessage.FromMarkupOrThrow($"[bold]{Loc.GetString("view-variables-property-type")}[/bold]"), Color.White);
+            var typeLabel = new Label
+            {
+                Text = Loc.GetString("view-variables-property-type")
+            };
             container.AddChild(typeLabel);
 
             container.AddChild(_typeLabel);
@@ -59,7 +63,7 @@ namespace Robust.Client.ViewVariables
 
         public void SetDocString(string docString)
         {
-            _documentationLabel.SetMessage(docString, null, Color.White);
+            _documentationLabel.SetMessage(docString, null, Color.DarkGray);
         }
 
         /// <param name="member">The member to show.</param>
@@ -75,7 +79,7 @@ namespace Robust.Client.ViewVariables
             if (docStringKey != null)
                 SetDocString(_viewVariablesManager.GetDocStringForFieldOrProperty(docStringKey));
 
-            _typeLabel.SetMessage(member.TypePretty, Color.White);
+            _typeLabel.SetMessage(member.TypePretty, Color.DarkGray);
             var editor = _viewVariablesManager.PropertyFor(type);
 
             var view = editor.Initialize(member.Value, !member.Editable);

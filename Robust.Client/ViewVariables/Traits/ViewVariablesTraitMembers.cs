@@ -110,7 +110,10 @@ namespace Robust.Client.ViewVariables.Traits
             }
 
             first = false;
-            container.Add(new Label {Text = groupName, FontColorOverride = Color.DarkGray});
+            var label = new RichTextLabel();
+            label.SetMessage(FormattedMessage.FromMarkupOrThrow($"[bold]{groupName}[/bold]"), Color.White);
+            label.Margin = new Thickness(2);
+            container.Add(label);
         }
     }
 }

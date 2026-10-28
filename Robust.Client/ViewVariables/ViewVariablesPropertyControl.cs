@@ -20,7 +20,7 @@ namespace Robust.Client.ViewVariables
         public BoxContainer BottomContainer { get; }
         public Label NameLabel { get; }
 
-        private readonly Label _middleLabel;
+        private readonly RichTextLabel _middleLabel;
 
         private readonly Label _bottomLabel;
 
@@ -61,10 +61,7 @@ namespace Robust.Client.ViewVariables
 
             //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
 
-            _middleLabel = new Label
-            {
-                FontColorOverride = Color.DarkGray,
-            };
+            _middleLabel = new RichTextLabel();
             BottomContainer.AddChild(_middleLabel);
 
             _bottomLabel = new Label
@@ -79,7 +76,7 @@ namespace Robust.Client.ViewVariables
 
         public void SetDocString(string docString)
         {
-            _middleLabel.Text = docString;
+            _middleLabel.SetMessage(docString, Color.White);
         }
 
         /// <param name="member">The member to show.</param>

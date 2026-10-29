@@ -18,6 +18,7 @@ using Robust.Server.ServerStatus;
 using Robust.Server.Upload;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.ColorNaming;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
@@ -76,6 +77,8 @@ namespace Robust.Server
             deps.Register<IStatusHost, StatusHost>();
             deps.Register<ISystemConsoleManager, SystemConsoleManager>();
             deps.Register<ITileDefinitionManager, TileDefinitionManager>();
+            deps.Register<IPaletteManager, PaletteManager>();
+            deps.Register<IPaletteManagerInternal, PaletteManager>();
             deps.Register<IViewVariablesManager, ServerViewVariablesManager>();
             deps.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
             deps.Register<IWatchdogApi, WatchdogApi>();

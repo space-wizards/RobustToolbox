@@ -109,7 +109,7 @@ internal sealed class AlwaysPushSerializationTest : RobustIntegrationTest
         // Save map to yaml
         var loader = server.System<MapLoaderSystem>();
         var map = server.System<SharedMapSystem>();
-        Assert.That(loader.TrySaveMap(mapId, path));
+        Assert.That(loader.TrySaveMap(mapId, path, immediate: true));
 
         // Delete the entities
         await server.WaitPost(() => map.DeleteMap(mapId));

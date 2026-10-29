@@ -628,10 +628,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             sim.System<MoveEventTestSystem>().FailOnMove = true;
 
             // Act
-#pragma warning disable CS0618 // Checking property setters.
-            xform.WorldPosition = new Vector2(99, 99);
-            xform.LocalPosition = new Vector2(99, 99);
-#pragma warning restore CS0618
+            xformSys.SetLocalPosition(ent1, new Vector2(99, 99));
 
             Assert.That(xformSys.GetMapCoordinates(ent1), Is.EqualTo(coordinates));
             var moveEventTest = sim.System<MoveEventTestSystem>();

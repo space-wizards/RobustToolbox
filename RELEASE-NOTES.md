@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `FileDialogManager.SaveFile` now has an optional `appendExtension` parameter.  When true, it adds the selected extension (if not a wildcard) if saving to a new file.
 
 ### New features
 

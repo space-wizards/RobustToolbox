@@ -1004,11 +1004,16 @@ Types:
     ValueTask: { All: True }
     ValueTask`1: { All: True }
   System.Threading:
+    AsyncLocal`1: { All: True }
+    AsyncLocalValueChangedArgs`1: { All: True }
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
     CancellationTokenRegistration: { All: True }
     Interlocked: { All: True }
+    LazyThreadSafetyMode: { } # Enum
     Monitor: { All: True }
+    ThreadLocal`1: { All: True }
+    Volatile: { All: True }
   System.Web:
     HttpUtility:
       Methods:
@@ -1040,6 +1045,7 @@ Types:
     Action`16: { All: True }
     ArgumentException: { All: True }
     ArgumentOutOfRangeException: { All: True }
+    ArgumentNullException: { All: True }
     Array:
       Methods:
       - "!!0 Find<>(!!0[], System.Predicate`1<!!0>)"
@@ -1245,6 +1251,7 @@ Types:
     Int64: { All: True }
     IntPtr: { All: True }
     InvalidOperationException: { All: True }
+    Lazy`1: { All: True }
     Math: { All: True }
     MathF: { All: True }
     Memory`1:

@@ -59,6 +59,7 @@ namespace Robust.Client.ViewVariables.Instances
                 ViewVariablesManager.ApplyDocStringsAsync(ViewVariablesDocStringKind.Type,
                     [(typeName, doc => middleLabel.Text = doc)]);
             }
+
             foreach (var trait in TraitsFor(blob.Traits))
             {
                 trait.Initialize(this);

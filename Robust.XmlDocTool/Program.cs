@@ -21,8 +21,6 @@ internal static class Program
         }
 
         var targetString = args[0];
-        bool success;
-
         IEnumerable<string> filePaths;
 
         if (File.Exists(targetString))

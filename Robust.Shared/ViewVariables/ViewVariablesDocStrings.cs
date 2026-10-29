@@ -65,7 +65,7 @@ internal sealed class ViewVariablesDocStrings(ISawmill sawmill, params ResPath[]
     {
         if (!_loaded)
         {
-            sawmill.Warning($"DocStrings haven't been loaded! Make sure {nameof(EnsureLoaded)} is called before any call to {TryGet}!");
+            sawmill.Warning($"DocStrings haven't been loaded! Make sure {nameof(EnsureLoaded)} is called before any call to {nameof(TryGet)}!");
             docString = null;
             return false;
         }
@@ -220,7 +220,6 @@ internal sealed class ViewVariablesDocStrings(ISawmill sawmill, params ResPath[]
             }
             case "b":     // bold text
             case "i":     // italic text
-
             case "c":     // text should be formatted as code
             case "code":  // text should be formatted as /multiline/ code
             case "para":  // paragraph text

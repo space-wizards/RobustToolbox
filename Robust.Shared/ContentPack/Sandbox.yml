@@ -729,6 +729,9 @@ Types:
     TypeInfo: { }
   System.Reflection.Metadata:
     MetadataUpdateHandlerAttribute: { All: True }
+  System.Runtime:
+    ArgumentNullException: { All: True }
+    Lazy`1:  { All: True }
   System.Runtime.CompilerServices:
     AsyncStateMachineAttribute: { All: True }
     AsyncTaskMethodBuilder: { All: True }
@@ -1004,11 +1007,16 @@ Types:
     ValueTask: { All: True }
     ValueTask`1: { All: True }
   System.Threading:
+    AsyncLocal`1: { All: True }
+    AsyncLocalValueChangedArgs`1: { All: True }
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
     CancellationTokenRegistration: { All: True }
     Interlocked: { All: True }
+    LazyThreadSafetyMode: { } # Enum
     Monitor: { All: True }
+    ThreadLocal`1: { All: True }
+    Volatile: { All: True }
   System.Web:
     HttpUtility:
       Methods:

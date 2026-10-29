@@ -10,7 +10,7 @@ namespace Robust.Client.ViewVariables
     internal sealed partial class ClientViewVariablesManager
     {
         // The client only ever sees the shared docs, server docs are requested from the server.
-        private readonly ViewVariablesDocStrings _docStrings = new(ViewVariablesDocStrings.SharedRoot);
+        private ViewVariablesDocStrings? _docStrings = null;
 
         // DocStrings we already asked the server for. null means the server didn't have one.
         // Cleared on disconnect because a different server may have different code.
@@ -20,7 +20,8 @@ namespace Robust.Client.ViewVariables
 
         public void LoadDocStrings()
         {
-            _docStrings.EnsureLoaded(_resManager, Sawmill);
+            _docStrings = new(Sawmill, ViewVariablesDocStrings.SharedRoot);
+            _docStrings.EnsureLoaded(_resManager);
         }
 
         public string GetDocStringForType(Type type)
@@ -50,7 +51,7 @@ namespace Robust.Client.ViewVariables
             {
                 var key = keys[i];
 
-                if (_docStrings.TryGet(kind, key, out var local))
+                if (_docStrings!.TryGet(kind, key, out var local))
                 {
                     result[i] = local;
                 }
@@ -76,13 +77,32 @@ namespace Robust.Client.ViewVariables
 
             for (var start = 0; start < missingKeys.Count; start += MsgViewVariablesReqDocStrings.MaxKeys)
             {
+                // We may have disconnected while waiting on the previous chunk.
+                if (!_netManager.IsConnected)
+                {
+                    for (var k = start; k < missingKeys.Count; k++)
+                    {
+                        result[missingIdx[k]] = ViewVariablesDocStrings.Missing(missingKeys[k]);
+                    }
+                    break;
+                }
+
                 var count = Math.Min(MsgViewVariablesReqDocStrings.MaxKeys, missingKeys.Count - start);
                 var chunk = missingKeys.GetRange(start, count);
                 var remote = await RequestDocStrings(kind, chunk);
 
                 for (var j = 0; j < chunk.Count; j++)
                 {
-                    var docString = j < remote.Length ? remote[j] : null;
+                    // A short answer means we never heard back for this key (e.g. we disconnected and the
+                    // request was finished with an empty array). Don't cache it, or the miss would stick
+                    // around after the cache was cleared and carry over to the next server.
+                    if (j >= remote.Length)
+                    {
+                        result[missingIdx[start + j]] = ViewVariablesDocStrings.Missing(chunk[j]);
+                        continue;
+                    }
+
+                    var docString = remote[j];
                     _remoteDocStrings[(kind, chunk[j])] = docString;
                     result[missingIdx[start + j]] = docString ?? ViewVariablesDocStrings.Missing(chunk[j]);
                 }
@@ -128,7 +148,7 @@ namespace Robust.Client.ViewVariables
         {
             LoadDocStrings();
 
-            return _docStrings.TryGet(kind, key, out var docString)
+            return _docStrings!.TryGet(kind, key, out var docString)
                 ? docString
                 : ViewVariablesDocStrings.Missing(key);
         }

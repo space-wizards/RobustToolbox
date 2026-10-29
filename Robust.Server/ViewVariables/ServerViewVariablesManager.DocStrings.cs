@@ -6,11 +6,13 @@ namespace Robust.Server.ViewVariables
     internal sealed partial class ServerViewVariablesManager
     {
         // The server can see both the shared docs and its own server-only docs.
-        private readonly ViewVariablesDocStrings _docStrings =
-            new(ViewVariablesDocStrings.SharedRoot, ViewVariablesDocStrings.ServerRoot);
+        private ViewVariablesDocStrings? _docStrings;
 
         private void _msgReqDocStrings(MsgViewVariablesReqDocStrings message)
         {
+            // lazy assign
+            _docStrings ??= new(Sawmill, ViewVariablesDocStrings.SharedRoot, ViewVariablesDocStrings.ServerRoot);
+
             var response = new MsgViewVariablesDocStrings
             {
                 RequestId = message.RequestId,
@@ -23,7 +25,7 @@ namespace Robust.Server.ViewVariables
             if (_groupController.CanCommand(player, "vv"))
             {
                 // Loaded on first use so servers that never get VV'd don't pay for it.
-                _docStrings.EnsureLoaded(_resManager, Sawmill);
+                _docStrings.EnsureLoaded(_resManager);
 
                 for (var i = 0; i < message.Keys.Count; i++)
                 {

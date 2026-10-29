@@ -110,8 +110,7 @@ namespace Robust.Client.ViewVariables.Traits
             }
 
             first = false;
-            var label = new Label { Text = groupName, FontColorOverride = Color.White };
-            label.Margin = new Thickness(2);
+            var label = new Label { Text = groupName, FontColorOverride = Color.White, Margin = new Thickness(2)};
             container.Add(label);
         }
     }

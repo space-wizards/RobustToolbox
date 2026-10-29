@@ -201,7 +201,7 @@ namespace Robust.Shared.Tests.Utility
         [Test]
         public void TestSwapFloat()
         {
-            const float a_original = MathHelper.Pi;
+            const float a_original = MathF.PI;
             const float b_original = MathHelper.PiOver2;
 
             float a = a_original;
@@ -216,7 +216,7 @@ namespace Robust.Shared.Tests.Utility
         [Test]
         public void TestSwapDouble()
         {
-            const double a_original = MathHelper.Pi;
+            const double a_original = Math.PI;
             const double b_original = MathHelper.PiOver2;
 
             double a = a_original;

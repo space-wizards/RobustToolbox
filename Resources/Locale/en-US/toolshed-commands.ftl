@@ -231,6 +231,10 @@ command-description-rng-from =
     Returns a number between the argument (inclusive) and the input (exclusive))
 command-description-rng-prob =
     Returns a boolean based on the input probability/chance (from 0 to 1)
+command-description-rng-seed =
+    Sets the seed of the shared random generator, so later random results repeat.
+command-description-rng-randomize =
+    Seeds the shared random generator with a new random value.
 command-description-sum =
     Computes the sum of the input.
 command-description-bin =

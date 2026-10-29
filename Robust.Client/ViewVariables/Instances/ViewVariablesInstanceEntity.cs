@@ -75,7 +75,7 @@ namespace Robust.Client.ViewVariables.Instances
             _netEntity = (NetEntity) obj;
             _entity = _entityManager.GetEntity(_netEntity);
 
-            var scrollContainer = new ScrollContainer();
+            var scrollContainer = new ScrollContainer { HScrollEnabled = false };
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
             var vBoxContainer = new BoxContainer

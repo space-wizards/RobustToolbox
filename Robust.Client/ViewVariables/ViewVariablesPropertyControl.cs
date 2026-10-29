@@ -5,6 +5,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.Input;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -15,17 +16,12 @@ namespace Robust.Client.ViewVariables
 {
     internal sealed class ViewVariablesPropertyControl : PanelContainer
     {
-        public BoxContainer VBox { get; }
-        public BoxContainer TopContainer { get; }
-        public BoxContainer BottomContainer { get; }
-        public Label NameLabel { get; }
-
-        private readonly Label _middleLabel;
-
-        private readonly Label _bottomLabel;
-
         private readonly IClientViewVariablesManagerInternal _viewVariablesManager;
         private readonly IRobustSerializer _robustSerializer;
+
+        private readonly CollapsibleHeading _heading = new();
+        private readonly RichTextLabel _documentationLabel = new();
+        private readonly RichTextLabel _typeLabel = new();
 
         public ViewVariablesPropertyControl(IClientViewVariablesManagerInternal viewVars, IRobustSerializer robustSerializer)
         {
@@ -35,51 +31,39 @@ namespace Robust.Client.ViewVariables
             _robustSerializer = robustSerializer;
 
             MouseFilter = MouseFilterMode.Pass;
-            ToolTip = "Click to expand";
             MinHeight = 25;
 
-            VBox = new BoxContainer
+            var body = new CollapsibleBody();
+
+            var container = new BoxContainer
             {
                 Orientation = LayoutOrientation.Vertical,
-                SeparationOverride = 0
             };
-            AddChild(VBox);
 
-            TopContainer = new BoxContainer
+            var docLabel = new Label
             {
-                Orientation = LayoutOrientation.Horizontal,
-                VerticalExpand = true
+                Text = Loc.GetString("view-variables-property-documentation")
             };
-            VBox.AddChild(TopContainer);
+            container.AddChild(docLabel);
 
-            BottomContainer = new BoxContainer
+            container.AddChild(_documentationLabel);
+
+            var typeLabel = new Label
             {
-                Orientation = LayoutOrientation.Vertical,
-                Visible = false
+                Text = Loc.GetString("view-variables-property-type")
             };
-            VBox.AddChild(BottomContainer);
+            container.AddChild(typeLabel);
 
-            //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
+            container.AddChild(_typeLabel);
+            body.AddChild(container);
 
-            _middleLabel = new Label
-            {
-                FontColorOverride = Color.DarkGray,
-            };
-            BottomContainer.AddChild(_middleLabel);
-
-            _bottomLabel = new Label
-            {
-                FontColorOverride = Color.DarkGray
-            };
-            BottomContainer.AddChild(_bottomLabel);
-
-            NameLabel = new Label();
-            TopContainer.AddChild(NameLabel);
+            var collapsible = new Collapsible(_heading, body);
+            AddChild(collapsible);
         }
 
         public void SetDocString(string docString)
         {
-            _middleLabel.Text = docString;
+            _documentationLabel.SetMessage(docString, null, Color.DarkGray);
         }
 
         /// <param name="member">The member to show.</param>
@@ -89,22 +73,23 @@ namespace Robust.Client.ViewVariables
         /// </param>
         public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member, string? docStringKey)
         {
-            NameLabel.Text = member.Name;
+            _heading.Title = member.Name;
             var type = member.Value?.GetType();
 
             if (docStringKey != null)
                 SetDocString(_viewVariablesManager.GetDocStringForFieldOrProperty(docStringKey));
-            _bottomLabel.Text = $"Type: {member.TypePretty}";
+
+            _typeLabel.SetMessage(member.TypePretty, Color.DarkGray);
             var editor = _viewVariablesManager.PropertyFor(type);
 
             var view = editor.Initialize(member.Value, !member.Editable);
             if (!view.HorizontalExpand)
             {
-                NameLabel.HorizontalExpand = true;
+                _heading.Label.HorizontalExpand = true;
             }
 
-            NameLabel.MinSize = new Vector2(150, 0);
-            TopContainer.AddChild(view);
+            _heading.Label.MinSize = new Vector2(150, 0);
+            _heading.Box.AddChild(view);
             /*
             _beingEdited = obj;
             _editedProperty = propertyInfo;
@@ -143,19 +128,6 @@ namespace Robust.Client.ViewVariables
             box.SetContentMarginOverride(StyleBox.Margin.Vertical, 1);
             box.SetContentMarginOverride(StyleBox.Margin.Horizontal, 5);
             return box;
-        }
-
-        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
-        {
-            base.KeyBindDown(args);
-
-            if (args.Function != EngineKeyFunctions.UIClick)
-            {
-                return;
-            }
-
-            BottomContainer.Visible = !BottomContainer.Visible;
-            args.Handle();
         }
     }
 }

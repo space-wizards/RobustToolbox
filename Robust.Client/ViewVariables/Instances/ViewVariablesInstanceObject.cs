@@ -70,7 +70,7 @@ namespace Robust.Client.ViewVariables.Instances
         private Label? _wrappingInit(DefaultWindow window, string top, string middle, string bottom)
         {
             // Wrapping containers.
-            var scrollContainer = new ScrollContainer();
+            var scrollContainer = new ScrollContainer { HScrollEnabled = false };
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
             var vBoxContainer = new BoxContainer

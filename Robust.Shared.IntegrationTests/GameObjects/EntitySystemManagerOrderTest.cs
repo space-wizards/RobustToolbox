@@ -46,25 +46,25 @@ namespace Robust.UnitTesting.Shared.GameObjects
         // Expected update order is is A -> D -> C -> B
 
         [Reflect(false)]
-        private sealed class TestSystemA : TestSystemBase
+        private sealed partial class TestSystemA : TestSystemBase
         {
 
         }
 
         [Reflect(false)]
-        private sealed class TestSystemB : TestSystemBase
+        private sealed partial class TestSystemB : TestSystemBase
         {
             public override IEnumerable<Type> UpdatesAfter => new[] {typeof(TestSystemA)};
         }
 
         [Reflect(false)]
-        private sealed class TestSystemC : TestSystemBase
+        private sealed partial class TestSystemC : TestSystemBase
         {
             public override IEnumerable<Type> UpdatesBefore => new[] {typeof(TestSystemB)};
         }
 
         [Reflect(false)]
-        private sealed class TestSystemD : TestSystemBase
+        private sealed partial class TestSystemD : TestSystemBase
         {
             public override IEnumerable<Type> UpdatesAfter => new[] {typeof(TestSystemA)};
             public override IEnumerable<Type> UpdatesBefore => new[] {typeof(TestSystemC)};

@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects.Components.Localization;
 
 namespace Robust.Shared.GameObjects;
 
-public sealed class GrammarSystem : EntitySystem
+public sealed partial class GrammarSystem : EntitySystem
 {
     public void Clear(Entity<GrammarComponent> grammar)
     {

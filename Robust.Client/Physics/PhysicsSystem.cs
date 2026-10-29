@@ -36,7 +36,7 @@ namespace Robust.Client.Physics
             {
                 var body = ent.Comp1;
 
-                if (!body.SleepingAllowed || body.LinearVelocity.Length() > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
+                if (!body.CanSleep || body.LinearVelocity.Length() > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
                 body.SleepTime += frameTime;
                 if (body.SleepTime > TimeToSleep)
                 {

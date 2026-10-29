@@ -921,7 +921,7 @@ public abstract partial class SharedPhysicsSystem
 
                     if (body.BodyType == BodyType.Static) continue;
 
-                    if (!body.SleepingAllowed ||
+                    if (!body.CanSleep ||
                         body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
                         Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
                     {
@@ -952,7 +952,7 @@ public abstract partial class SharedPhysicsSystem
 
                     if (body.BodyType == BodyType.Static) continue;
 
-                    if (!body.SleepingAllowed ||
+                    if (!body.CanSleep ||
                         body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
                         Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
                     {
@@ -1026,6 +1026,7 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var (joint, error) in island.BrokenJoints)
         {
+            _joints.SetEnabled(joint, false);
             var ev = new JointBreakEvent(joint, MathF.Sqrt(error));
             RaiseLocalEvent(joint.BodyAUid, ref ev);
             RaiseLocalEvent(joint.BodyBUid, ref ev);

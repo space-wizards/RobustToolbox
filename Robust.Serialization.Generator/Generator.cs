@@ -796,6 +796,18 @@ public class Generator : IIncrementalGenerator
 
         GetCopierMethod(definition, definition.Type, "object", baseDefinition, builder, requiredFields);
         GetCopierMethod(definition, definition.Type, GetGenericTypeName(type), false, builder, requiredFields);
+        builder.AppendLine($$"""
+            public static void CopyObj(
+                {{definition.GenericTypeName}} source,
+                ref {{definition.GenericTypeName}} target,
+                ISerializationManager serialization,
+                SerializationHookContext hookCtx,
+                ISerializationContext? context)
+            {
+                source.Copy(ref target, serialization, hookCtx, context);
+            }
+            """);
+
         return builder.ToString();
     }
 
@@ -997,6 +1009,18 @@ public class Generator : IIncrementalGenerator
                 {{body}}
             }
 
+            public static void ReadObj(
+                ref object target,
+                MappingDataNode mappingDataNode,
+                ISerializationManager serialization,
+                SerializationHookContext hookCtx,
+                ISerializationContext? context)
+            {
+                var obj = ({{definition.GenericTypeName}}) target;
+                {{definition.GenericTypeName}}.Read(ref obj, mappingDataNode, serialization, hookCtx, context);
+                target = obj;
+            }
+
             {{GetReadCompMethod(definition)}}
             """;
     }
@@ -1046,7 +1070,7 @@ public class Generator : IIncrementalGenerator
             if (!field.Attribute.IsDataFieldAttribute || !field.Attribute.Required)
             {
                 builder.AppendLine($$"""
-                    if (alwaysWrite || !EqualityComparer<{{fieldType}}>.Default.Equals(obj.{{field.Symbol.Name}}, ({{fieldType}}) defaultValues["{{field.Attribute.Tag}}"]!))
+                    if (alwaysWrite || !EqualityComparer<{{fieldType}}>.Default.Equals(obj.{{field.Symbol.Name}}, ({{fieldType}}) defaultValues[{{i}}].DefaultValue!))
                     {
                     """);
             }
@@ -1137,7 +1161,7 @@ public class Generator : IIncrementalGenerator
                 ISerializationManager serialization,
                 ISerializationContext? context,
                 bool alwaysWrite,
-                ImmutableDictionary<string, object?> defaultValues)
+                ImmutableArray<DataFieldDefinition> defaultValues)
             {
                 {{builder}}
             }
@@ -1237,11 +1261,35 @@ public class Generator : IIncrementalGenerator
     {
         var builder = new StringBuilder();
         var nullConditional = definition.Type.IsValueType ? string.Empty : "?";
-        var fieldTags = new List<string>(definition.Fields.Count);
-        foreach (var field in definition.Fields)
+        var fields = new StringBuilder();
+        var duplicates = new StringBuilder();
+        var inherited = new Dictionary<INamedTypeSymbol, int>();
+        for (var i = 0; i < definition.Fields.Count; i++)
         {
-            if (!definition.Type.Equals(field.Symbol.ContainingType, SymbolEqualityComparer.Default))
-                continue;
+            var field = definition.Fields[i];
+            for (var j = 0; j < definition.Fields.Count; j++)
+            {
+                if (i == j)
+                    continue;
+
+                var other = definition.Fields[j];
+                if (field.Attribute.Tag != other.Attribute.Tag)
+                    continue;
+
+                if (field.Symbol is not IPropertySymbol fieldProperty ||
+                    !Equals(fieldProperty.OverriddenProperty, other.Symbol))
+                {
+                    continue;
+                }
+
+                if (other.Symbol is not IPropertySymbol otherProperty ||
+                    !Equals(field.Symbol, otherProperty.OverriddenProperty))
+                {
+                    continue;
+                }
+
+                duplicates.Append($"\"{field.Attribute.Tag.Replace("\"", "\\\"")}\", ");
+            }
 
             var (fieldType, _) = GetCleanNameForGenericType(field.Type, out var isNullableValueType);
             var nullable = field.Type.NullableAnnotation == NullableAnnotation.Annotated ||
@@ -1250,41 +1298,67 @@ public class Generator : IIncrementalGenerator
             if (!isNullableValueType && fieldType.EndsWith("?"))
                 fieldType = fieldType.Substring(0, fieldType.Length - 1);
 
-            builder.AppendLine($$"""
-                if (fieldsParsed == null || !fieldsParsed.Contains("{{field.Attribute.Tag}}"))
-                {
-                    fields.Add(new DataFieldDefinition(
-                        "{{field.Attribute.Tag}}",
-                        {{field.Attribute.Priority}},
-                        {{field.Attribute.IsDataFieldAttribute.ToString().ToLowerInvariant()}},
-                        {{field.Attribute.Include.ToString().ToLowerInvariant()}},
-                        instance{{nullConditional}}.{{field.Symbol.Name}},
-                        (InheritanceBehavior) {{field.Attribute.InheritanceBehavior}},
-                        "{{field.Symbol.Name}}",
-                        typeof({{fieldType}}),
-                        {{nullable.ToString().ToLowerInvariant()}},
-                        "{{field.Attribute.CamelCasedName}}",
-                        {{(field.CustomSerializer == null ? "null" : $"typeof({field.CustomSerializer.Value.Serializer.ToDisplayString()})")}}
-                    ));
-                }
-                """);
+            var fieldDefinition = $"""
+                new DataFieldDefinition(
+                    "{field.Attribute.Tag}",
+                    {field.Attribute.Priority},
+                    {field.Attribute.IsDataFieldAttribute.ToString().ToLowerInvariant()},
+                    {field.Attribute.Include.ToString().ToLowerInvariant()},
+                    instance{nullConditional}.{field.Symbol.Name},
+                    (InheritanceBehavior) {field.Attribute.InheritanceBehavior},
+                    "{field.Symbol.Name}",
+                    typeof({fieldType}),
+                    {nullable.ToString().ToLowerInvariant()},
+                    "{field.Attribute.CamelCasedName}",
+                    {(field.CustomSerializer == null ? "null" : $"typeof({field.CustomSerializer.Value.Serializer.ToDisplayString()})")}
+                )
+                """;
 
-            fieldTags.Add($"\"{field.Attribute.Tag}\"");
+            var containing = field.Symbol.ContainingType;
+            if (definition.Type.Equals(containing, SymbolEqualityComparer.Default))
+            {
+                builder.AppendLine($"builder.Add({fieldDefinition});");
+                fields.AppendLine($"{i} => {fieldDefinition},");
+            }
+            else
+            {
+                inherited.TryGetValue(containing, out var inheritedIndex);
+
+                builder.AppendLine($"builder.Add(global::{containing.ToDisplayString()}.GetFieldDefinition(instance, {inheritedIndex}));");
+                fields.AppendLine($"{i} => global::{containing.ToDisplayString()}.GetFieldDefinition(instance, {inheritedIndex}),");
+
+                inheritedIndex++;
+                inherited[containing] = inheritedIndex;
+            }
         }
-
-        if (definition.GetFirstDataDefinitionBaseType() is { } baseType)
-            builder.AppendLine(
-                $"{baseType.ToDisplayString()}.GetFieldDefinitions(instance, fields, [{string.Join(", ", fieldTags)}]);");
 
         var instance = definition.Type.IsAbstract
             ? string.Empty
             : $"instance = global::{definition.Type.ToDisplayString()}.StaticInstantiate();";
 
         return $$"""
-            public static void GetFieldDefinitions({{definition.GenericTypeName}}{{nullConditional}} instance, List<DataFieldDefinition> fields, string[]? fieldsParsed = null)
+            public static global::System.Collections.Immutable.ImmutableArray<DataFieldDefinition> GetFieldDefinitions({{definition.GenericTypeName}}{{nullConditional}} instance)
             {
                 {{instance}}
+
+                var builder = global::System.Collections.Immutable.ImmutableArray.CreateBuilder<DataFieldDefinition>({{definition.Fields.Count}});
                 {{builder}}
+                return builder.MoveToImmutable();
+            }
+
+            public static DataFieldDefinition GetFieldDefinition({{definition.GenericTypeName}}{{nullConditional}} instance, int field)
+            {
+                return field switch
+                {
+                    {{fields}}
+                    _ => throw new global::System.ArgumentOutOfRangeException(nameof(field)),
+                };
+            }
+
+            [Obsolete("Used only in serialization source generation internally")]
+            public static string[] GetDuplicates()
+            {
+                return {{(duplicates.Length == 0 ? "global::System.Array.Empty<string>()" : $"new[] {{{duplicates}}}")}};
             }
             """;
     }

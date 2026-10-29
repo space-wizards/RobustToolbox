@@ -260,7 +260,7 @@ public sealed partial class SerializationManager
             throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
 
         var mapping = new MappingDataNode();
-        definition.Serialize(value, mapping, this, context, alwaysWrite, definition.DefaultValuesDict);
+        definition.Serialize(value, mapping, this, context, alwaysWrite, definition.BaseFieldDefinitions);
 
         return mapping;
     }

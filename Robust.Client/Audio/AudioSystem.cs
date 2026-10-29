@@ -485,17 +485,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
     }
 
     private bool TryGetAudio(ResolvedSoundSpecifier specifier, [NotNullWhen(true)] out AudioResource? audio)
-    {
-        var filename = GetAudioPath(specifier);
-        if (_resourceCache.TryGetResource(new ResPath(filename), out audio))
-            return true;
-
-        Log.Error($"Server tried to play audio file {filename} which does not exist.");
-        return false;
-    }
+        => TryGetAudio(GetAudioPath(specifier), out audio);
 
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
     {
+        audio = null;
+        if (string.IsNullOrEmpty(filename)) // happens if you are messing with audio comp state
+            return false;
+
         if (_resourceCache.TryGetResource(new ResPath(filename), out audio))
             return true;
 

@@ -3,7 +3,7 @@ using System.Xml;
 
 namespace Robust.XmlDocTool;
 
-public class XmlUtil
+public static class XmlUtil
 {
     public static bool TryGetChildNode(XmlNode node, string childName, [NotNullWhen(true)] out XmlNode? element)
     {
@@ -15,15 +15,12 @@ public class XmlUtil
     {
         attributeText = null;
         var attributes = xmlNode.Attributes;
-        if (attributes != null)
-        {
-            var attribute = attributes[attributeName];
-            if (attribute != null)
-            {
-                attributeText = attribute.InnerText;
-                return true;
-            }
-        }
-        return false;
+
+        var attribute = attributes?[attributeName];
+        if (attribute == null)
+            return false;
+
+        attributeText = attribute.InnerText;
+        return true;
     }
 }

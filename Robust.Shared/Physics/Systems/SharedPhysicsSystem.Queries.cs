@@ -445,14 +445,8 @@ namespace Robust.Shared.Physics.Systems
                             if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                                 return true;
 
-                            if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction)
-                                .Intersects(
-                                    proxy.AABB,
-                                    out _,
-                                    out var exitPoint))
-                            {
-                                penetration += (point - exitPoint).Length();
-                            }
+                            if (gridRay.Intersects(proxy.AABB, out var entry, out _, out var exit))
+                                penetration += exit - entry;
 
                             return true;
                         },
@@ -470,14 +464,8 @@ namespace Robust.Shared.Physics.Systems
                             if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                                 return true;
 
-                            if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction)
-                                .Intersects(
-                                    proxy.AABB,
-                                    out _,
-                                    out var exitPoint))
-                            {
-                                penetration += (point - exitPoint).Length();
-                            }
+                            if (gridRay.Intersects(proxy.AABB, out var entry, out _, out var exit))
+                                penetration += exit - entry;
 
                             return true;
                         },

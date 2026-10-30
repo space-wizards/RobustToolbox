@@ -11,6 +11,7 @@
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
     <RobustILLink>true</RobustILLink>
     <NoWarn>CA1416</NoWarn>
+    <ViewVariables>true</ViewVariables>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />

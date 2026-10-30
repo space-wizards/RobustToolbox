@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Lidgren.Network;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 #nullable disable
@@ -18,7 +19,7 @@ namespace Robust.Shared.Network.Messages
         /// <summary>
         ///     The most keys a single request may contain. The server ignores anything past this.
         /// </summary>
-        public const int MaxKeys = 4096;
+        public const int MaxKeys = 1024;
 
         public override MsgGroups MsgGroup => MsgGroups.Command;
 
@@ -38,6 +39,9 @@ namespace Robust.Shared.Network.Messages
         {
             RequestId = buffer.ReadUInt32();
             Kind = (ViewVariablesDocStringKind) buffer.ReadByte();
+            if (Kind is not (ViewVariablesDocStringKind.Type or ViewVariablesDocStringKind.FieldOrProperty))
+                throw new InvalidOperationException($"DocString request has invalid kind {Kind}");
+
             var count = buffer.ReadVariableInt32();
             if (count < 0 || count > MaxKeys)
                 throw new InvalidOperationException($"DocString request has invalid key count {count}");
@@ -51,6 +55,8 @@ namespace Robust.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
+            DebugTools.Assert(Kind != ViewVariablesDocStringKind.Invalid, $"{nameof(Kind)} was not set");
+
             buffer.Write(RequestId);
             buffer.Write((byte) Kind);
             buffer.WriteVariableInt32(Keys.Count);

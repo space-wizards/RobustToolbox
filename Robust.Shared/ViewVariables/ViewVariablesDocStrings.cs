@@ -15,6 +15,11 @@ namespace Robust.Shared.ViewVariables;
 public enum ViewVariablesDocStringKind : byte
 {
     /// <summary>
+    ///     Not a real kind.
+    /// </summary>
+    Invalid = 0,
+
+    /// <summary>
     ///     A type definition, looked up as <c>T:{key}</c>.
     /// </summary>
     Type,

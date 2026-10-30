@@ -40,7 +40,8 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         {
             if (TryLoadPrototypeData(message.PrototypeData))
             {
-                _netManager.ServerSendToAll(message); // everyone load it up!
+                var broadcast = new GamePrototypeLoadMessage { PrototypeData = message.PrototypeData };
+                _netManager.ServerSendToAll(broadcast); // everyone load it up!
                 _sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
             }
         }
@@ -50,16 +51,24 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         }
     }
 
-    internal void SendToNewUser(INetChannel channel)
+    internal bool SendToNewUser(INetChannel channel)
     {
         if (LoadedPrototypes.Count == 0)
-            return;
+            return false;
 
-        // Just dump all the prototypes on connect, before them missing could be an issue.
-        var msg = new GamePrototypeLoadMessage
+        var parts = SplitPrototypeDump(LoadedPrototypes, _sawmill);
+
+        for (var i = 0; i < parts.Count; i++)
         {
-            PrototypeData = string.Join("\n\n", LoadedPrototypes)
-        };
-        channel.SendMessage(msg);
+            channel.SendMessage(new GamePrototypeLoadMessage
+            {
+                PrototypeData = parts[i],
+                IsDump = true,
+                PartCount = parts.Count,
+                PartIndex = i,
+            });
+        }
+
+        return parts.Count > 0;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -25,16 +26,86 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     [Access(typeof(SharedPrototypeLoadManager))]
     public readonly List<string> LoadedPrototypes = new();
 
-    private ISawmill _sawmill = default!;
+    /// <summary>
+    ///     Maximum size of a single part of a prototype dump.
+    ///     Kept well below Lidgren 16 MiB fragment group limit (Lidgren.Network.NetConstants.MaximumFragmentGroupSize).
+    /// </summary>
+    public const int MaxPrototypePartBytes = 4 * 1024 * 1024;
+
+    protected ISawmill Sawmill = default!;
 
     public virtual void Initialize()
     {
         _replay.RecordingStarted += OnStartReplayRecording;
-        _sawmill = Logger.GetSawmill("adminbus");
+        Sawmill = Logger.GetSawmill("adminbus");
         NetManager.RegisterNetMessage<GamePrototypeLoadMessage>(LoadPrototypeData);
+        NetManager.RegisterNetMessage<GamePrototypeLoadAckMessage>(OnPrototypeLoadAck, NetMessageAccept.Server);
     }
 
     public abstract void SendGamePrototype(string prototype);
+
+    /// <summary>
+    ///     Raised on the server when a connecting client confirms it has applied a prototype dump.
+    /// </summary>
+    public event Action<INetChannel>? LoadComplete;
+
+    private void OnPrototypeLoadAck(GamePrototypeLoadAckMessage message)
+    {
+        LoadComplete?.Invoke(message.MsgChannel);
+    }
+
+    /// <summary>
+    ///     Individual prototypes are never split across parts, and joining the returned parts with "\n\n"
+    ///     reproduces the same data as string.Join("\n\n", prototypes)
+    /// </summary>
+    internal static List<string> SplitPrototypeDump(
+        IList<string> prototypes,
+        ISawmill? sawmill = null,
+        int maxPartBytes = MaxPrototypePartBytes)
+    {
+        var parts = new List<string>();
+        var sb = new StringBuilder();
+        long partBytes = 0;
+        var partStarted = false;
+
+        foreach (var prototype in prototypes)
+        {
+            var prototypeBytes = Encoding.UTF8.GetByteCount(prototype);
+
+            // +2 accounts for the "\n\n" separator that will be inserted before this prototype.
+            if (partStarted && partBytes + 2 + prototypeBytes > maxPartBytes)
+            {
+                parts.Add(sb.ToString());
+                sb.Clear();
+                partBytes = 0;
+                partStarted = false;
+            }
+
+            if (!partStarted && prototypeBytes > maxPartBytes)
+            {
+                // Splitting inside an element would be corrupted when the client re-joins parts
+                // with "\n\n", so an oversized element is sent as a single (larger) part instead.
+                sawmill?.Warning(
+                    $"A single uploaded prototype is {prototypeBytes} bytes, exceeding the " +
+                    $"{maxPartBytes} byte part limit. Sending it as an oversized part.");
+            }
+
+            if (partStarted)
+            {
+                sb.Append("\n\n");
+                partBytes += 2;
+            }
+
+            sb.Append(prototype);
+            partBytes += prototypeBytes;
+            partStarted = true;
+        }
+
+        if (partStarted)
+            parts.Add(sb.ToString());
+
+        return parts;
+    }
 
     protected virtual void LoadPrototypeData(GamePrototypeLoadMessage message)
     {
@@ -49,7 +120,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         }
         catch (Exception e)
         {
-            _sawmill.Error($"Failed to load prototype data. Dropping upload.\n{e}");
+            Sawmill.Error($"Failed to load prototype data. Dropping upload.\n{e}");
             // LoadString can leave partial prototype data behind before failing.
             TryReloadLoadedPrototypeData();
             return false;
@@ -58,7 +129,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         // Add to replay recording after we have loaded the file, in case it contains bad yaml that throws exceptions.
         LoadedPrototypes.Add(data);
         _replay.RecordReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = data });
-        _sawmill.Info("Loaded adminbus prototype data.");
+        Sawmill.Info("Loaded adminbus prototype data.");
         return true;
     }
 
@@ -83,7 +154,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         }
         catch (Exception e)
         {
-            _sawmill.Error($"Failed to reload accepted prototype data.\n{e}");
+            Sawmill.Error($"Failed to reload accepted prototype data.\n{e}");
         }
     }
 

@@ -30,7 +30,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     ///     Maximum size of a single part of a prototype dump.
     ///     Kept well below Lidgren 16 MiB fragment group limit (Lidgren.Network.NetConstants.MaximumFragmentGroupSize).
     /// </summary>
-    public const int MaxPrototypePartBytes = 4 * 1024 * 1024;
+    public const int MaxPrototypePartBytes = 256 * 1024;
 
     protected ISawmill Sawmill = default!;
 

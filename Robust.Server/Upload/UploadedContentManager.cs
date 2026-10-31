@@ -66,7 +66,10 @@ internal sealed partial class UploadedContentManager
             return;
 
         if (!_playerManager.TryGetSessionByChannel(channel, out var session))
+        {
+            _sawmill.Error($"Resources ready for {channel.RemoteEndPoint} with no session.");
             return;
+        }
 
         if (session is CommonSession { InitialResourcesDone: true })
             return;
@@ -89,7 +92,10 @@ internal sealed partial class UploadedContentManager
             return;
 
         if (!_playerManager.TryGetSessionByChannel(channel, out _))
+        {
+            _sawmill.Error($"Prototype ack received for {channel.RemoteEndPoint} with no session.");
             return;
+        }
 
         _playerManager.MarkPlayerResourcesSent(channel);
     }
@@ -99,8 +105,14 @@ internal sealed partial class UploadedContentManager
         if (!_awaitingPrototypeAck.Remove(channel))
             return;
 
-        if (!channel.IsConnected || !_playerManager.TryGetSessionByChannel(channel, out _))
+        if (!channel.IsConnected)
             return;
+
+        if (!_playerManager.TryGetSessionByChannel(channel, out _))
+        {
+            _sawmill.Error($"Prototype ack timed out for {channel.RemoteEndPoint} with no session.");
+            return;
+        }
 
         // a client that never acknowledges shouldn't be stuck in "connecting" forever.
         _sawmill.Warning(

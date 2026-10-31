@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Upload;
 
-public sealed class GamePrototypeLoadAckMessage : NetMessage
+internal sealed class GamePrototypeLoadAckMessage : NetMessage
 {
     public override MsgGroups MsgGroup => MsgGroups.String;
 

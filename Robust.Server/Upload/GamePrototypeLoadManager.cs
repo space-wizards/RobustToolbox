@@ -1,7 +1,9 @@
+using System;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Upload;
 
@@ -15,16 +17,7 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
     [Dependency] private IServerNetManager _netManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IConGroupController _controller = default!;
-    [Dependency] private ILogManager _logManager = default!;
-
-    private ISawmill _sawmill = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        _sawmill = _logManager.GetSawmill("adminbus");
-    }
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public override void SendGamePrototype(string prototype)
     {
@@ -42,7 +35,7 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
             {
                 var broadcast = new GamePrototypeLoadMessage { PrototypeData = message.PrototypeData };
                 _netManager.ServerSendToAll(broadcast); // everyone load it up!
-                _sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
+                Sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
             }
         }
         else
@@ -51,12 +44,15 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         }
     }
 
+    /// <returns>Whether any data was sent, and thus an ack is expected.</returns>
     internal bool SendToNewUser(INetChannel channel)
     {
         if (LoadedPrototypes.Count == 0)
             return false;
 
-        var parts = SplitPrototypeDump(LoadedPrototypes, _sawmill);
+        var maxPartBytes = Math.Clamp(_cfg.GetCVar(CVars.NetPrototypeDumpPartBytes), 1024, 4 * 1024 * 1024);
+
+        var parts = SplitPrototypeDump(LoadedPrototypes, Sawmill, maxPartBytes);
 
         for (var i = 0; i < parts.Count; i++)
         {

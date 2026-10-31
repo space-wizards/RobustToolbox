@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Upload;
 
 namespace Robust.Shared
 {
@@ -165,12 +166,12 @@ namespace Robust.Shared
             CVarDef.Create("net.fragment_group_timeout", 30.0f, CVar.ARCHIVE);
 
         /// <summary>
-        /// Maximum size of a single part of the prototype dump sent to connecting clients.
-        /// Each part is a single message that must be reassembled within <see cref="NetFragmentGroupTimeout"/>,
-        /// so this bounds the minimum bandwidth required by a joining client.
+        /// Maximum size of a prototype dump part. Larger parts mean fewer messages but are harder on slow or
+        /// lossy connections.
         /// </summary>
         public static readonly CVarDef<int> NetPrototypeDumpPartBytes =
-            CVarDef.Create("net.prototype_dump_part_bytes", 256 * 1024, CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("net.prototype_dump_part_bytes", SharedPrototypeLoadManager.DefaultPrototypePartBytes,
+                CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.

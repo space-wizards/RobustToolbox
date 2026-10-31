@@ -27,10 +27,14 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     public readonly List<string> LoadedPrototypes = new();
 
     /// <summary>
-    ///     Maximum size of a single part of a prototype dump.
-    ///     Kept well below Lidgren 16 MiB fragment group limit (Lidgren.Network.NetConstants.MaximumFragmentGroupSize).
+    ///     Default size of a single prototype dump part.
     /// </summary>
-    public const int MaxPrototypePartBytes = 256 * 1024;
+    public const int DefaultPrototypePartBytes = 256 * 1024;
+
+    /// <summary>
+    ///     Upper limit for <see cref="CVars.NetPrototypeDumpPartBytes"/>.
+    /// </summary>
+    public const int MaxPrototypePartBytes = 4 * 1024 * 1024;
 
     protected ISawmill Sawmill = default!;
 
@@ -61,7 +65,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     internal static List<string> SplitPrototypeDump(
         IList<string> prototypes,
         ISawmill? sawmill = null,
-        int maxPartBytes = MaxPrototypePartBytes)
+        int maxPartBytes = DefaultPrototypePartBytes)
     {
         var parts = new List<string>();
         var sb = new StringBuilder();

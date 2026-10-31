@@ -50,7 +50,7 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         if (LoadedPrototypes.Count == 0)
             return false;
 
-        var maxPartBytes = Math.Clamp(_cfg.GetCVar(CVars.NetPrototypeDumpPartBytes), 1024, 4 * 1024 * 1024);
+        var maxPartBytes = Math.Clamp(_cfg.GetCVar(CVars.NetPrototypeDumpPartBytes), 1024, MaxPrototypePartBytes);
 
         var parts = SplitPrototypeDump(LoadedPrototypes, Sawmill, maxPartBytes);
 

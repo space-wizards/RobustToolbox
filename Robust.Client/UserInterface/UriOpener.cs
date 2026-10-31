@@ -1,5 +1,9 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
+using Robust.Shared;
+using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
 using System.Threading.Tasks;
 
 namespace Robust.Client.UserInterface
@@ -37,6 +41,9 @@ namespace Robust.Client.UserInterface
 
     internal abstract class UriOpenerBase : IUriOpener
     {
+        [Dependency] private IConfigurationManager _cfg = default!;
+        private UriConfirmationWindow? _prompt;
+
         public void OpenUri(Uri uri)
         {
             if (!uri.IsAbsoluteUri)
@@ -49,7 +56,33 @@ namespace Robust.Client.UserInterface
                 throw new ArgumentException("URI must be for HTTP or HTTPS.");
             }
 
-            Task.Run(() => DoOpen(uri));
+            var value = uri.AbsoluteUri;
+            var trusted = _cfg.GetCVar(CVars.TrustedOpenUris).Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            if (trusted.Contains(value, StringComparer.Ordinal))
+            {
+                Task.Run(() => DoOpen(uri));
+                return;
+            }
+
+            if (_prompt != null)
+                return;
+
+            var window = new UriConfirmationWindow(value);
+            _prompt = window;
+            window.OnClose += () => _prompt = null;
+            window.OnceButton.OnPressed += _ => { window.Close(); Task.Run(() => DoOpen(uri)); };
+            window.AlwaysButton.OnPressed += _ =>
+            {
+                // Read again in case the CVar was changed while the prompt was open.
+                var current = _cfg.GetCVar(CVars.TrustedOpenUris);
+                _cfg.SetCVar(CVars.TrustedOpenUris, string.Join("\n",
+                    current.Split('\n', StringSplitOptions.RemoveEmptyEntries).Append(value).Distinct(StringComparer.Ordinal)));
+                _cfg.SaveToFile();
+                window.Close();
+                Task.Run(() => DoOpen(uri));
+            };
+            window.NoButton.OnPressed += _ => window.Close();
+            window.OpenCentered();
         }
 
         public void OpenUri(string uriString)

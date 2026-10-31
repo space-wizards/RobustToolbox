@@ -2144,6 +2144,12 @@ namespace Robust.Shared
          */
 
         /// <summary>
+        /// Uris the client has accepted it trusts and to not prompt anymore.
+        /// </summary>
+        public static readonly CVarDef<string> TrustedOpenUris =
+            CVarDef.Create("client.trusted_open_uris", "", CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
         ///     The file XamlHotReloadManager looks for when locating the root of the project.
         ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
         /// </summary>

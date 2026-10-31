@@ -44,6 +44,8 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix Windows Robust.Packaging not using correct path separators for zip archives.
+* Fix prototype uploads failing validation on packaged servers for paths to resources that aren't shipped to the server, like `/Textures` and `/Audio`.
+* Clients no longer drop prototype uploads that the server accepted.
 
 ### Other
 

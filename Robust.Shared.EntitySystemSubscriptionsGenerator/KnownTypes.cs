@@ -17,6 +17,7 @@ public static class KnownTypes
     public const string AllSubscriptionMemberAttributeName =
         "Robust.Shared.Analyzers.SubscribeAllEventAttribute";
 
+    // Temporary fallback, to be deleted later. See the TO DO in EntitySystemSubscriptionsGeneratorAttributes.cs
     public const string AllSubscriptionMemberAttributeFallbackName =
         "Robust.Shared.Analyzers.EventSubscriptionAttribute";
 

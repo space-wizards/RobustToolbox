@@ -49,6 +49,8 @@ void fragment()
         discard;
     }
 
+    // Note that if this calculation changes in the future, then LightLevelSystem.GetColourFromLight should also be updated
+
     // this implementation of light attenuation primarily adapted from
     // https://lisyarus.github.io/blog/posts/point-light-attenuation.html
     highp float sqr_dist = dot(diff, diff) + LIGHTING_HEIGHT;

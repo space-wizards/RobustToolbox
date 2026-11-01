@@ -48,14 +48,20 @@ public sealed class AutoGenerateComponentStateAttribute : Attribute
     public readonly bool RaiseAfterAutoHandleState;
 
     /// <summary>
-    ///     Should delta states be generated for every field.
+    ///     Should delta states be generated for changed fields.
     /// </summary>
     public readonly bool FieldDeltas;
 
-    public AutoGenerateComponentStateAttribute(bool raiseAfterAutoHandleState = false, bool fieldDeltas = false)
+    /// <summary>
+    ///     Should replays get a null component state, or a regular one.
+    /// </summary>
+    public readonly bool ExcludeReplays;
+
+    public AutoGenerateComponentStateAttribute(bool raiseAfterAutoHandleState = false, bool fieldDeltas = false, bool excludeReplays = false)
     {
         RaiseAfterAutoHandleState = raiseAfterAutoHandleState;
         FieldDeltas = fieldDeltas;
+        ExcludeReplays = excludeReplays;
     }
 }
 

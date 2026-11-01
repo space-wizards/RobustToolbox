@@ -2,6 +2,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Client.GameStates;
 using Robust.Client.Timing;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
@@ -163,6 +164,55 @@ namespace Robust.UnitTesting.Client.GameStates
             Assert.That(curState, Is.Not.Null);
         }
 
+        [Test]
+        public void PvsDetachMergesMessagesWithSameTick()
+        {
+            var (_, processor) = SetupEmptyProcessor();
+            var tick = new GameTick(5);
+
+            processor.AddLeavePvsMessage(new() { Ent(1), Ent(2) }, tick);
+            processor.AddLeavePvsMessage(new() { Ent(3) }, tick);
+
+            var result = processor.GetEntitiesToDetach(tick, 10);
+
+            Assert.That(result, Has.Count.EqualTo(1));
+            Assert.That(result[0].Tick, Is.EqualTo(tick));
+            Assert.That(result[0].Entities, Is.EqualTo(new[] { Ent(1), Ent(2), Ent(3) }));
+        }
+
+        [Test]
+        public void PvsDetachProcessesOldestTickFirst()
+        {
+            var (_, processor) = SetupEmptyProcessor();
+
+            processor.AddLeavePvsMessage(new() { Ent(10) }, new GameTick(10));
+            processor.AddLeavePvsMessage(new() { Ent(5) }, new GameTick(5));
+
+            var result = processor.GetEntitiesToDetach(new GameTick(10), 10);
+
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result[0].Tick, Is.EqualTo(new GameTick(5)));
+            Assert.That(result[1].Tick, Is.EqualTo(new GameTick(10)));
+        }
+
+        [Test]
+        public void PvsDetachPartialBudgetKeepsRemainingEntities()
+        {
+            var (_, processor) = SetupEmptyProcessor();
+            var tick = new GameTick(1);
+            processor.AddLeavePvsMessage(new() { Ent(1), Ent(2), Ent(3) }, tick);
+
+            var result = processor.GetEntitiesToDetach(tick, 2);
+
+            Assert.That(result, Has.Count.EqualTo(1));
+            Assert.That(result[0].Entities, Is.EqualTo(new[] { Ent(2), Ent(3) }));
+
+            result = processor.GetEntitiesToDetach(tick, 10);
+            Assert.That(result, Has.Count.EqualTo(1));
+            Assert.That(result[0].Entities, Is.EqualTo(new[] { Ent(1) }));
+        }
+
+
         /// <summary>
         ///     Creates a new empty GameState with the given to and from properties.
         /// </summary>
@@ -170,6 +220,25 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             return new(new GameTick(@from), new GameTick(to), 0, default, default, default);
         }
+
+        private static NetEntity Ent(int id) => new(id);
+
+        private static (IClientGameTiming timing, GameStateProcessor processor) SetupEmptyProcessor()
+        {
+            var timingMock = new Mock<IClientGameTiming>();
+            timingMock.SetupProperty(p => p.CurTick);
+            timingMock.SetupProperty(p => p.LastProcessedTick);
+            timingMock.SetupProperty(p => p.LastRealTick);
+            timingMock.SetupProperty(p => p.TickTimingAdjustment);
+
+            var timing = timingMock.Object;
+            var managerMock = new Mock<IClientGameStateManager>();
+            var logMock = new Mock<ISawmill>();
+            var processor = new GameStateProcessor(managerMock.Object, timing, logMock.Object);
+
+            return (timing, processor);
+        }
+
 
         /// <summary>
         ///     Creates a new GameTiming and GameStateProcessor, fills the processor with enough states, and calculate the first tick.

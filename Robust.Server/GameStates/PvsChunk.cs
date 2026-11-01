@@ -35,6 +35,11 @@ internal sealed class PvsChunk
     public HashSet<EntityUid> Children = new();
 
     /// <summary>
+    /// Nullspace chunk entity that should be sent when this PVS chunk is visible.
+    /// </summary>
+    public EntityUid? AttachedChunkEntity;
+
+    /// <summary>
     /// Sorted list of all entities on this chunk. The list is sorted based on their "proximity" to the root entity in
     /// the transform hierarchy. I.e., it will list all entities that are directly parented to the grid before listing
     /// any entities that are parented to those entities and so on.
@@ -132,9 +137,22 @@ internal sealed class PvsChunk
         DebugTools.AssertEqual(_anchoredChildren.Count, 0);
         DebugTools.AssertEqual(_lowPriorityChildren.Count, 0);
 
-        Contents.EnsureCapacity(Children.Count);
+        Contents.EnsureCapacity(Children.Count + (AttachedChunkEntity == null ? 0 : 1));
         _lowPriorityChildren.EnsureCapacity(Children.Count);
         var nextSetTotal = 0;
+
+        if (AttachedChunkEntity is { } chunkEntity)
+        {
+            if (!meta.TryGetComponent(chunkEntity, out var chunkMeta) ||
+                chunkMeta.EntityLifeStage >= EntityLifeStage.Terminating)
+            {
+                DebugTools.Assert($"PVS chunk contains a deleted or terminating chunk entity: {chunkEntity}");
+                MarkDirty();
+                return false;
+            }
+
+            Contents.Add(new ChunkEntity(chunkEntity, chunkMeta));
+        }
 
         // First, we add all high-priority children.
         foreach (var child in Children)
@@ -243,6 +261,12 @@ internal sealed class PvsChunk
         set.Add(Map.Owner);
         foreach (var child in Contents)
         {
+            if (child.Uid == AttachedChunkEntity)
+            {
+                DebugTools.Assert(set.Add(child.Uid), "Child appears more than once in the chunk.");
+                continue;
+            }
+
             var parent = query.GetComponent(child.Uid).ParentUid;
             DebugTools.Assert(set.Contains(parent),
                 "A child's parent is not in the chunk, or is not listed first.");
@@ -267,6 +291,7 @@ internal sealed class PvsChunk
         Map = default;
         Location = default;
         Children.Clear();
+        AttachedChunkEntity = null;
         MarkDirty();
     }
 

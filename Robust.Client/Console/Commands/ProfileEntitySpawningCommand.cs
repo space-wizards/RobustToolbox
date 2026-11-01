@@ -51,7 +51,7 @@ public sealed partial class ProfileEntitySpawningCommand : IConsoleCommand
 
         for (var i = 0; i < amount; i++)
         {
-            ents[i] = _entities.SpawnEntity(prototype, MapCoordinates.Nullspace);
+            ents[i] = _entities.Spawn(prototype);
         }
 
         MeasureProfiler.SaveData();

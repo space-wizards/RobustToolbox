@@ -15,10 +15,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+      <!-- Build-time tools run on the host, not the target runtime. This stops us trying to get runtime for FreeBSD which doesn't exist. -->
+      <GlobalPropertiesToRemove>RuntimeIdentifier;RestoreRuntimeIdentifier</GlobalPropertiesToRemove>
+    </ProjectReference>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false" Condition="'$(RuntimeIdentifier)' == ''">
       <SetConfiguration Condition="'$(Configuration)' == 'DebugOpt'">Configuration=Debug</SetConfiguration>
       <SetConfiguration Condition="'$(Configuration)' == 'Tools'">Configuration=Release</SetConfiguration>
+      <GlobalPropertiesToRemove>RuntimeIdentifier;RestoreRuntimeIdentifier</GlobalPropertiesToRemove>
     </ProjectReference>
   </ItemGroup>
 
@@ -29,7 +33,7 @@
     <RobustInjectorsConfiguration Condition="'$(Configuration)' == 'Tools'">Release</RobustInjectorsConfiguration>
     <RobustInjectorsConfiguration Condition="'$(UseArtifactsOutput)' == 'true' And '$(RuntimeIdentifier)' != ''">$(RobustInjectorsConfiguration)_$(RuntimeIdentifier)</RobustInjectorsConfiguration>
     <RobustInjectorsConfiguration Condition="'$(UseArtifactsOutput)' == 'true'">$(RobustInjectorsConfiguration.ToLower())</RobustInjectorsConfiguration>
-    <CompileRobustXamlTaskAssemblyFile Condition="'$(UseArtifactsOutput)' != 'true'">$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(RobustInjectorsConfiguration)\netstandard2.0\Robust.Client.Injectors.dll</CompileRobustXamlTaskAssemblyFile>
+    <CompileRobustXamlTaskAssemblyFile Condition="'$(UseArtifactsOutput)' != 'true'">$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(RobustInjectorsConfiguration)\net10.0\Robust.Client.Injectors.dll</CompileRobustXamlTaskAssemblyFile>
     <CompileRobustXamlTaskAssemblyFile Condition="'$(UseArtifactsOutput)' == 'true'">$(MSBuildThisFileDirectory)\..\..\artifacts\bin\Robust.Client.Injectors\$(RobustInjectorsConfiguration)\Robust.Client.Injectors.dll</CompileRobustXamlTaskAssemblyFile>
   </PropertyGroup>
 
@@ -37,6 +41,16 @@
     Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true"
     TaskName="CompileRobustXamlTask"
     AssemblyFile="$(CompileRobustXamlTaskAssemblyFile)"/>
+  <Target
+    Name="BuildRobustClientInjectorsForRuntimeBuild"
+    Condition="'$(RuntimeIdentifier)' != '' And '$(_RobustForceInternalMSBuild)' != 'true'"
+    BeforeTargets="CompileRobustXaml">
+    <PropertyGroup>
+      <DOTNET_HOST_PATH Condition="'$(DOTNET_HOST_PATH)' == ''">dotnet</DOTNET_HOST_PATH>
+    </PropertyGroup>
+    <Exec
+      Command="&quot;$(DOTNET_HOST_PATH)&quot; build /nologo &quot;$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\Robust.Client.Injectors.csproj&quot; /p:Configuration=$(RobustInjectorsConfiguration) /p:TargetFramework=net10.0 /p:RuntimeIdentifier= /p:RestoreRuntimeIdentifier= /p:UseAppHost=false" />
+  </Target>
   <Target
     Name="CompileRobustXaml"
     Condition="Exists('@(IntermediateAssembly)')"

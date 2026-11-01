@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Shared.Graphics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -82,6 +85,17 @@ namespace Robust.Client.Graphics
         /// </summary>
         public abstract void DrawTextureRectsUnmodulated(Texture texture, ReadOnlySpan<WorldTextureRect> rects);
 
+        /// <summary>
+        /// Renders a sprite through the supplied post-shader passes.
+        /// </summary>
+        public abstract void RenderSpritePostShaders(
+            Entity<SpriteComponent> sprite,
+            IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
+            Angle eyeRotation,
+            Angle worldRotation,
+            Vector2 worldPosition,
+            Direction? overrideDirection);
+
         private Box2 GetQuad(Texture texture, Vector2 position)
         {
             return Box2.FromDimensions(position, texture.Size / (float)Ppm);
@@ -135,6 +149,16 @@ namespace Robust.Client.Graphics
         /// <param name="quad">The four vertices of the quad in object space (or world if the transform is identity.).</param>
         /// <param name="modulate">A color to multiply the texture by when shading.</param>
         public void DrawTextureRect(Texture texture, Box2 quad, Color? modulate = null)
+        {
+            CheckDisposed();
+
+            DrawTextureRectRegion(texture, quad, modulate);
+        }
+
+        /// <summary>
+        ///     Draws an atlas texture without an additional subregion.
+        /// </summary>
+        public virtual void DrawTextureRect(AtlasTexture texture, Box2 quad, Color? modulate = null)
         {
             CheckDisposed();
 

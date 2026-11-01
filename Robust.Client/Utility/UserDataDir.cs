@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using JetBrains.Annotations;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Utility
 {
@@ -35,7 +37,8 @@ namespace Robust.Client.Utility
             appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 #endif
 
-            return Path.Combine(appDataDir, gameController.Options.UserDataDirectoryName);
+
+            return PathHelpers.SafeGetResourcePath(appDataDir, new ResPath(gameController.Options.UserDataDirectoryName));
         }
     }
 }

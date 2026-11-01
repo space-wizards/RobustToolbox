@@ -87,7 +87,7 @@ internal sealed class Broadphase_Test
         Assert.That(entManager.HasComponent<BroadphaseComponent>(grid));
         var broadphase = entManager.GetComponent<BroadphaseComponent>(grid);
 
-        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
+        var ent = entManager.SpawnAttachedTo(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
         var xform = entManager.GetComponent<TransformComponent>(ent);
         Assert.That(broadphase.SundriesTree, Does.Contain(ent));
 
@@ -123,7 +123,7 @@ internal sealed class Broadphase_Test
         Assert.That(entManager.HasComponent<BroadphaseComponent>(gridUid));
         var broadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
 
-        var ent = entManager.SpawnEntity(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
+        var ent = entManager.SpawnAttachedTo(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
         var physics = entManager.AddComponent<PhysicsComponent>(ent);
         var xform = entManager.GetComponent<TransformComponent>(ent);
 
@@ -205,13 +205,13 @@ internal sealed class Broadphase_Test
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(2));
 
-        var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
+        var parent = entManager.SpawnAttachedTo(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
 
-        var child1 = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+        var child1 = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, Vector2.Zero));
         var child1Xform = entManager.GetComponent<TransformComponent>(child1);
 
         // Have a non-collidable child and check it doesn't get added too.
-        var child2 = entManager.SpawnEntity(null, new EntityCoordinates(child1, Vector2.Zero));
+        var child2 = entManager.SpawnAttachedTo(null, new EntityCoordinates(child1, Vector2.Zero));
         var child2Xform = entManager.GetComponent<TransformComponent>(child2);
         var child2Body = entManager.AddComponent<PhysicsComponent>(child2);
         physicsSystem.SetCanCollide(child2, false, body: child2Body);
@@ -228,6 +228,85 @@ internal sealed class Broadphase_Test
         Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
+    }
+
+    [Test]
+    public void BroadphaseRecursiveReinsert()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var entManager = sim.Resolve<IEntityManager>();
+        var system = entManager.EntitySysManager;
+        var lookup = system.GetEntitySystem<EntityLookupSystem>();
+        var xforms = system.GetEntitySystem<SharedTransformSystem>();
+        var physics = system.GetEntitySystem<SharedPhysicsSystem>();
+        var fixtures = system.GetEntitySystem<FixtureSystem>();
+        var mapSys = entManager.System<SharedMapSystem>();
+
+        var (map, mapId) = sim.CreateMap();
+        var grid = mapSys.CreateGridEntity(mapId);
+        var gridUid = grid.Owner;
+        mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
+        xforms.SetCoordinates(gridUid, new EntityCoordinates(map, new Vector2(10f, 10f)));
+        xforms.SetLocalRotation(gridUid, Angle.FromDegrees(90));
+
+        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
+        var broadphaseData = new BroadphaseData(gridUid, false, false);
+
+        var parent = entManager.SpawnAttachedTo(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
+        var child = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, new Vector2(0.2f, 0f)));
+        var collidableChild = entManager.SpawnAttachedTo(null, new EntityCoordinates(child, new Vector2(0.1f, 0f)));
+        var parentXform = entManager.GetComponent<TransformComponent>(parent);
+        var childXform = entManager.GetComponent<TransformComponent>(child);
+        var collidableXform = entManager.GetComponent<TransformComponent>(collidableChild);
+        var collidableBody = entManager.AddComponent<PhysicsComponent>(collidableChild);
+
+        var shape = new PolygonShape();
+        shape.SetAsBox(0.25f, 0.25f);
+        fixtures.CreateFixture(
+            collidableChild,
+            "fix1",
+            new Fixture(shape, 0, 0, false),
+            body: collidableBody,
+            xform: collidableXform);
+        physics.SetCanCollide(collidableChild, true, body: collidableBody);
+        lookup.FindAndAddToEntityTree(collidableChild, false, collidableXform);
+
+        Assert.That(parentXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(childXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(collidableXform.Broadphase, Is.EqualTo(new BroadphaseData(gridUid, true, true)));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(parent));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(child));
+        Assert.That(gridBroadphase.StaticTree.Count, Is.EqualTo(1));
+
+        lookup.RemoveFromEntityTree(parent, parentXform);
+        Assert.That(parentXform.Broadphase, Is.Null);
+        Assert.That(childXform.Broadphase, Is.Null);
+        Assert.That(collidableXform.Broadphase, Is.Null);
+        Assert.That(gridBroadphase.SundriesTree, Does.Not.Contain(parent));
+        Assert.That(gridBroadphase.SundriesTree, Does.Not.Contain(child));
+        Assert.That(gridBroadphase.StaticTree.Count, Is.EqualTo(0));
+
+        lookup.FindAndAddToEntityTree(parent, true, parentXform);
+
+        Assert.That(parentXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(childXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(collidableXform.Broadphase, Is.EqualTo(new BroadphaseData(gridUid, true, true)));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(parent));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(child));
+        Assert.That(gridBroadphase.StaticTree.Count, Is.EqualTo(1));
+
+        var parentWorld = xforms.GetWorldPosition(parent);
+        var childWorld = xforms.GetWorldPosition(child);
+        var collidableWorld = xforms.GetWorldPosition(collidableChild);
+
+        var found = lookup.GetEntitiesIntersecting(mapId, Box2.CenteredAround(parentWorld, Vector2.One));
+        Assert.That(found, Does.Contain(parent));
+
+        found = lookup.GetEntitiesIntersecting(mapId, Box2.CenteredAround(childWorld, Vector2.One));
+        Assert.That(found, Does.Contain(child));
+
+        found = lookup.GetEntitiesIntersecting(mapId, Box2.CenteredAround(collidableWorld, Vector2.One));
+        Assert.That(found, Does.Contain(collidableChild));
     }
 
     /// <summary>
@@ -264,9 +343,9 @@ internal sealed class Broadphase_Test
         mapSys.SetTile(gridCComp, Vector2i.Zero, new Tile(1));
 
         // set up test entities
-        var parent = entManager.SpawnEntity(null, new EntityCoordinates(mapA, new Vector2(200,200)));
+        var parent = entManager.SpawnAttachedTo(null, new EntityCoordinates(mapA, new Vector2(200,200)));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
-        var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+        var child = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, Vector2.Zero));
         var childXform = entManager.GetComponent<TransformComponent>(child);
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
         var childFixtures = entManager.GetComponent<FixturesComponent>(child);
@@ -373,11 +452,11 @@ internal sealed class Broadphase_Test
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(1));
 
-        var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var parent = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
         entManager.AddComponent<PhysicsComponent>(parent);
 
-        var child1 = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+        var child1 = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, Vector2.Zero));
         var child1Xform = entManager.GetComponent<TransformComponent>(child1);
         var child1Body = entManager.AddComponent<PhysicsComponent>(child1);
 
@@ -388,7 +467,7 @@ internal sealed class Broadphase_Test
         Assert.That(child1Body.CanCollide);
 
         // Have a non-collidable child and check it doesn't get added too.
-        var child2 = entManager.SpawnEntity(null, new EntityCoordinates(child1, Vector2.Zero));
+        var child2 = entManager.SpawnAttachedTo(null, new EntityCoordinates(child1, Vector2.Zero));
         var child2Xform = entManager.GetComponent<TransformComponent>(child2);
         var child2Body = entManager.AddComponent<PhysicsComponent>(child2);
         physSystem.SetCanCollide(child2, false, body: child2Body);

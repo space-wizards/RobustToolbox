@@ -37,46 +37,6 @@ internal static class InternalReflectionUtils
         }
     }
 
-    internal static object EmitFieldAccessor(Type obj, FieldDefinition fieldDefinition)
-    {
-        if (fieldDefinition.BackingField is SpecificFieldInfo fieldInfo)
-            return fieldInfo.FieldInfo;
-
-        if (fieldDefinition.BackingField is SpecificPropertyInfo propertyInfo)
-            return propertyInfo.PropertyInfo.GetGetMethod(true) ?? throw new InvalidOperationException("Property has no getter");
-
-        var method = new DynamicMethod(
-            "AccessField",
-            fieldDefinition.BackingField.FieldType,
-            new[] {obj.MakeByRefType()},
-            true);
-
-        method.DefineParameter(1, ParameterAttributes.Out, "target");
-
-        var generator = method.GetILGenerator();
-
-        generator.Emit(OpCodes.Ldarg_0);
-
-        if(!obj.IsValueType)
-            generator.Emit(OpCodes.Ldind_Ref);
-
-        switch (fieldDefinition.BackingField)
-        {
-            case SpecificFieldInfo field:
-                generator.Emit(OpCodes.Ldfld, field.FieldInfo);
-                break;
-            case SpecificPropertyInfo property:
-                var getter = property.PropertyInfo.GetGetMethod(true) ?? throw new NullReferenceException();
-                var opCode = fieldDefinition.BackingField.FieldType.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
-                generator.Emit(opCode, getter);
-                break;
-        }
-
-        generator.Emit(OpCodes.Ret);
-
-        return method.CreateDelegate(typeof(AccessField<,>).MakeGenericType(obj, fieldDefinition.BackingField.FieldType));
-    }
-
     internal static object EmitFieldAssigner(Type objType, AbstractFieldInfo backingField, bool boxing = false)
     {
         if (!boxing)

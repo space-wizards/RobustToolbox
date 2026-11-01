@@ -403,6 +403,35 @@ internal sealed class ToolshedTests : ToolshedTest
     }
 
     [Test]
+    public async Task TestArrayParsing()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            AssertResult("testarrayparse []", Array.Empty<int>());
+            AssertResult("testarrayparse [ ]", Array.Empty<int>());
+            AssertResult("testarrayparse [1]", new[] {1});
+            AssertResult("testarrayparse [1,2]", new[] {1, 2});
+            AssertResult("testarrayparse [ 1 , 2 ]", new[] {1, 2});
+            AssertCompletionSingle("testarrayparse ", "[");
+            AssertCompletionContains("testarrayparse [ 1 ", "]", ",");
+
+            ParseError<ExpectedTokenError>("testarrayparse [ 1 ");
+
+            AssertResult("testlistparse []", new List<int>());
+            AssertResult("testlistparse [1]", new List<int> {1});
+            AssertResult("testlistparse [1,2]", new List<int> {1, 2});
+            AssertResult("testlistparse [ 1 , 2 ]", new List<int> {1, 2});
+            AssertCompletionSingle("testlistparse ", "[");
+            AssertCompletionContains("testlistparse [ 1 ", "]", ",");
+
+            AssertResult("testlistlength  [ 1 ]", new[] {1});
+            AssertResult("testlistlength  [ 1, 2 ]", new[] {1, 2});
+            ParseError<NotEnoughElementsError>("testlistlength [ ]");
+            ParseError<TooManyElementsError>("testlistlength [ 1, 2, 3 ]");
+        });
+    }
+
+    [Test]
     public async Task TestCompletions()
     {
         await Server.WaitAssertion(() =>

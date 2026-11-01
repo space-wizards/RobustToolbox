@@ -3,8 +3,14 @@
 on:
   push:
     branches: [master]
+  merge_group:
   pull_request:
+    types: [ opened, reopened, synchronize, ready_for_review ]
     branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 jobs:
   build:
@@ -25,10 +31,56 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Debug
         run: dotnet build --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Tools
         run: dotnet build --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Release
         run: dotnet build --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
+
+  publish-check:
+    name: Publish check (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        rid:
+          - win-x64
+          - win-arm64
+          - linux-x64
+          - linux-arm64
+          - osx-x64
+          - osx-arm64
+          - freebsd-x64
+          - freebsd-arm64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Package client (${{ matrix.rid }})
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p ci-logs
+          Tools/package_client_build.py --platform ${{ matrix.rid }} 2>&1 | tee ci-logs/publish-${{ matrix.rid }}.log
+
+      - name: Clean generated package artifacts
+        if: always()
+        shell: bash
+        run: rm -rf bin release
+
+      - name: Upload publish log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-${{ matrix.rid }}-log
+          path: ci-logs/publish-${{ matrix.rid }}.log
+          retention-days: 7
+          if-no-files-found: warn

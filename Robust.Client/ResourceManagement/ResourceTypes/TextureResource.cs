@@ -88,6 +88,18 @@ namespace Robust.Client.ResourceManagement
             data.Image.Dispose();
         }
 
+        /// <summary>
+        /// Loads a texture from path as an <see cref="OwnedTexture"/>.
+        /// Texture parameters are taken from a matching .yml file if present.
+        /// </summary>
+        public static OwnedTexture LoadOwnedTexture(IResourceManager resManager, IClyde clyde, ResPath path)
+        {
+            var loadParams = TryLoadTextureParameters(resManager, path) ?? TextureLoadParameters.Default;
+            using var stream = resManager.ContentFileRead(path);
+            using var image = Image.Load<Rgba32>(stream);
+            return clyde.LoadTextureFromImage(image, path.ToString(), loadParams);
+        }
+
         private static TextureLoadParameters? TryLoadTextureParameters(IResourceManager cache, ResPath path)
         {
             var metaPath = path.WithName(path.Filename + ".yml");

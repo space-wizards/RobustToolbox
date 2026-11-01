@@ -120,6 +120,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         Subs.CVar(CfgManager, CVars.AudioEndBuffer, OnAudioBuffer, true);
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
+        Subs.CVar(CfgManager, CVars.AudioDopplerFactor, OnDopplerFactor, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
         Subs.CVar(CfgManager, CVars.AudioTickRate, OnAudioTickRate, true);
         InitializeLimit();
@@ -298,6 +299,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private void OnAudioAttenuation(int obj)
     {
         _audio.SetAttenuation((Attenuation) obj);
+    }
+
+    private void OnDopplerFactor(float value)
+    {
+        _audio.SetDopplerFactor(value);
     }
 
     private void OnRaycastLengthChanged(float value)

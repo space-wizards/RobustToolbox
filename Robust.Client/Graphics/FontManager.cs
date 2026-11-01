@@ -18,6 +18,8 @@ namespace Robust.Client.Graphics
     {
         private const int SheetWidth = 256;
         private const int SheetHeight = 256;
+        // FreeType's stroker radius is expressed in 26.6 fixed-point pixel units.
+        private const float FreeType26Dot6Scale = 64f;
 
         private readonly IClyde _clyde;
         private readonly ISawmill _sawmill;
@@ -115,7 +117,7 @@ namespace Robust.Client.Graphics
             var descent = -ftFace.Size.Metrics.Descender.ToInt32();
             var lineHeight = ftFace.Size.Metrics.Height.ToInt32();
 
-            var data = new ScaledFontData(ascent, descent, ascent + descent, lineHeight);
+            var data = new ScaledFontData(ascent, descent, ascent + descent, lineHeight, _library);
 
 
             return data;
@@ -142,102 +144,129 @@ namespace Robust.Client.Graphics
                 glyphMetrics.Height.ToInt32());
 
             using var bitmap = face.Glyph.Bitmap;
-            if (bitmap.Pitch < 0)
-            {
-                throw new NotImplementedException();
-            }
-
-            if (bitmap.Pitch != 0)
-            {
-                Image<A8> img;
-                switch (bitmap.PixelMode)
-                {
-                    case PixelMode.Mono:
-                    {
-                        img = MonoBitMapToImage(bitmap);
-                        break;
-                    }
-
-                    case PixelMode.Gray:
-                    {
-                        ReadOnlySpan<A8> span;
-                        unsafe
-                        {
-                            span = new ReadOnlySpan<A8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
-                        }
-
-                        img = new Image<A8>(bitmap.Width, bitmap.Rows);
-
-                        span.Blit(
-                            bitmap.Pitch,
-                            UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows),
-                            img,
-                            (0, 0));
-
-                        break;
-                    }
-
-                    case PixelMode.Gray2:
-                    case PixelMode.Gray4:
-                    case PixelMode.Lcd:
-                    case PixelMode.VerticalLcd:
-                    case PixelMode.Bgra:
-                        throw new NotImplementedException();
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                OwnedTexture sheet;
-                if (scaled.AtlasTextures.Count == 0)
-                    sheet = GenSheet();
-                else
-                    sheet = scaled.AtlasTextures[^1];
-
-                var (sheetW, sheetH) = sheet.Size;
-
-                if (sheetW - scaled.CurSheetX < img.Width)
-                {
-                    scaled.CurSheetX = 0;
-                    // +1 Adds a pixel of vertical padding, to avoid arifacts when aliasing
-                    scaled.CurSheetY = scaled.CurSheetMaxY + 1;
-                }
-
-                if (sheetH - scaled.CurSheetY < img.Height)
-                {
-                    // Make new sheet.
-                    scaled.CurSheetY = 0;
-                    scaled.CurSheetX = 0;
-                    scaled.CurSheetMaxY = 0;
-
-                    sheet = GenSheet();
-                }
-
-                sheet.SetSubImage((scaled.CurSheetX, scaled.CurSheetY), img);
-
-                var atlasTexture = new AtlasTexture(
-                    sheet,
-                    UIBox2.FromDimensions(
-                        scaled.CurSheetX,
-                        scaled.CurSheetY,
-                        bitmap.Width,
-                        bitmap.Rows));
-
-                info.Texture = atlasTexture;
-
-                scaled.CurSheetMaxY = Math.Max(scaled.CurSheetMaxY, scaled.CurSheetY + bitmap.Rows);
-                // +1 adds a pixel of horizontal padding, to avoid artifacts when aliasing
-                scaled.CurSheetX += bitmap.Width + 1;
-            }
+            info.Texture = CacheBitmap(instance, scaled, scale, bitmap);
 
             scaled.GlyphInfos.Add(glyph, info);
             return info;
+        }
+
+        private OutlinedGlyphInfo EnsureOutlinedGlyphCached(
+            FontInstanceHandle instance,
+            ScaledFontData scaled,
+            float scale,
+            uint glyph,
+            int radius)
+        {
+            if (scaled.OutlinedGlyphInfos.TryGetValue((glyph, radius), out var info))
+                return info;
+
+            var face = instance.FaceHandle.Face;
+            face.SetCharSize(0, instance.Size, 0, (uint) (_baseFontDpi * scale));
+            face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
+
+            using var sourceGlyph = face.Glyph.GetGlyph();
+            var stroker = scaled.Stroker;
+            stroker.Set(radius, StrokerLineCap.Round, StrokerLineJoin.Round, Fixed16Dot16.FromInt32(0));
+            stroker.Rewind();
+            using var strokedGlyph = sourceGlyph.StrokeBorder(stroker, false, true);
+            strokedGlyph.ToBitmap(RenderMode.Normal, new FTVector26Dot6(0, 0), true);
+
+            var bitmapGlyph = strokedGlyph.ToBitmapGlyph();
+            using var bitmap = bitmapGlyph.Bitmap;
+            info = new OutlinedGlyphInfo
+            {
+                Texture = CacheBitmap(instance, scaled, scale, bitmap),
+                Left = bitmapGlyph.Left,
+                Top = bitmapGlyph.Top,
+            };
+
+            scaled.OutlinedGlyphInfos.Add((glyph, radius), info);
+            return info;
+        }
+
+        private AtlasTexture? CacheBitmap(
+            FontInstanceHandle instance,
+            ScaledFontData scaled,
+            float scale,
+            FTBitmap bitmap)
+        {
+            if (bitmap.Pitch < 0)
+                throw new NotImplementedException();
+
+            if (bitmap.Pitch == 0)
+                return null;
+
+            Image<A8> img;
+            switch (bitmap.PixelMode)
+            {
+                case PixelMode.Mono:
+                    img = MonoBitMapToImage(bitmap);
+                    break;
+                case PixelMode.Gray:
+                {
+                    ReadOnlySpan<A8> span;
+                    unsafe
+                    {
+                        span = new ReadOnlySpan<A8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
+                    }
+
+                    img = new Image<A8>(bitmap.Width, bitmap.Rows);
+                    span.Blit(
+                        bitmap.Pitch,
+                        UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows),
+                        img,
+                        (0, 0));
+                    break;
+                }
+                case PixelMode.Gray2:
+                case PixelMode.Gray4:
+                case PixelMode.Lcd:
+                case PixelMode.VerticalLcd:
+                case PixelMode.Bgra:
+                    throw new NotImplementedException();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            OwnedTexture sheet;
+            if (scaled.AtlasTextures.Count == 0)
+                sheet = GenSheet();
+            else
+                sheet = scaled.AtlasTextures[^1];
+
+            var (sheetW, sheetH) = sheet.Size;
+            if (sheetW - scaled.CurSheetX < img.Width)
+            {
+                scaled.CurSheetX = 0;
+                // +1 adds vertical padding to avoid artifacts when aliasing.
+                scaled.CurSheetY = scaled.CurSheetMaxY + 1;
+            }
+
+            if (sheetH - scaled.CurSheetY < img.Height)
+            {
+                scaled.CurSheetY = 0;
+                scaled.CurSheetX = 0;
+                scaled.CurSheetMaxY = 0;
+                sheet = GenSheet();
+            }
+
+            sheet.SetSubImage((scaled.CurSheetX, scaled.CurSheetY), img);
+            var atlasTexture = new AtlasTexture(
+                sheet,
+                UIBox2.FromDimensions(scaled.CurSheetX, scaled.CurSheetY, bitmap.Width, bitmap.Rows));
+
+            scaled.CurSheetMaxY = Math.Max(scaled.CurSheetMaxY, scaled.CurSheetY + bitmap.Rows);
+            // +1 adds horizontal padding to avoid artifacts when aliasing.
+            scaled.CurSheetX += bitmap.Width + 1;
+            return atlasTexture;
 
             OwnedTexture GenSheet()
             {
-                var sheet = _clyde.CreateBlankTexture<A8>((SheetWidth, SheetHeight),
+                var face = instance.FaceHandle.Face;
+                var texture = _clyde.CreateBlankTexture<A8>((SheetWidth, SheetHeight),
                     $"font-{face.FamilyName}-{instance.Size}-{(uint) (_baseFontDpi * scale)}-sheet{scaled.AtlasTextures.Count}");
-                scaled.AtlasTextures.Add(sheet);
-                return sheet;
+                scaled.AtlasTextures.Add(texture);
+                return texture;
             }
         }
 
@@ -306,34 +335,80 @@ namespace Robust.Client.Graphics
                     {
                         ownedTexture.Dispose();
                     }
+
+                    scaleData.Value.Stroker.Dispose();
                 }
                 _scaledData.Clear();
             }
 
-            public Texture? GetCharTexture(Rune codePoint, float scale)
-            {
-                var glyph = GetGlyph(codePoint);
-                if (glyph == 0)
-                    return null;
-
-                var scaled = GetScaleDatum(scale);
-                var glyphInfo = _fontManager.EnsureGlyphCached(this, scaled, scale, glyph);
-
-                return glyphInfo.Texture;
-            }
-
-            public CharMetrics? GetCharMetrics(Rune codePoint, float scale)
+            public bool TryGetGlyph(
+                Rune codePoint,
+                float scale,
+                float outlineThickness,
+                out CharMetrics metrics,
+                out Texture? texture,
+                out OutlinedGlyph? outlinedGlyph)
             {
                 var glyph = GetGlyph(codePoint);
                 if (glyph == 0)
                 {
-                    return null;
+                    metrics = default;
+                    texture = null;
+                    outlinedGlyph = null;
+                    return false;
                 }
 
                 var scaled = GetScaleDatum(scale);
-                var info = _fontManager.EnsureGlyphCached(this, scaled, scale, glyph);
+                var glyphInfo = _fontManager.EnsureGlyphCached(this, scaled, scale, glyph);
+                metrics = glyphInfo.Metrics;
+                texture = glyphInfo.Texture;
+                outlinedGlyph = null;
 
-                return info.Metrics;
+                // An outline is never rendered without the normal glyph, so avoid generating or
+                // looking up outline data when the glyph has no bitmap.
+                if (texture == null || outlineThickness <= 0)
+                    return true;
+
+                var radius = (int) MathF.Round(outlineThickness * scale * FreeType26Dot6Scale);
+                if (radius <= 0)
+                    return true;
+
+                var outlinedInfo = _fontManager.EnsureOutlinedGlyphCached(this, scaled, scale, glyph, radius);
+                if (outlinedInfo.Texture != null)
+                    outlinedGlyph = new OutlinedGlyph(outlinedInfo.Texture, outlinedInfo.Left, outlinedInfo.Top);
+
+                return true;
+            }
+
+            public Texture? GetCharTexture(Rune codePoint, float scale)
+            {
+                return TryGetGlyph(codePoint, scale, 0, out _, out var texture, out _) ? texture : null;
+            }
+
+            public OutlinedGlyph? GetOutlinedChar(Rune codePoint, float scale, float thickness)
+            {
+                if (thickness <= 0)
+                    return null;
+
+                var glyph = GetGlyph(codePoint);
+                if (glyph == 0)
+                    return null;
+
+                var radius = (int) MathF.Round(thickness * scale * FreeType26Dot6Scale);
+                if (radius <= 0)
+                    return null;
+
+                var scaled = GetScaleDatum(scale);
+                var info = _fontManager.EnsureOutlinedGlyphCached(this, scaled, scale, glyph, radius);
+                if (info.Texture == null)
+                    return null;
+
+                return new OutlinedGlyph(info.Texture, info.Left, info.Top);
+            }
+
+            public CharMetrics? GetCharMetrics(Rune codePoint, float scale)
+            {
+                return TryGetGlyph(codePoint, scale, 0, out var metrics, out _, out _) ? metrics : null;
             }
 
             public int GetAscent(float scale)
@@ -390,16 +465,19 @@ namespace Robust.Client.Graphics
 
         private sealed class ScaledFontData
         {
-            public ScaledFontData(int ascent, int descent, int height, int lineHeight)
+            public ScaledFontData(int ascent, int descent, int height, int lineHeight, Library library)
             {
                 Ascent = ascent;
                 Descent = descent;
                 Height = height;
                 LineHeight = lineHeight;
+                Stroker = new Stroker(library);
             }
 
             public readonly List<OwnedTexture> AtlasTextures = new();
             public readonly Dictionary<uint, GlyphInfo> GlyphInfos = new();
+            public readonly Dictionary<(uint Glyph, int Radius), OutlinedGlyphInfo> OutlinedGlyphInfos = new();
+            public readonly Stroker Stroker;
             public readonly int Ascent;
             public readonly int Descent;
             public readonly int Height;
@@ -414,6 +492,13 @@ namespace Robust.Client.Graphics
         {
             public CharMetrics Metrics;
             public AtlasTexture? Texture;
+        }
+
+        private sealed class OutlinedGlyphInfo
+        {
+            public AtlasTexture? Texture;
+            public int Left;
+            public int Top;
         }
 
         private sealed class ArrayMemoryHandle(byte[] array) : IFontMemoryHandle

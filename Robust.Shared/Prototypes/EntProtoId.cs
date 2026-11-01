@@ -97,7 +97,7 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
     {
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
         var proto = prototypes.Index(this);
-        if (!proto.TryGetComponent(out T? comp, compFactory))
+        if (!proto.TryComp(out T? comp, compFactory))
         {
             throw new ArgumentException($"{nameof(EntityPrototype)} {proto.ID} has no {nameof(T)}");
         }
@@ -110,6 +110,6 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
         comp = default;
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
         return prototypes.TryIndex(this, out var proto) &&
-               proto.TryGetComponent(out comp, compFactory);
+               proto.TryComp(out comp, compFactory);
     }
 }

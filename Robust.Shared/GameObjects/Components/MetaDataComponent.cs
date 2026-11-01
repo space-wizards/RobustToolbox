@@ -244,6 +244,11 @@ namespace Robust.Shared.GameObjects
         /// If set, transform system will raise events directed at this entity whenever the GridUid or MapUid are modified.
         /// </summary>
         ExtraTransformEvents = 1 << 5,
+
+        /// <summary>
+        /// Indicates this entity represents server-managed map or grid PVS chunk data.
+        /// </summary>
+        ChunkEntity = 1 << 6,
     }
 
     /// <summary>

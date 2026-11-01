@@ -25,6 +25,13 @@ namespace Robust.Client.Graphics
         IRenderTexture RenderTarget { get; }
         IRenderTexture LightRenderTarget { get; }
 
+        /// <summary>
+        ///     The render target holding the FOV shadow-depth map for this viewport's eye.
+        ///     Can be sampled by world-space shaders (together with the eye position) to
+        ///     determine per-pixel whether a world point is occluded by FOV.
+        /// </summary>
+        IRenderTexture FovRenderTarget { get; }
+
         IEye? Eye { get; set; }
         Vector2i Size { get; }
 

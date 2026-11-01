@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
@@ -24,6 +25,7 @@ namespace Robust.Client.ViewVariables.Editors
             hBoxContainer.AddChild(new Label {Text = "grid: "});
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var xformSystem = entityManager.System<TransformSystem>();
 
             var gridId = new LineEdit
             {
@@ -31,7 +33,7 @@ namespace Robust.Client.ViewVariables.Editors
                 HorizontalExpand = true,
                 PlaceHolder = "Grid ID",
                 ToolTip = "Grid ID",
-                Text = coords.GetGridUid(entityManager)?.ToString() ?? ""
+                Text = xformSystem.GetGrid(coords)?.ToString() ?? ""
             };
 
             hBoxContainer.AddChild(gridId);

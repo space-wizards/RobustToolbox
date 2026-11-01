@@ -35,7 +35,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<MapChunk>? instantiationDelegate = null)
     {
-        var ind = (Vector2i) serializationManager.Read(typeof(Vector2i), node["ind"], hookCtx, context)!;
+        var ind = serializationManager.Read<Vector2i>(node["ind"], hookCtx, context)!;
         var tileNode = (ValueDataNode)node["tiles"];
         var tileBytes = Convert.FromBase64String(tileNode.Value);
 
@@ -49,9 +49,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         // TODO: This should be on the context I think?
         if (node.TryGet("size", out ValueDataNode? sizeNode))
-        {
-            size = (ushort) serializationManager.Read(typeof(ushort), sizeNode, context)!;
-        }
+            size = serializationManager.Read<ushort>(sizeNode, context)!;
 
         var chunk = instantiationDelegate != null ? instantiationDelegate() : new MapChunk(ind.X, ind.Y, size);
 

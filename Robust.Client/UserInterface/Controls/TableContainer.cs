@@ -4,7 +4,8 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls;
 
-internal sealed class TableContainer : Container
+[Virtual]
+public class TableContainer : Container
 {
     private int _columns = 1;
 

@@ -59,6 +59,7 @@ namespace Robust.Shared.Maths
         // 1f / MathF.Sqrt(2) except we can't const that.
         private const float DiagonalComponent = 0.7071067811865476f;
 
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Direction AsDir(this DirectionFlag directionFlag)
         {
@@ -76,6 +77,7 @@ namespace Robust.Shared.Maths
             };
         }
 
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DirectionFlag AsFlag(this Direction direction)
         {
@@ -93,6 +95,7 @@ namespace Robust.Shared.Maths
             };
         }
 
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DirectionFlag AsDirectionFlag(this Vector2i indices)
         {
@@ -113,6 +116,7 @@ namespace Robust.Shared.Maths
             };
         }
 
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Direction AsDirection(this Vector2i indices)
         {
@@ -139,6 +143,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vec"></param>
         /// <returns></returns>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Direction GetDir(this Vector2 vec)
         {
@@ -150,6 +155,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vec"></param>
         /// <returns></returns>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Direction GetDir(this Vector2i vec)
         {
@@ -161,6 +167,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vec"></param>
         /// <returns></returns>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Direction GetCardinalDir(this Vector2i vec)
         {
@@ -170,12 +177,14 @@ namespace Robust.Shared.Maths
         /// <param name="direction"></param>
         extension(Direction direction)
         {
+            [Pure]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Direction GetOpposite()
             {
                 return (Direction) (((int) direction + 4) & 7);
             }
 
+            [Pure]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Direction GetClockwise90Degrees()
             {
@@ -204,6 +213,7 @@ namespace Robust.Shared.Maths
             /// <returns>a normalized 2D Vector</returns>
             /// <exception cref="ArgumentOutOfRangeException">if invalid Direction is used</exception>
             /// <seealso cref="Vector2"/>
+            [Pure]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Vector2 ToVec()
             {
@@ -227,6 +237,7 @@ namespace Robust.Shared.Maths
             /// <returns>an 2D int Vector</returns>
             /// <exception cref="ArgumentOutOfRangeException">if invalid Direction is used</exception>
             /// <seealso cref="Vector2i"/>
+            [Pure]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Vector2i ToIntVec()
             {
@@ -252,6 +263,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">2D integer vector</param>
         /// <param name="dir">Direction by which we offset</param>
         /// <returns>a newly vector offset by the <param name="dir">dir</param> or exception if the direction is invalid</returns>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2i Offset(this Vector2i vec, Direction dir)
         {
@@ -263,12 +275,14 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vec">Vector to get the angle from.</param>
         /// <returns>Angle of the vector.</returns>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Angle ToAngle(this Vector2 vec)
         {
             return new(vec);
         }
 
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Angle ToWorldAngle(this Vector2 vec)
         {

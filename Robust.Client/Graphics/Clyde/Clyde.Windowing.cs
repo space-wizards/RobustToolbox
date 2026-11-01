@@ -290,6 +290,19 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowSetMonitor(_mainWindow!, monitor);
         }
 
+        public IClydeMonitor? GetMainWindowMonitor()
+        {
+            return GetWindowMonitor(_mainWindow!.Owner!);
+        }
+
+        public IClydeMonitor? GetWindowMonitor(IClydeWindow window)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            var reg = ((WindowHandle)window).Reg;
+            return _windowing!.WindowGetMonitor(reg);
+        }
+
         public void RequestWindowAttention()
         {
             DebugTools.AssertNotNull(_windowing);
@@ -332,6 +345,7 @@ namespace Robust.Client.Graphics.Clyde
             if (parameters.Owner != null)
                 owner = ((WindowHandle)parameters.Owner).Reg;
 
+            parameters.Main = isMain;
             var (reg, error) = _windowing!.WindowCreate(glSpec, parameters, share, owner);
 
             if (reg != null)
@@ -555,6 +569,13 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2 ContentScale => Reg.WindowScale;
+
+            public void SetRelativeMouseMode(bool enabled)
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.WindowSetRelativeMouseMode(Reg, enabled);
+            }
 
             public bool DisposeOnClose
             {

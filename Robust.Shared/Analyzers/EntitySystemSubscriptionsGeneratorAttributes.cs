@@ -104,5 +104,5 @@ public sealed class SubscribeAllEventAttribute(Type[]? before = null, Type[]? af
 
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-[Obsolete("Use SubscribeAllEvent instead")]
+[Obsolete("Use [SubscribeAllEvent] instead")]
 public sealed class EventSubscriptionAttribute(Type[]? before = null, Type[]? after = null) : SubscribeAllEventAttributeAbstract;

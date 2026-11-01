@@ -48,12 +48,6 @@
     <File Path="MSBuild/XamlIL.targets" />
     <File Path="MSBuild/WebView.targets" />
   </Folder>
-  <Folder Name="/NetSerializer/">
-    <Project Path="NetSerializer/NetSerializer/NetSerializer.csproj">
-      <BuildType Solution="DebugOpt|*" Project="Debug" />
-      <BuildType Solution="Tools|*" Project="Release" />
-    </Project>
-  </Folder>
   <Folder Name="/Project Files/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />

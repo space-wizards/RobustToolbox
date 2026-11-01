@@ -93,7 +93,7 @@ public abstract class SubscribeAllEventAttributeAbstract(Type[]? before = null, 
     public readonly Type[]? After = after;
 }
 
-//TODO after 2027 April
+// TODO(After 2027-04):
 // Delete EventSubscriptionAttribute and SubscribeAllEventAttribute
 // Change SubscribeAllEventAttributeAbstract to SubscribeAllEventAttribute
 // Delete AllSubscriptionMemberAttributeFallbackName in Robust.Shared.EntitySystemSubscriptionsGenerator/KnownTypes.cs

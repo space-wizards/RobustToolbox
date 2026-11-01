@@ -80,7 +80,6 @@ public sealed class SubscribeNetworkEventAttribute(Type[]? before = null, Type[]
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-// public sealed class SubscribeAllEventAttribute(Type[]? before = null, Type[]? after = null) : Attribute;
 public abstract class SubscribeAllEventAttributeAbstract(Type[]? before = null, Type[]? after = null) : Attribute
 {
     /// <summary>

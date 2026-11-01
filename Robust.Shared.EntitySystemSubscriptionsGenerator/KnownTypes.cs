@@ -14,7 +14,11 @@ public static class KnownTypes
     public const string NetworkSubscriptionMemberAttributeName =
         "Robust.Shared.Analyzers.SubscribeNetworkEventAttribute";
 
-    public const string AllSubscriptionMemberAttributeName = "Robust.Shared.Analyzers.EventSubscriptionAttribute";
+    public const string AllSubscriptionMemberAttributeName =
+        "Robust.Shared.Analyzers.SubscribeAllEventAttribute";
+
+    public const string AllSubscriptionMemberAttributeFallbackName =
+        "Robust.Shared.Analyzers.EventSubscriptionAttribute";
 
     public static readonly string ComponentSubscriptionHandlerTypes = string.Join(
         ", ",
@@ -35,6 +39,7 @@ public static class KnownTypes
         return annotation switch
         {
             AllSubscriptionMemberAttributeName => SubscriptionType.All,
+            AllSubscriptionMemberAttributeFallbackName => SubscriptionType.All,
             NetworkSubscriptionMemberAttributeName => SubscriptionType.Network,
             LocalSubscriptionMemberAttributeName => SubscriptionType.Local,
             _ => null

@@ -97,7 +97,8 @@ public abstract class SubscribeAllEventAttributeAbstract(Type[]? before = null, 
 // Delete EventSubscriptionAttribute and SubscribeAllEventAttribute
 // Change SubscribeAllEventAttributeAbstract to SubscribeAllEventAttribute
 // Delete AllSubscriptionMemberAttributeFallbackName in Robust.Shared.EntitySystemSubscriptionsGenerator/KnownTypes.cs
-
+// Delete AllSubscriptionMemberAttributeFallbackName code in EntitySystemSubscriptionGeneratorErrorAnalyzer
+// Delete AllSubscriptionMemberAttributeFallbackName code in EntitySystemSubscriptionGenerator
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
 public sealed class SubscribeAllEventAttribute(Type[]? before = null, Type[]? after = null) : SubscribeAllEventAttributeAbstract(before, after);

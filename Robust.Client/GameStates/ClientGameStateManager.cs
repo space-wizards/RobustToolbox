@@ -916,6 +916,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(!_toApply.ContainsKey(uid));
 
                     meta.Flags &= ~MetaDataFlags.Detached;
+                    _entities.ClearPredictedDeletion(uid);
                     if (isEnteringPvs)
                         enteringPvs++;
                 }
@@ -1591,6 +1592,8 @@ namespace Robust.Client.GameStates
                     else if (compChange.LastModifiedTick <= data.LastApplied && data.LastApplied != GameTick.Zero)
                         continue;
 
+                    // Reset it to server state in case something dirtied it in the meantime.
+                    comp.LastModifiedTick = compChange.LastModifiedTick;
                     _compStateWork[compChange.NetID] = (comp, compChange.State, null);
                 }
             }
@@ -1636,10 +1639,11 @@ namespace Robust.Client.GameStates
                     ref var compState =
                         ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, netId, out var exists);
 
-                    if (exists)
+                    // A next-only entry shouldn't stop the state handler from going out.
+                    if (exists && compState.curState != null)
                         continue;
 
-                    compState = (comp, lastCompState, null);
+                    compState = (comp, lastCompState, compState.nextState);
                 }
             }
 
@@ -1757,7 +1761,7 @@ namespace Robust.Client.GameStates
             if (!_entities.IsClientSide(uid) && _entities.TryGetComponent(uid, out TransformComponent? xform))
                 _recursiveRemoveState(meta.NetEntity, xform, _entities.GetEntityQuery<MetaDataComponent>(), _entities.GetEntityQuery<TransformComponent>());
 
-            // Set ApplyingState to true to avoid logging errors about predicting the deletion of networked entities.
+            // DeleteEntity predicts the deletion of networked entities.
             using (_timing.StartStateApplicationArea())
             {
                 _entities.DeleteEntity(uid);

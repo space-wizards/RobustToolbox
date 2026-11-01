@@ -66,7 +66,10 @@ internal sealed partial class PvsSystem
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (state != null)
-                DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState);
+            {
+                DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState,
+                    $"Expected full state for {ToPrettyString(entityUid)} / {EntityManager.ComponentFactory.CompName(component.GetType())}; got {state.GetType().Name}. From={fromTick}, event from={stateEv.FromTick}, creation={component.CreationTick}, modified={component.LastModifiedTick}.");
+            }
 
             if (sendCompList)
                 netComps!.Add(netId);

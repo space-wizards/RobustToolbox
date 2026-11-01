@@ -2,6 +2,7 @@ using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -44,6 +45,11 @@ public sealed partial class OccluderComponent : Component, IComponentTreeEntry<O
     /// </summary>
     [ViewVariables]
     public Box2 LocalBounds { get; internal set; } = Box2.Empty; // Leave as empty so we remember to always update the cache on init.
+
+    /// <summary>
+    /// Cached shape of <see cref="_polygon"/>
+    /// </summary>
+    internal Polygon CachedShape;
 
     public EntityUid? TreeUid { get; set; }
     public DynamicTree<ComponentTreeEntry<OccluderComponent>>? Tree { get; set; }

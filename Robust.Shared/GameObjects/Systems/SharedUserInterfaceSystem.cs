@@ -123,11 +123,11 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         {
             var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
 
-            RaiseLocalEvent(attempt);
+            RaiseLocalEvent(ref attempt);
             if (attempt.Cancelled)
                 return;
 
-            RaiseLocalEvent(uid, attempt);
+            RaiseLocalEvent(uid, ref attempt);
             if (attempt.Cancelled)
                 return;
         }

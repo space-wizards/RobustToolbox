@@ -142,7 +142,8 @@ namespace Robust.Client.Tests.Graphics
 
             public override void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Angle? worldRot,
                 Angle eyeRotation = default, Direction? overrideDirection = null, SpriteComponent? sprite = null,
-                TransformComponent? xform = null, SharedTransformSystem? xformSystem = null)
+                TransformComponent? xform = null, SharedTransformSystem? xformSystem = null,
+                IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null)
             {
             }
         }

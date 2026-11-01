@@ -43,40 +43,40 @@ internal sealed class GridTraversalTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             // Spawn an entity using map coordinates will get parented to the grid when spawning on the grid.
-            var entity = sEntMan.SpawnEntity(null, new MapCoordinates(gridMapPos, mapId));
+            var entity = sEntMan.Spawn(null, new MapCoordinates(gridMapPos, mapId));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.EqualTo(grid));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(grid));
             sEntMan.Deleted(entity);
 
             // Spawning using map entity coords will still parent to the grid when spawning on the grid.
-            entity = sEntMan.SpawnEntity(null, new EntityCoordinates(map, gridMapPos));
+            entity = sEntMan.SpawnAttachedTo(null, new EntityCoordinates(map, gridMapPos));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.EqualTo(grid));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(grid));
             sEntMan.Deleted(entity);
 
             // and using local grid coords also works.
-            entity = sEntMan.SpawnEntity(null, new EntityCoordinates(grid, 0.5f, 0.5f));
+            entity = sEntMan.SpawnAttachedTo(null, new EntityCoordinates(grid, 0.5f, 0.5f));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.EqualTo(grid));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(grid));
             sEntMan.Deleted(entity);
 
             // Spawning an entity far away from the grid will leave it parented to the map.
-            entity = sEntMan.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 100f), mapId));
+            entity = sEntMan.Spawn(null, new MapCoordinates(new Vector2(100f, 100f), mapId));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.Null);
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(map));
             sEntMan.Deleted(entity);
 
-            entity = sEntMan.SpawnEntity(null, new EntityCoordinates(map, new Vector2(100f, 100f)));
+            entity = sEntMan.SpawnAttachedTo(null, new EntityCoordinates(map, new Vector2(100f, 100f)));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.Null);
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(map));
             sEntMan.Deleted(entity);
 
-            entity = sEntMan.SpawnEntity(null, new EntityCoordinates(grid, 100f, 100f));
+            entity = sEntMan.SpawnAttachedTo(null, new EntityCoordinates(grid, 100f, 100f));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.Null);
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(map));

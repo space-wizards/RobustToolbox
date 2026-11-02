@@ -9,6 +9,7 @@
   <Folder Name="/.github/workflows/">
     <File Path=".github/workflows/build-all-configurations.yml" />
     <File Path=".github/workflows/build-test.yml" />
+    <File Path=".github/workflows/codeql.yml" />
     <File Path=".github/workflows/publish-client.yml" />
     <File Path=".github/workflows/test-content.yml" />
   </Folder>

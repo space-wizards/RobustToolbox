@@ -395,10 +395,10 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
         SetRelations(ownerEnt, testComp, targetEnt1, entMan);
 
         // Collections have to be cleared manually since there's no way to know which entity is being replaced.
-        entMan.ClearRelation(ownerEnt, testComp.List, targetEnt1, false);
-        entMan.ClearRelation(ownerEnt, testComp.Set, targetEnt1, false);
-        entMan.ClearRelation(ownerEnt, testComp.DictKey, targetEnt1, false);
-        entMan.ClearRelation(ownerEnt, testComp.DictValue, targetEnt1, false, true);
+        entMan.ClearRelation(ownerEnt, testComp.List, targetEnt1);
+        entMan.ClearRelation(ownerEnt, testComp.Set, targetEnt1);
+        entMan.ClearRelation(ownerEnt, testComp.DictKey, targetEnt1);
+        entMan.ClearRelation(ownerEnt, testComp.DictValue, targetEnt1, true);
 
         SetRelations(ownerEnt, testComp, targetEnt2, entMan);
 
@@ -451,12 +451,12 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
 
     private static void SetRelations(EntityUid ownerEnt, EntityRelationsTestComponent testComp, EntityUid targetEnt, IEntityManager entMan)
     {
-        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt, false);
-        entMan.SetRelation(ownerEnt, ref testComp.NullableValue, targetEnt, false);
-        entMan.AddRelation(ownerEnt, testComp.List, targetEnt, false);
-        entMan.AddRelation(ownerEnt, testComp.Set, targetEnt, false);
-        entMan.AddRelation(ownerEnt, testComp.DictKey, targetEnt, 1, false);
-        entMan.AddRelation(ownerEnt, testComp.DictValue, targetEnt, testComp.DictValue.Count + 1, false);
+        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt);
+        entMan.SetRelation(ownerEnt, ref testComp.NullableValue, targetEnt);
+        entMan.AddRelation(ownerEnt, testComp.List, targetEnt);
+        entMan.AddRelation(ownerEnt, testComp.Set, targetEnt);
+        entMan.AddRelation(ownerEnt, testComp.DictKey, targetEnt, 1);
+        entMan.AddRelation(ownerEnt, testComp.DictValue, targetEnt, testComp.DictValue.Count + 1);
     }
 
     private static void AssertTestCompTarget(EntityRelationsTestComponent testComp, EntityUid targetEnt)
@@ -530,20 +530,6 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
 
         [DataField]
         public Dictionary<int, EntityRelation> DictValue = new();
-
-        /// <summary>
-        /// Auto-generated method that clears all relations in a certain entity.
-        /// This has to be called on component shutdown to keep all relations correct.
-        /// </summary>
-        public static void ClearComponentRelations(Entity<EntityRelationsTestComponent> ent, IEntityManager entMan)
-        {
-            entMan.ClearRelation(ent.Owner, ref ent.Comp.Value, false);
-            entMan.ClearRelation(ent.Owner, ref ent.Comp.NullableValue, false);
-            entMan.ClearRelations(ent.Owner, ent.Comp.List, false);
-            entMan.ClearRelations(ent.Owner, ent.Comp.Set, false);
-            entMan.ClearRelations(ent.Owner, ent.Comp.DictKey, false);
-            entMan.ClearRelations(ent.Owner, ent.Comp.DictValue, false);
-        }
     }
 
     [Serializable, NetSerializable]
@@ -564,7 +550,7 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<EntityRelationsTestComponent, ComponentShutdown>(OnRelationShutdown);
+            SubscribeLocalEvent<EntityRelationsTestComponent, ComponentRemove>(OnRelationRemove);
             SubscribeLocalEvent<EntityRelationsTestComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
             SubscribeLocalEvent<EntityRelationsTestComponent, EntityRelationShutdownEvent>(OnRelationsClear);
             SubscribeLocalEvent<EntityRelationsTestComponent, ComponentGetState>(OnGetState);
@@ -600,9 +586,14 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
             }
         }
 
-        private void OnRelationShutdown(Entity<EntityRelationsTestComponent> ent, ref ComponentShutdown args)
+        private void OnRelationRemove(Entity<EntityRelationsTestComponent> ent, ref ComponentRemove args)
         {
-            EntityRelationsTestComponent.ClearComponentRelations(ent, EntityManager);
+            ClearRelation(ent.Owner, ref ent.Comp.Value);
+            ClearRelation(ent.Owner, ref ent.Comp.NullableValue);
+            ClearRelations(ent.Owner, ent.Comp.List);
+            ClearRelations(ent.Owner, ent.Comp.Set);
+            ClearRelations(ent.Owner, ent.Comp.DictKey);
+            ClearRelations(ent.Owner, ent.Comp.DictValue);
         }
 
         private void OnGetState(EntityUid uid, EntityRelationsTestComponent component, ref ComponentGetState args)

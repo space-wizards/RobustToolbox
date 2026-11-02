@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* NetSerializer is now referenced through the `SpaceWizards.NetSerializer` NuGet package instead of the `NetSerializer` git submodule. The assembly is now named `SpaceWizards.NetSerializer` instead of `Robust.NetSerializer`, the `NetSerializer` namespace is unchanged. Anything that references the old project or loads the old assembly by name needs updating.
+* The `NetSerializer` submodule has been removed. Run `git submodule deinit -f NetSerializer` (or re-clone) after updating. Projects that referenced `RobustToolbox/NetSerializer/NetSerializer/NetSerializer.csproj` must remove that reference. In particular, `SpaceStation14.slnx` must have its `/RobustToolbox/NetSerializer/` folder and project entry removed, or the solution will point at a missing project.
 
 ### New features
 
@@ -51,7 +52,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* NetSerializer is now versioned and published independently (`SpaceWizards.NetSerializer` 1.0.0 on NuGet, from `space-wizards/SpaceWizards.NetSerializer`), and is restored through `Directory.Packages.props`.
 
 
 ## 294.0.1

@@ -15,7 +15,7 @@ namespace Robust.Shared.Analyzers;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 [BaseTypeRequired(typeof(IComponent))]
-public sealed class AutoGenerateEntityRelationsAttribute(bool dirty = false, bool shutdownEvent = true) : Attribute
+public sealed class AutoGenerateEntityRelationsAttribute(bool dirty = false) : Attribute
 {
     /// <summary>
     /// Whether the generated code should automatically call
@@ -27,12 +27,6 @@ public sealed class AutoGenerateEntityRelationsAttribute(bool dirty = false, boo
     /// when the related entity is deleted.
     /// </remarks>
     public readonly bool Dirty = dirty;
-
-    /// <summary>
-    /// Whether the generated code should subscribe to the <see cref="ComponentShutdown"/> event.
-    /// in order to clear the related links.
-    /// </summary>
-    public readonly bool ShutdownEvent = shutdownEvent;
 }
 
 /// <summary>

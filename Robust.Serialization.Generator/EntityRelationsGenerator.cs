@@ -33,7 +33,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
     }
 
     /// <summary> Extracts valid EntityRelations fields that needs code generated (with additional info about field/property). </summary>
-    private ComponentInfo Transform(GeneratorAttributeSyntaxContext syntaxContext, CancellationToken _)
+    private static ComponentInfo Transform(GeneratorAttributeSyntaxContext syntaxContext, CancellationToken _)
     {
         var symbol = (INamedTypeSymbol)syntaxContext.TargetSymbol;
 
@@ -47,10 +47,6 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         var dirty = false;
         if (autoGenerateRelationshipAttribute.ConstructorArguments[0].Value is bool dirtyBool)
             dirty = dirtyBool;
-
-        var shutdownSub = false;
-        if (autoGenerateRelationshipAttribute.ConstructorArguments[1].Value is bool shutdownSubBool)
-            shutdownSub = shutdownSubBool;
 
         var fieldBuilder = ImmutableArray.CreateBuilder<FieldInfo>();
         foreach (var member in symbol.GetMembers())
@@ -71,10 +67,10 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                     case { Name: "Nullable", TypeArguments: [{ Name: "EntityRelation" }] }:
                         nullable = true;
                         break;
-                    case { Name: "Dictionary", TypeArguments: [{ Name: "EntityRelation" }, { }] }:
+                    case { Name: "Dictionary", TypeArguments: [{ Name: "EntityRelation" }, not null] }:
                         dictionaryKey = true;
                         break;
-                    case { Name: "Dictionary", TypeArguments: [{ }, { Name: "EntityRelation" }] }:
+                    case { Name: "Dictionary", TypeArguments: [not null, { Name: "EntityRelation" }] }:
                         dictionaryValue = true;
                         break;
                     default:
@@ -103,14 +99,13 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         return new ComponentInfo(partialTypeInfo,
             EquatableArray<FieldInfo>.FromImmutableArray(fieldBuilder.ToImmutable()),
             dirty,
-            shutdownSub,
-            !TypeSymbolHelper.ImplementsInterface(symbol, IComponentTypeName)
+            !symbol.ImplementsInterface(IComponentTypeName)
         );
     }
 
     private static bool TryGetValidFieldOrProperty(ISymbol member,[NotNullWhen(true)] out INamedTypeSymbol? namedTypeSymbol)
     {
-        if (AttributeHelper.HasAttribute(member, AutoRelationFieldAttributeName, out var _))
+        if (AttributeHelper.HasAttribute(member, AutoRelationFieldAttributeName, out _))
         {
             var type = member switch
             {
@@ -228,19 +223,6 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                 """);
         }
 
-        var shutdownSub = info.ShutdownEvent
-            ? $"        SubscribeLocalEvent<{info.PartialTypeInfo.Name}, ComponentShutdown>(OnRelationShutdown);"
-            : string.Empty;
-
-        var shutdownSubMethod = info.ShutdownEvent
-            ? $$"""
-                private void OnRelationShutdown(Entity<{{info.PartialTypeInfo.Name}}> ent, ref ComponentShutdown args)
-                {
-                    {{info.PartialTypeInfo.Name}}.ClearComponentRelations(ent, EntityManager);
-                }
-            """
-            : string.Empty;
-
         var result = new StringBuilder();
 
         result.AppendLine("""
@@ -262,9 +244,9 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                 public override void Initialize()
                 {
                     base.Initialize();
-            {{shutdownSub}}
                     SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationDeleteEvent>(OnRelationDeleted);
                     SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationShutdownEvent>(OnRelationsClear);
+                    SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, ComponentRemove>(OnRelationRemove);
                 }
 
                 private void OnRelationDeleted(Entity<{{info.PartialTypeInfo.Name}}> ent, ref EntityRelationDeleteEvent args)
@@ -277,14 +259,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
             {{clearBuilder}}
                 }
 
-            {{shutdownSubMethod}}
-            }
-
-                /// <summary>
-                /// Auto-generated method that clears all relations in a certain entity.
-                /// This has to be called on component shutdown to keep all relations correct.
-                /// </summary>
-                public static void ClearComponentRelations(Entity<{{info.PartialTypeInfo.Name}}> ent, IEntityManager entMan)
+                private void OnRelationRemove(Entity<{{info.PartialTypeInfo.Name}}> ent, ref ComponentRemove args)
                 {
             {{shutdownBuilder}}
                 }
@@ -300,7 +275,6 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         PartialTypeInfo PartialTypeInfo,
         EquatableArray<FieldInfo> Fields,
         bool Dirty,
-        bool ShutdownEvent,
         bool NotComponent
     );
 

@@ -25,7 +25,7 @@ public sealed class ColorTag : IMarkupTagHandler
         }
 
         if (node.Value.TryGetString(out var name) &&
-            context.TryGetStyleProperty<Color>($"{StylePropertyColorPrefix}{name}", out var value))
+            context.TryGetStyleProperty<Color>(StylePropertyColorPrefix + name, out var value))
         {
             context.Color.Push(value);
             return;

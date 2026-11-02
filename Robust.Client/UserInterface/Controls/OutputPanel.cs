@@ -84,6 +84,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.ChildAdded(newChild);
 
+            _scrollBar?.SetPositionLast();
             _scrollDownButton?.SetPositionLast();
         }
 

@@ -34,7 +34,7 @@ public partial class ComponentIteratorBenchmark
 
         for (var i = 0; i < N; i++)
         {
-            var uid = _entityManager.SpawnEntity(null, coords);
+            var uid = _entityManager.Spawn(null, coords);
             _entityManager.AddComponent<A>(uid);
         }
     }

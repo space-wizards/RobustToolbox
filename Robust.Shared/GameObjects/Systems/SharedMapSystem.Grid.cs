@@ -1266,7 +1266,16 @@ public abstract partial class SharedMapSystem
     public bool IsAnchored(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
     {
         var tilePos = TileIndicesFor(uid, grid, coords);
+        return IsAnchored(uid, grid, tilePos, euid);
+    }
 
+    public bool IsAnchored(Entity<MapGridComponent> grid, Vector2i tilePos, EntityUid euid)
+    {
+        return IsAnchored(grid.Owner, grid.Comp, tilePos, euid);
+    }
+
+    public bool IsAnchored(EntityUid uid, MapGridComponent grid, Vector2i tilePos, EntityUid euid)
+    {
         if (!TryChunkAndOffsetForTile(uid, grid, tilePos, out var chunk, out var chunkTile))
             return false;
 

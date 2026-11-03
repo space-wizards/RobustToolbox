@@ -76,7 +76,7 @@ internal sealed class RobustCloneableTest() : RobustIntegrationTest
         {
             server.System<SharedMapSystem>().CreateMap(out mapId);
             var coords = new MapCoordinates(0, 0, mapId);
-            var uid = sEntMan.SpawnEntity(null, coords);
+            var uid = sEntMan.Spawn(null, coords);
             var comp = sEntMan.EnsureComponent<RobustCloneableTestComponent>(uid);
             comp.TestClass.IntValue = 50;
             comp.TestStruct.IntValue = 60;
@@ -101,7 +101,7 @@ internal sealed class RobustCloneableTest() : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var coords = new MapCoordinates(0, 0, mapId);
-            player = sEntMan.SpawnEntity(null, coords);
+            player = sEntMan.Spawn(null, coords);
             var session = sPlayerMan.Sessions.First();
             server.PlayerMan.SetAttachedEntity(session, player);
             sPlayerMan.JoinGame(session);

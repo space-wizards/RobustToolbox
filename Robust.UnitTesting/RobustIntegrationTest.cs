@@ -1165,7 +1165,7 @@ namespace Robust.UnitTesting
                 /* TODO: End my suffering and fix this because entmanager hasn't started up yet.
                 for (var i = 0; i < 10; i++)
                 {
-                    EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
+                    EntMan.Spawn();
                 }
                 */
 

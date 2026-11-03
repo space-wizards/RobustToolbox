@@ -2023,6 +2023,98 @@ namespace Robust.Shared.GameObjects
             return GetComponent(uid);
         }
 
+        /// <summary>
+        /// This method will always return <typeparamref name="TComp1"/> for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <returns>The component in question</returns>
+        public TComp1 EnsureComp(EntityUid uid)
+        {
+            if (TryComp(uid, out var component))
+            {
+                // Check for deferred component removal.
+                if (component.LifeStage <= ComponentLifeStage.Running)
+                    return component;
+
+                _entMan.RemoveComponent(uid, component);
+            }
+
+            return AddComp(uid);
+        }
+
+        /// <summary>
+        /// This method will always return <typeparamref name="TComp1"/> for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <param name="comp">The output component after being ensured.</param>
+        /// <returns>True if the component already existed</returns>
+        public bool EnsureComp(EntityUid uid, out TComp1 comp)
+        {
+            if (TryComp(uid, out var currentComp))
+            {
+                // Check for deferred component removal.
+                if (currentComp.LifeStage <= ComponentLifeStage.Running)
+                {
+                    comp = currentComp;
+                    return true;
+                }
+
+                _entMan.RemoveComponent(uid, currentComp);
+            }
+
+            comp = AddComp(uid);
+            return false;
+        }
+
+        /// <summary>
+        /// This method will always return <typeparamref name="TComp1"/> for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="ent">Entity to modify.</param>
+        /// <returns>True if the component already existed</returns>
+        public bool EnsureComp(ref Entity<TComp1?> ent)
+        {
+            if (ent.Comp == null)
+                return EnsureComp(ent.Owner, out ent.Comp);
+
+            DebugTools.AssertOwner(ent, ent.Comp);
+
+            // Check for deferred component removal.
+            if (ent.Comp.LifeStage <= ComponentLifeStage.Running)
+                return true;
+
+            _entMan.RemoveComponent(ent, ent.Comp); // The non-query version doesn't do this for some reason, don't ask me why.
+            ent.Comp = AddComp(ent);
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the component with the specified reference type,
+        /// Without needing to have the component itself.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        public bool RemComp(EntityUid uid)
+        {
+            if (!TryComp(uid, out var comp))
+                return false;
+
+            _entMan.RemoveComponent(uid, comp);
+            return true;
+        }
+
+        /// <summary>
+        /// Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
+        /// Without needing to have the component itself.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        public bool RemCompDeferred(EntityUid uid)
+        {
+            if (!TryComp(uid, out var comp))
+                return false;
+
+            _entMan.RemoveComponentDeferred(uid, comp);
+            return true;
+        }
+
         #region Internal
 
         /// <summary>
@@ -2082,7 +2174,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        /// Elides the component.Deleted check of <see cref="Resolve"/>
+        /// Elides the component.Deleted check of <see cref="Resolve(EntityUid,ref TComp1,bool)"/>
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -2119,6 +2211,13 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+
+        private TComp1 AddComp(EntityUid uid) // Convenience function for query methods, shouldn't be used by consumers since they can use proper AddComponent.
+        {
+            var comp = _entMan.ComponentFactory.GetComponent(typeof(TComp1));
+            _entMan.AddComponent(uid, comp);
+            return (TComp1)comp;
+        }
     }
 
     #region ComponentRegistry Query

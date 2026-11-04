@@ -45,6 +45,11 @@ namespace Robust.Shared.Prototypes
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
 
+        /// <summary>
+        /// Guards <see cref="KindData.UnfrozenVariants"/> against concurrent modification.
+        /// </summary>
+        private readonly object _variantRegistrationLock = new();
+
         protected ISawmill Sawmill = default!;
 
         private bool _initialized;

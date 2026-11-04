@@ -5,7 +5,6 @@ using Robust.Shared.Serialization.Markdown.Value;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading;
 
 namespace Robust.Shared.Prototypes;
 
@@ -78,11 +77,6 @@ public partial class PrototypeManager
         parentNode.Remove(variantNodeName);
         parentNode.Add(variantNodeName, newNode);
     }
-
-    /// <summary>
-    /// Guards <see cref="KindData.UnfrozenVariants"/> against concurrent modification.
-    /// </summary>
-    private readonly object _variantRegistrationLock = new();
 
     /// <summary>
     /// Registers a collection of prototype variants for later reference.

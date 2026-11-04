@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed a race condition in parallel prototype loading that could corrupt the prototype variant collection and throw an `ArgumentNullException` when freezing prototype kinds.
 
 ### Other
 

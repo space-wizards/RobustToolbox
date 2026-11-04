@@ -43,15 +43,66 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix Windows Robust.Packaging not using correct path separators for zip archives.
 
 ### Other
 
-* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 294.0.1
+
+### New features
+
+* build.* CVars now include source information.
+
+### Bugfixes
+
+* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
+* Fix model transforms not being reset fully in RenderInRenderTarget.
+* Fix the debug connection screen throwing if the connect button is hit twice.
+
+
+## 294.0.0
+
+### Breaking changes
+
+- `MarkupDrawingContext.Tags` are now a `List<IMarkupTagHandler>` instead of `List<IMarkupTag>`, as `IMarkupTag` is obsolete.
+
+### New features
+
+- `MarkupDrawingContext` now provides a `TryGetStyleProperty{T}` method and a `MarkupDrawingContext(Control? owner, int capacity = 0)` constructor, which exposes `Control.TryGetStyleProperty{T}` to rich text markup tags. This lets you write tags that can read style properties set on their parents via stylesheets, just like any Control could.
+
+### Bugfixes
+
+* The default AnchorEntity method now snaps to tile center again.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRayClosest` and `CastShape` returning a grid-local hit point when a hit on a grid replaced a farther hit already found on the map or another grid.
+
+### Other
+
+- `MarkupDrawingContext` constructors without an `owner` parameter are now obsolete (use the new variants that take a `Control owner` parameter).
+
+
+## 293.0.1
+
+### Breaking changes
+
+* ImageSharp's dynamic/automatic decoder detection code (used in Image.Load()) no longer includes TIFF (due to security vulnerabilities)
+
+
+## 293.0.0
+
+### Breaking changes
+* Transform lerping rework from the previous release (292.0.0) has been reverted due to unforseen bugs. As a short summary, this should have the following impact: The lerping-related fields in TransformComponent (`NextPosition`, `NextRotation `, `PrevPosition `, `PrevRotation` , `ActivelyLerping` , `LastLerp` ) are back; The lerping-related cvars (`NetInterpMaxDistance`, `NetInterpMinDistance`, `NetInterpCorrectionHalfLife`, `NetInterpCorrectionMinTranslation`, `NetInterpCorrectionMinRotation`) and the `RenderTransform` struct are gone; The related functions in TransformSystem (i.e `ActivateLerp` , `GetRender...`, etc) have been removed.
+
+### Other
+
+* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
 
 
 ## 292.0.0

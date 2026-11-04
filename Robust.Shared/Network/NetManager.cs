@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -136,7 +137,7 @@ namespace Robust.Shared.Network
         private readonly List<NetPeerData> _netPeers = new();
 
         // Client connect happens during status changed and such callbacks, so we need to defer deletion of these.
-        private readonly List<NetPeer> _toCleanNetPeers = new();
+        private readonly ConcurrentQueue<NetPeer> _toCleanNetPeers = new();
 
         private readonly Dictionary<NetConnection, TaskCompletionSource<object?>> _awaitingDisconnect
             = new();
@@ -715,14 +716,9 @@ namespace Robust.Shared.Network
                 */
             }
 
-            if (_toCleanNetPeers.Count != 0)
+            while (_toCleanNetPeers.TryDequeue(out var peer))
             {
-                foreach (var peer in _toCleanNetPeers)
-                {
-                    _netPeers.RemoveAll(p => p.Peer == peer);
-                }
-
-                _toCleanNetPeers.Clear();
+                _netPeers.RemoveAll(p => p.Peer == peer);
             }
 
             SentMessagesMetrics.IncTo(sentMessages);

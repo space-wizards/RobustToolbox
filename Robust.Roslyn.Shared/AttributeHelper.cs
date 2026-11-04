@@ -14,7 +14,7 @@ public static class AttributeHelper
             if (attribute.AttributeClass == null)
                 continue;
 
-            if (TypeSymbolHelper.ShittyTypeMatch(attribute.AttributeClass, attributeMetadataName))
+            if (attribute.AttributeClass.ShittyTypeMatch(attributeMetadataName))
             {
                 matchedAttribute = attribute;
                 return true;

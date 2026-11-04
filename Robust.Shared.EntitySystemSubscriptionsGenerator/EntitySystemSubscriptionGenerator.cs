@@ -166,8 +166,7 @@ using JetBrains.Annotations;
     {
         if (method.Parameters.Length != 2 ||
             method.Parameters[0].Type is not INamedTypeSymbol eventType ||
-            !TypeSymbolHelper.ShittyTypeMatch(
-                method.Parameters[1].Type,
+            !method.Parameters[1].Type.ShittyTypeMatch(
                 EntitySessionEventArgsTypeName
             ))
             return null;
@@ -188,7 +187,7 @@ using JetBrains.Annotations;
         if (entityType.OriginalDefinition.ToDisplayString() != EntityTypeName ||
             entityType.TypeArguments is not [INamedTypeSymbol componentType] ||
             componentType.NullableAnnotation == NullableAnnotation.Annotated ||
-            !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
+            !componentType.ImplementsInterface(IComponentTypeName))
             return null;
 
         return [componentType.ToString(), eventType.ToString()];
@@ -202,9 +201,9 @@ using JetBrains.Annotations;
             method.Parameters[0].Type is not INamedTypeSymbol entityUidType ||
             method.Parameters[1].Type is not INamedTypeSymbol componentType ||
             method.Parameters[2].Type is not INamedTypeSymbol eventType ||
-            !TypeSymbolHelper.ShittyTypeMatch(entityUidType, EntityUidTypeName) ||
+            !entityUidType.ShittyTypeMatch(EntityUidTypeName) ||
             componentType.NullableAnnotation == NullableAnnotation.Annotated ||
-            !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
+            !componentType.ImplementsInterface(IComponentTypeName))
             return null;
 
         return [componentType.ToString(), eventType.ToString()];

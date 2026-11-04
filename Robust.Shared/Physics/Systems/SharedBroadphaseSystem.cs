@@ -585,8 +585,9 @@ namespace Robust.Shared.Physics.Systems
             if (!_map.TryGetMap(mapId, out var map))
                 return;
 
+            // Use the same copy as the grids, as that is what gets written back to the caller's state.
             if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
-                callback((map.Value, mapBroadphase), ref state);
+                callback((map.Value, mapBroadphase), ref internalState.state);
 
             _map.FindGridsIntersecting(map.Value,
                 aabb,

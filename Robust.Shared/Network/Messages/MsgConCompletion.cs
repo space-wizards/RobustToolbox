@@ -19,6 +19,10 @@ public sealed class MsgConCompletion : NetMessage
         Seq = buffer.ReadInt32();
 
         var len = buffer.ReadVariableInt32();
+
+        // len * sizeof(string)
+        buffer.AssertAtLeastSize(len * NetMessageExt.MinSizeOfString);
+
         Args = new string[len];
         for (var i = 0; i < len; i++)
         {

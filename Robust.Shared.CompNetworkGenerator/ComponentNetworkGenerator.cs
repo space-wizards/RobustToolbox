@@ -58,7 +58,7 @@ namespace Robust.Shared.CompNetworkGenerator
             var stateName = $"{componentName}_AutoState";
             var componentDeltaStateName = $"{componentName}_AutoDeltaState";
 
-            var members = TypeSymbolHelper.GetAllMembersIncludingInherited(classSymbol);
+            var members = classSymbol.GetAllMembersIncludingInherited();
             var fields = new List<(ITypeSymbol Type, string FieldName)>();
             var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
 
@@ -1116,7 +1116,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
                 if (relevantAttribute == null)
                 {
-                    foreach (var mem in TypeSymbolHelper.GetAllMembersIncludingInherited(typeSymbol))
+                    foreach (var mem in typeSymbol.GetAllMembersIncludingInherited())
                     {
                         var attribute = mem.GetAttributes().FirstOrDefault(a =>
                             a.AttributeClass != null &&

@@ -23,6 +23,7 @@ internal sealed class RayCast_Test
         RayAll,
         RayClosest,
         Shape,
+        ShapeClosest,
     }
 
     private static TestCaseData[] _rayCases =
@@ -169,7 +170,75 @@ internal sealed class RayCast_Test
             Flags = flags,
         };
 
-        var hits = kind switch
+        var hits = CastUpwards(raycast, kind, mapId, filter);
+
+        var expected = hardFixture || includeSensors
+            ? new[] { target }
+            : Array.Empty<EntityUid>();
+
+        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void CastsHitOffGridEntities([Values] SensorCastKind kind)
+    {
+        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
+        {
+            f.LoadExtraSystemType<RayCastSystem>();
+        }).InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapUid = entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+        var target = SpawnCastTarget(entManager,
+            entManager.System<FixtureSystem>(),
+            entManager.System<SharedPhysicsSystem>(),
+            mapUid,
+            new Vector2(0.5f, 1f),
+            true);
+        var raycast = sim.System<RayCastSystem>();
+
+        var hits = CastUpwards(raycast, kind, mapId, new QueryFilter { LayerBits = 1 });
+
+        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(new[] { target }));
+    }
+
+    [Test]
+    public void ClosestHitFromLaterBroadphaseIsInMapCoordinates(
+        [Values(SensorCastKind.RayClosest, SensorCastKind.ShapeClosest)] SensorCastKind kind)
+    {
+        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
+        {
+            f.LoadExtraSystemType<RayCastSystem>();
+        }).InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+
+        var mapUid = mapSystem.CreateMap(out var mapId);
+
+        // The map's broadphase is checked first, so this hit is found first even though it's farther away.
+        SpawnCastTarget(entManager, fixtureSystem, physicsSystem, mapUid, new Vector2(0.5f, 2.5f), true);
+
+        // Offset the grid so its local coordinates differ from map coordinates.
+        var grid = mapSystem.CreateGridEntity(mapId);
+        entManager.System<SharedTransformSystem>().SetLocalPosition(grid.Owner, new Vector2(5f, 0f));
+        mapSystem.SetTile(grid, new Vector2i(-5, 1), new Tile(1));
+        var closer = SpawnCastTarget(entManager, fixtureSystem, physicsSystem, grid.Owner, new Vector2(-4.5f, 1.5f), true);
+
+        var raycast = sim.System<RayCastSystem>();
+        var hits = CastUpwards(raycast, kind, mapId, new QueryFilter { LayerBits = 1 });
+
+        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(new[] { closer }));
+        // Where the cast reaches the closer target's circle, which has a radius of 0.25.
+        Assert.That(hits.Results[0].Point.X, Is.EqualTo(0.5f).Within(0.001f));
+        Assert.That(hits.Results[0].Point.Y, Is.EqualTo(1.25f).Within(0.001f));
+    }
+
+    private static RayResult CastUpwards(RayCastSystem raycast, SensorCastKind kind, MapId mapId, QueryFilter filter)
+    {
+        return kind switch
         {
             SensorCastKind.RayAll => raycast.CastRay(
                 mapId,
@@ -188,14 +257,15 @@ internal sealed class RayCast_Test
                 Vector2.UnitY * 3f,
                 filter,
                 RayCastSystem.RayCastAllCallback),
+            SensorCastKind.ShapeClosest => raycast.CastShape(
+                mapId,
+                new PhysShapeCircle(0.1f),
+                new Transform(Vector2.UnitX / 2f, Angle.Zero),
+                Vector2.UnitY * 3f,
+                filter,
+                RayCastSystem.RayCastClosestCallback),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
-
-        var expected = hardFixture || includeSensors
-            ? new[] { target }
-            : Array.Empty<EntityUid>();
-
-        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(expected));
     }
 
     private void Setup(ISimulation sim, out MapId mapId)

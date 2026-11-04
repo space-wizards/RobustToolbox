@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using Robust.Shared.Collections;
 using Robust.Shared.Utility;
 
@@ -27,7 +27,8 @@ public partial class EntityManager
     private void SetRelationInternal(
         Entity<EntityRelationsComponent?> owner,
         ref EntityRelation relation,
-        Entity<EntityRelationsComponent?>? entity)
+        Entity<EntityRelationsComponent?>? entity,
+        bool local = false)
     {
         DebugTools.Assert(owner.Owner != entity,
             $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
@@ -55,8 +56,16 @@ public partial class EntityManager
 
         relation.Entity = entity;
 
-        ent.Comp!.Relations.Add(new EntityRelation(owner));
-        owner.Comp!.Relations.Add(relation);
+        if (local)
+        {
+            ent.Comp!.LocalRelations.Add(new EntityRelation(owner));
+            owner.Comp!.LocalRelations.Add(relation);
+        }
+        else
+        {
+            ent.Comp!.Relations.Add(new EntityRelation(owner));
+            owner.Comp!.Relations.Add(relation);
+        }
     }
 
     /// <inheritdoc/>
@@ -138,7 +147,8 @@ public partial class EntityManager
     private void AddRelationsInternal(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
-        List<EntityUid> entities)
+        List<EntityUid> entities,
+        bool local = false)
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent(ref owner);
@@ -149,7 +159,7 @@ public partial class EntityManager
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelationInternal(owner, ref relation, entity);
+            SetRelationInternal(owner, ref relation, entity, local);
             relations.Add(relation);
         }
     }
@@ -176,7 +186,8 @@ public partial class EntityManager
     private void AddRelationsInternal(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
-        HashSet<EntityUid> entities)
+        HashSet<EntityUid> entities,
+        bool local = false)
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent(ref owner);
@@ -187,7 +198,7 @@ public partial class EntityManager
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelationInternal(owner, ref relation, entity);
+            SetRelationInternal(owner, ref relation, entity, local);
             relations.Add(relation);
         }
     }
@@ -198,18 +209,7 @@ public partial class EntityManager
         List<EntityRelation> relations,
         params Entity<EntityRelationsComponent?>?[] entities)
     {
-        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
-            EnsureComponent(ref owner);
-
-        foreach (var entity in entities)
-        {
-            DebugTools.Assert(owner.Owner != entity,
-                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
-
-            var relation = EntityRelation.Null;
-            SetRelation(owner, ref relation, entity);
-            relations.Add(relation);
-        }
+        AddRelationsInternal(owner, relations, false, entities);
 
         foreach (var relation in entities)
         {
@@ -226,10 +226,10 @@ public partial class EntityManager
         DirtyRelations(owner);
     }
 
-    /// <inheritdoc/>
-    public void AddRelations(
+    private void AddRelationsInternal(
         Entity<EntityRelationsComponent?> owner,
-        HashSet<EntityRelation> relations,
+        List<EntityRelation> relations,
+        bool local = false,
         params Entity<EntityRelationsComponent?>?[] entities)
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
@@ -241,9 +241,18 @@ public partial class EntityManager
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelationInternal(owner, ref relation, entity);
+            SetRelationInternal(owner, ref relation, entity, local);
             relations.Add(relation);
         }
+    }
+
+    /// <inheritdoc/>
+    public void AddRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        params Entity<EntityRelationsComponent?>?[] entities)
+    {
+        AddRelationsInternal(owner, relations, false, entities);
 
         foreach (var relation in entities)
         {
@@ -258,6 +267,26 @@ public partial class EntityManager
         }
 
         DirtyRelations(owner);
+    }
+
+    private void AddRelationsInternal(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        bool local = false,
+        params Entity<EntityRelationsComponent?>?[] entities)
+    {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+            EnsureComponent(ref owner);
+
+        foreach (var entity in entities)
+        {
+            DebugTools.Assert(owner.Owner != entity,
+                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
+            var relation = EntityRelation.Null;
+            SetRelationInternal(owner, ref relation, entity, local);
+            relations.Add(relation);
+        }
     }
 
     /// <inheritdoc/>
@@ -282,7 +311,8 @@ public partial class EntityManager
     private void AddRelationsInternal<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
-        Dictionary<EntityUid, T> entities)
+        Dictionary<EntityUid, T> entities,
+        bool local = false)
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent(ref owner);
@@ -293,7 +323,7 @@ public partial class EntityManager
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelationInternal(owner, ref relation, entity);
+            SetRelationInternal(owner, ref relation, entity, local);
             relations.Add(relation, value);
         }
     }
@@ -320,7 +350,8 @@ public partial class EntityManager
     private void AddRelationsInternal<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
-        Dictionary<T, EntityUid> entities) where T : notnull
+        Dictionary<T, EntityUid> entities,
+        bool local = false) where T : notnull
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent(ref owner);
@@ -331,19 +362,9 @@ public partial class EntityManager
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelationInternal(owner, ref relation, entity);
+            SetRelationInternal(owner, ref relation, entity, local);
             relations.Add(key, relation);
         }
-
-        foreach (var relation in relations.Values)
-        {
-            if (!_relationsQuery.TryComp(relation.Entity, out var entityRelations))
-                continue;
-
-            DirtyRelations((relation.Entity.Value, entityRelations));
-        }
-
-        DirtyRelations(owner);
     }
 
     /// <inheritdoc/>
@@ -409,13 +430,14 @@ public partial class EntityManager
             DirtyRelations((relation.Entity.Value, relations));
     }
 
-    private void ClearRelationsInternal(Entity<EntityRelationsComponent?> ent)
+    private void ClearRelationsInternal(Entity<EntityRelationsComponent?> ent, bool local = false)
     {
         if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp))
             return;
 
         var ev = new EntityRelationDeleteEvent(new EntityRelation(ent.Owner));
-        foreach (var related in ent.Comp.Relations)
+        var list = local ? ent.Comp.LocalRelations : ent.Comp.Relations;
+        foreach (var related in list)
         {
             if (!related.Entity.HasValue)
                 continue;
@@ -453,37 +475,43 @@ public partial class EntityManager
         DirtyRelations(relEnt);
     }
 
-    private bool ClearRelationInternal(
+    private void ClearRelationInternal(
         Entity<EntityRelationsComponent?> ent,
         ref EntityRelation relation,
-        [NotNullWhen(true)] out Entity<EntityRelationsComponent?>? relationEnt)
+        out Entity<EntityRelationsComponent?>? relationEnt,
+        bool local = false)
     {
         relationEnt = null;
         if (relation.Entity == null)
-            return false;
+            return;
 
         if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp))
-            return false;
+            return;
 
-        ent.Comp.Relations.Remove(relation);
+        if (local)
+            ent.Comp.LocalRelations.Remove(relation);
+        else
+            ent.Comp.Relations.Remove(relation);
 
         if (_relationsQuery.TryComp(relation.Entity.Value, out var relationComp))
         {
-            relationComp.Relations.Remove(new EntityRelation(ent.Owner));
+            if (local)
+                relationComp.LocalRelations.Remove(new EntityRelation(ent.Owner));
+            else
+                relationComp.Relations.Remove(new EntityRelation(ent.Owner));
+
             relationEnt = (relation.Entity.Value, relationComp);
-            relation = EntityRelation.Null;
-            return true;
         }
 
         relation = EntityRelation.Null;
-        return false;
     }
 
     private void ClearRelationInternal(
         Entity<EntityRelationsComponent?> ent,
-        ref EntityRelation relation)
+        ref EntityRelation relation,
+        bool local = false)
     {
-        ClearRelationInternal(ent, ref relation, out _);
+        ClearRelationInternal(ent, ref relation, out _, local);
     }
 
     /// <inheritdoc/>
@@ -510,12 +538,12 @@ public partial class EntityManager
     /// <summary>
     /// Cuts a list of connections from an entity without modifying the list nor removing any components.
     /// </summary>
-    private void ClearRelationsInternal(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
+    private void ClearRelationsInternal(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations, bool local = false)
     {
         foreach (var relation in relations)
         {
             var copy = relation;
-            ClearRelationInternal(ent, ref copy);
+            ClearRelationInternal(ent, ref copy, local);
         }
     }
 
@@ -532,12 +560,12 @@ public partial class EntityManager
     /// <summary>
     /// Cuts a list of connections from an entity without modifying the list nor removing any components.
     /// </summary>
-    private void ClearRelationsInternal(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations)
+    private void ClearRelationsInternal(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations, bool local = false)
     {
         foreach (var relation in relations)
         {
             var copy = relation;
-            ClearRelationInternal(ent, ref copy);
+            ClearRelationInternal(ent, ref copy, local);
         }
     }
 
@@ -551,12 +579,12 @@ public partial class EntityManager
         DirtyRelations(ent);
     }
 
-    private void ClearRelationsInternal<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations)
+    private void ClearRelationsInternal<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations, bool local = false)
     {
         foreach (var relation in relations.Keys)
         {
             var copy = relation;
-            ClearRelationInternal(ent, ref copy);
+            ClearRelationInternal(ent, ref copy, local);
         }
         relations.Clear();
     }
@@ -573,12 +601,12 @@ public partial class EntityManager
         }
     }
 
-    private void ClearRelationsInternal<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull
+    private void ClearRelationsInternal<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations, bool local = false) where T : notnull
     {
         foreach (var relation in relations.Values)
         {
             var copy = relation;
-            ClearRelationInternal(ent, ref copy);
+            ClearRelationInternal(ent, ref copy, local);
         }
     }
 
@@ -588,10 +616,24 @@ public partial class EntityManager
         List<EntityRelation> relations,
         Entity<EntityRelationsComponent?> entity)
     {
+        ClearRelationInternal(owner, relations, entity);
+        RemoveRelationCompIfEmpty(ref owner);
+        RemoveRelationCompIfEmpty(ref entity);
+        DirtyRelations(owner);
+        DirtyRelations(entity);
+    }
+
+    private void ClearRelationInternal(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool local = false)
+    {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
             || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
+        var count = 0;
         var relation = new EntityRelation(entity.Owner);
         foreach (var rel in relations)
         {
@@ -599,13 +641,14 @@ public partial class EntityManager
                 continue;
 
             var copy = relation;
-            ClearRelationInternal(owner, ref copy);
+            ClearRelationInternal(owner, ref copy, local);
+            count++;
         }
 
-        relations.RemoveAll(x => x == relation);
-
-        DirtyRelations(owner);
-        DirtyRelations(entity);
+        for (int i = 0; i < count; i++)
+        {
+            relations.Remove(relation);
+        }
     }
 
     /// <inheritdoc/>
@@ -613,6 +656,19 @@ public partial class EntityManager
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
         Entity<EntityRelationsComponent?> entity)
+    {
+        ClearRelationInternal(owner, relations, entity);
+        RemoveRelationCompIfEmpty(ref owner);
+        RemoveRelationCompIfEmpty(ref entity);
+        DirtyRelations(owner);
+        DirtyRelations(entity);
+    }
+
+    private void ClearRelationInternal(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool local = false)
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
             || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
@@ -623,13 +679,8 @@ public partial class EntityManager
             return;
 
         var copy = relation;
-        ClearRelationInternal(owner, ref copy);
+        ClearRelationInternal(owner, ref copy, local);
         relations.Remove(relation);
-
-        RemoveRelationCompIfEmpty(ref owner);
-        RemoveRelationCompIfEmpty(ref entity);
-        DirtyRelations(owner);
-        DirtyRelations(entity);
     }
 
     /// <inheritdoc/>
@@ -637,6 +688,19 @@ public partial class EntityManager
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
         Entity<EntityRelationsComponent?> entity)
+    {
+        ClearRelationInternal(owner, relations, entity);
+        RemoveRelationCompIfEmpty(ref owner);
+        RemoveRelationCompIfEmpty(ref entity);
+        DirtyRelations(owner);
+        DirtyRelations(entity);
+    }
+
+    private void ClearRelationInternal<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool local = false)
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
             || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
@@ -647,13 +711,8 @@ public partial class EntityManager
             return;
 
         var copy = relation;
-        ClearRelationInternal(owner, ref copy);
+        ClearRelationInternal(owner, ref copy, local);
         relations.Remove(relation);
-
-        RemoveRelationCompIfEmpty(ref owner);
-        RemoveRelationCompIfEmpty(ref entity);
-        DirtyRelations(owner);
-        DirtyRelations(entity);
     }
 
     /// <inheritdoc/>
@@ -662,6 +721,20 @@ public partial class EntityManager
         Dictionary<T, EntityRelation> relations,
         Entity<EntityRelationsComponent?> entity,
         bool removeKey = false) where T : notnull
+    {
+        ClearRelationInternal(owner, relations, entity, removeKey);
+        RemoveRelationCompIfEmpty(ref owner);
+        RemoveRelationCompIfEmpty(ref entity);
+        DirtyRelations(owner);
+        DirtyRelations(entity);
+    }
+
+    private void ClearRelationInternal<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool removeKey = false,
+        bool local = false) where T : notnull
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
             || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
@@ -674,7 +747,7 @@ public partial class EntityManager
                 continue;
 
             var copy = relation;
-            ClearRelationInternal(owner, ref copy);
+            ClearRelationInternal(owner, ref copy, local);
             toRemove.Add(key);
         }
 
@@ -685,11 +758,251 @@ public partial class EntityManager
             else
                 relations[remove] = EntityRelation.Null;
         }
+    }
 
-        RemoveRelationCompIfEmpty(ref owner);
-        RemoveRelationCompIfEmpty(ref entity);
-        DirtyRelations(owner);
-        DirtyRelations(entity);
+    // -- Local relations --
+
+    public void SetLocalRelation(
+        Entity<EntityRelationsComponent?> owner,
+        ref EntityRelation relation,
+        Entity<EntityRelationsComponent?>? entity)
+    {
+        AssertLocalRelations(owner, entity);
+        SetRelationInternal(owner, ref relation, entity, true);
+    }
+
+    public void SetLocalRelation(
+        Entity<EntityRelationsComponent?> owner,
+        ref EntityRelation? relation,
+        Entity<EntityRelationsComponent?>? entity)
+    {
+        AssertLocalRelations(owner, entity);
+        var copy = relation ?? EntityRelation.Null;
+        SetRelationInternal(owner, ref copy, entity, true);
+        relation = copy;
+    }
+
+    public void AddLocalRelation(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        Entity<EntityRelationsComponent?>? entity)
+    {
+        AssertLocalRelations(owner, entity);
+        var copy = EntityRelation.Null;
+        SetRelationInternal(owner, ref copy, entity, true);
+        relations.Add(copy);
+    }
+
+    public void AddLocalRelation(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        Entity<EntityRelationsComponent?>? entity)
+    {
+        AssertLocalRelations(owner, entity);
+        var copy = EntityRelation.Null;
+        SetRelationInternal(owner, ref copy, entity, true);
+        relations.Add(copy);
+    }
+
+    public void AddLocalRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Entity<EntityRelationsComponent?>? entity,
+        T value)
+    {
+        AssertLocalRelations(owner, entity);
+        var copy = EntityRelation.Null;
+        SetRelationInternal(owner, ref copy, entity, true);
+        relations.Add(copy, value);
+    }
+
+    public void AddLocalRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Entity<EntityRelationsComponent?>? entity,
+        T key) where T : notnull
+    {
+        AssertLocalRelations(owner, entity);
+        var copy = EntityRelation.Null;
+        SetRelationInternal(owner, ref copy, entity, true);
+        relations.Add(key, copy);
+    }
+
+    public void AddLocalRelations(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        List<EntityUid> entities)
+    {
+        AssertLocalRelations(owner, entities);
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void AddLocalRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        HashSet<EntityUid> entities)
+    {
+        AssertLocalRelations(owner, entities);
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void AddLocalRelations(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        params Entity<EntityRelationsComponent?>?[] entities)
+    {
+        AssertLocalRelations(owner, entities);
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, true, entities);
+    }
+
+    public void AddLocalRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        params Entity<EntityRelationsComponent?>?[] entities)
+    {
+        AssertLocalRelations(owner, entities);
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, true, entities);
+    }
+
+    public void AddLocalRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Dictionary<EntityUid, T> entities)
+    {
+        AssertLocalRelations(owner, entities);
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void AddLocalRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Dictionary<T, EntityUid> entities) where T : notnull
+    {
+        AssertLocalRelations(owner, entities);
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void SetLocalRelations(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        List<EntityUid> entities)
+    {
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void SetLocalRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        HashSet<EntityUid> entities)
+    {
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void SetLocalRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Dictionary<EntityUid, T> entities)
+    {
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void SetLocalRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Dictionary<T, EntityUid> entities) where T : notnull
+    {
+        ClearRelationsInternal(owner, relations, true);
+        AddRelationsInternal(owner, relations, entities, true);
+    }
+
+    public void ClearLocalRelations(EntityRelation relation, EntityRelationsComponent? relations = null)
+    {
+        if (relation.Entity == null)
+            return;
+
+        if (!_relationsQuery.Resolve(relation.Entity.Value, ref relations))
+            return;
+
+        ClearRelationsInternal((relation.Entity.Value, relations), true);
+    }
+
+    public void ClearLocalRelations(Entity<EntityRelationsComponent?> ent)
+    {
+        ClearRelationsInternal(ent, true);
+    }
+
+    public void ClearLocalRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation)
+    {
+        ClearRelationInternal(ent, ref relation, true);
+    }
+
+    public void ClearLocalRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation? relation)
+    {
+        var copy = relation ?? EntityRelation.Null;
+        ClearRelationInternal(ent, ref copy, true);
+        relation = copy;
+    }
+
+    public void ClearLocalRelations(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
+    {
+        ClearRelationsInternal(ent, relations, true);
+    }
+
+    public void ClearLocalRelations(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations)
+    {
+        ClearRelationsInternal(ent, relations, true);
+    }
+
+    public void ClearLocalRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations)
+    {
+        ClearRelationsInternal(ent, relations, true);
+    }
+
+    public void ClearLocalRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull
+    {
+        ClearRelationsInternal(ent, relations, true);
+    }
+
+    public void ClearLocalRelation(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity)
+    {
+        ClearRelationInternal(owner, relations, entity, true);
+    }
+
+    public void ClearLocalRelation(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity)
+    {
+        ClearRelationInternal(owner, relations, entity, true);
+    }
+
+    public void ClearLocalRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Entity<EntityRelationsComponent?> entity)
+    {
+        ClearRelationInternal(owner, relations, entity, true);
+    }
+
+    public void ClearLocalRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool removeKey = false) where T : notnull
+    {
+        ClearRelationInternal(owner, relations, entity, removeKey, true);
     }
 
     /// <inheritdoc/>
@@ -720,10 +1033,11 @@ public partial class EntityManager
         return relations.ContainsValue(new EntityRelation(entity));
     }
 
-    private bool RemoveRelationCompIfEmpty(Entity<EntityRelationsComponent?> ent)
+    #region Helpers
+
+    private void RemoveRelationCompIfEmpty(Entity<EntityRelationsComponent?> ent)
     {
         RemoveRelationCompIfEmpty(ref ent);
-        return ent.Comp == null;
     }
 
     private void RemoveRelationCompIfEmpty(ref Entity<EntityRelationsComponent?> ent)
@@ -829,4 +1143,125 @@ public partial class EntityManager
                 DirtyField(rel.Entity.Value, comp, nameof(EntityRelationsComponent.Relations));
         }
     }
+
+    [Conditional("DEBUG")]
+    private void AssertLocalRelations(Entity<EntityRelationsComponent?> owner, Entity<EntityRelationsComponent?>? entity)
+    {
+        if (_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+        {
+            DebugTools.Assert(!owner.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+
+        if (entity == null)
+            return;
+
+        var ent = entity.Value;
+        if (_relationsQuery.Resolve(ent.Owner, ref ent.Comp, false))
+        {
+            DebugTools.Assert(!ent.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+    }
+
+    [Conditional("DEBUG")]
+    private void AssertLocalRelations(Entity<EntityRelationsComponent?> owner, List<EntityUid> entities)
+    {
+        if (_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+        {
+            DebugTools.Assert(!owner.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+
+        foreach (var ent in entities)
+        {
+            if (!_relationsQuery.TryComp(ent, out var comp))
+                continue;
+
+            DebugTools.Assert(!comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+    }
+
+    [Conditional("DEBUG")]
+    private void AssertLocalRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityUid> entities)
+    {
+        if (_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+        {
+            DebugTools.Assert(!owner.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+
+        foreach (var ent in entities)
+        {
+            if (!_relationsQuery.TryComp(ent, out var comp))
+                continue;
+
+            DebugTools.Assert(!comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+    }
+
+    [Conditional("DEBUG")]
+    private void AssertLocalRelations(Entity<EntityRelationsComponent?> owner, params Entity<EntityRelationsComponent?>?[] entities)
+    {
+        if (_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+        {
+            DebugTools.Assert(!owner.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+
+        foreach (var ent in entities)
+        {
+            if (ent == null)
+                continue;
+
+            var copy = ent.Value;
+            if (!_relationsQuery.Resolve(copy.Owner, ref copy.Comp, false))
+                continue;
+
+            DebugTools.Assert(!copy.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+    }
+
+    [Conditional("DEBUG")]
+    private void AssertLocalRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<EntityUid, T> entities)
+    {
+        if (_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+        {
+            DebugTools.Assert(!owner.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+
+        foreach (var ent in entities.Keys)
+        {
+            if (!_relationsQuery.TryComp(ent, out var comp))
+                continue;
+
+            DebugTools.Assert(!comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+    }
+
+    [Conditional("DEBUG")]
+    private void AssertLocalRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<T, EntityUid> entities) where T : notnull
+    {
+        if (_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+        {
+            DebugTools.Assert(!owner.Comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+
+        foreach (var ent in entities.Values)
+        {
+            if (!_relationsQuery.TryComp(ent, out var comp))
+                continue;
+
+            DebugTools.Assert(!comp.RemoveOnEmpty,
+                $"{{nameof(EntityRelationsComponent)}} Local relations aren't supported with {nameof(EntityRelationsComponent.RemoveOnEmpty)} enabled!");
+        }
+    }
+
+    #endregion
 }

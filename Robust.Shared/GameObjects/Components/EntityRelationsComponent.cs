@@ -25,8 +25,18 @@ public sealed partial class EntityRelationsComponent : Component
     public List<EntityRelation> Relations = new();
 
     /// <summary>
+    /// A list of currently active local entity relations.
+    /// Stored in a separate list so it's not interfering with networked operations.
+    /// </summary>
+    /// <remarks>
+    /// Local relations are relations that only on one side, server or client.
+    /// </remarks>
+    [DataField]
+    public List<EntityRelation> LocalRelations = new();
+
+    /// <summary>
     /// If true, will remove the component when <see cref="Relations"/> list becomes empty.
-    /// Useful for conditional networking or performance sensitive EntityRelation interactions.
+    /// Setting this to false may be useful for custom performance sensitive EntityRelation interactions.
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool RemoveOnEmpty = true;

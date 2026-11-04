@@ -99,7 +99,7 @@ def main() -> None:
     skip_build = args.skip_build
 
     if not platforms:
-        platforms = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX, PLATFORM_FREEBSD]
+        platforms = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX]
 
     if os.path.exists("release"):
         print(Fore.BLUE + Style.DIM +

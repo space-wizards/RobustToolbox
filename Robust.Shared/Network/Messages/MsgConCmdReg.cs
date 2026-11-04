@@ -23,7 +23,11 @@ namespace Robust.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var cmdCount = buffer.ReadUInt16();
-            Commands = new (cmdCount);
+
+            // cmdCount * sizeof(string) * 3
+            buffer.AssertAtLeastSize(cmdCount * NetMessageExt.MinSizeOfString * 3L);
+
+            Commands = new List<Command>(cmdCount);
             for (var i = 0; i < cmdCount; i++)
             {
                 Commands.Add(new Command()

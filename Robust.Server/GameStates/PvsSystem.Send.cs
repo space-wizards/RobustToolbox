@@ -1,6 +1,7 @@
 using System;
 using Prometheus;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
@@ -42,24 +43,15 @@ internal sealed partial class PvsSystem
             if (!data.Session.Channel.IsConnected)
                 return;
 
-            DebugTools.AssertNotEqual(stateStream, null);
+            DebugTools.AssertNotNull(stateStream);
+            using var payload = ZStdPayload.Create(stateStream, ctx, MsgState.CompressionThreshold);
             var msg = new MsgState
             {
-                StateStream = stateStream,
-                ForceSendReliably = data.ForceSendReliably,
-                CompressionContext = ctx
+                Payload = payload,
+                ForceSendReliably = data.ForceSendReliably
             };
 
-            try
-            {
-                msg.Compress();
-                _netMan.ServerSendMessage(msg, data.Session.Channel);
-            }
-            finally
-            {
-                msg.ReleaseCompressed();
-            }
-
+            _netMan.ServerSendMessage(msg, data.Session.Channel);
             // The channel can disconnect between our check and the network manager's check.
             if (msg.HasWritten && msg.ShouldSendReliably())
             {

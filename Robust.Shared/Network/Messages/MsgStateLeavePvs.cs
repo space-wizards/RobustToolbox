@@ -26,6 +26,8 @@ public sealed class MsgStateLeavePvs : NetMessage
     {
         Tick = buffer.ReadGameTick();
         var length = buffer.ReadInt32();
+
+        buffer.AssertAtLeastSize(length * NetMessageExt.SizeOfNetEntity);
         Entities = new(length);
 
         for (int i = 0; i < length; i++)

@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
- * Added the `rng:seed` and `rng:randomize` Toolshed commands to set the shared random generator's seed, so random results can be repeated when debugging
+*None yet*
 
 ### Bugfixes
 
@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added the `rng:seed` and `rng:randomize` Toolshed commands to either set or randomize the shared RNG's seed for debugging purposes.
 
 ### Bugfixes
 

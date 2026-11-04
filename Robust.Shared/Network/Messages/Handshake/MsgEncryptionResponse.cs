@@ -15,10 +15,16 @@ namespace Robust.Shared.Network.Messages.Handshake
         public Guid UserId;
         public byte[] SealedData;
 
+        private const int MaxFieldLength = 1024;
+
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             UserId = buffer.ReadGuid();
+
             var keyLength = buffer.ReadVariableInt32();
+            if (keyLength is < 0 or > (int)NetMessageExt.MaxSizeOfEncryption)
+                throw new InvalidOperationException($"Sealed data length {keyLength} out of range.");
+
             SealedData = buffer.ReadBytes(keyLength);
         }
 

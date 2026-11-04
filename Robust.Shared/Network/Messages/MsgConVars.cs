@@ -28,6 +28,10 @@ namespace Robust.Shared.Network.Messages
             Tick = new GameTick(buffer.ReadVariableUInt32());
             var nVars = buffer.ReadInt16();
 
+            // Booleans are bitpacked, so they're 1 bit per
+            // nVars * (sizeof(string) + sizeof(byte)) + (nVars + 7) / 8
+            buffer.AssertAtLeastSize(nVars * (NetMessageExt.MinSizeOfString + sizeof(byte)) + (nVars + 7) / 8);
+
             NetworkedVars = new List<(string name, object value)>(nVars);
 
             for (int i = 0; i < nVars; i++)

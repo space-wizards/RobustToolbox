@@ -36,12 +36,14 @@ public sealed partial class EntityRelationsSystem : EntitySystem
     private static void OnEntityRelationDelete(Entity<EntityRelationsComponent> ent, ref EntityRelationDeleteEvent args)
     {
         ent.Comp.Relations.Remove(args.Relation);
+        ent.Comp.LocalRelations.Remove(args.Relation);
     }
 
     [SubscribeLocalEvent]
     private void OnEntityRelationDelete(Entity<EntityRelationsComponent> ent, ref ComponentShutdown args)
     {
         ClearRelations(ent.AsNullable());
+        ClearLocalRelations(ent.AsNullable());
     }
 }
 

@@ -13,7 +13,12 @@ public partial class EntityManager
         ref EntityRelation relation,
         Entity<EntityRelationsComponent?>? entity)
     {
+        var oldRelation = relation;
         SetRelationInternal(owner, ref relation, entity);
+
+        // Delete the component of the old entity if the relation was replaced.
+        if (oldRelation.Entity != null)
+            RemoveRelationCompIfEmpty(oldRelation.Entity.Value);
 
         DirtyRelations(owner);
         if (entity is { Comp: not null })
@@ -36,7 +41,7 @@ public partial class EntityManager
         if (!entity.HasValue)
         {
             if (relation.Entity != null)
-                ClearRelation(owner, ref relation);
+                ClearRelationInternal(owner, ref relation, local);
 
             relation.Entity = null;
             return;
@@ -52,7 +57,7 @@ public partial class EntityManager
             EnsureComponent(ref owner);
 
         if (relation.Entity != null)
-            ClearRelation(owner, ref relation);
+            ClearRelationInternal(owner, ref relation, local);
 
         relation.Entity = entity;
 
@@ -60,6 +65,8 @@ public partial class EntityManager
         {
             ent.Comp!.LocalRelations.Add(new EntityRelation(owner));
             owner.Comp!.LocalRelations.Add(relation);
+            ent.Comp.RemoveOnEmpty = false;
+            owner.Comp.RemoveOnEmpty = false;
         }
         else
         {
@@ -443,7 +450,8 @@ public partial class EntityManager
                 continue;
 
             EventBus.RaiseLocalEvent(related.Entity.Value, ref ev);
-            RemoveRelationCompIfEmpty(related.Entity.Value);
+            if (!local)
+                RemoveRelationCompIfEmpty(related.Entity.Value);
         }
 
         if (MetaQuery.Comp(ent.Owner).EntityLifeStage >= EntityLifeStage.Terminating)
@@ -762,6 +770,7 @@ public partial class EntityManager
 
     // -- Local relations --
 
+    /// <inheritdoc/>
     public void SetLocalRelation(
         Entity<EntityRelationsComponent?> owner,
         ref EntityRelation relation,
@@ -771,6 +780,7 @@ public partial class EntityManager
         SetRelationInternal(owner, ref relation, entity, true);
     }
 
+    /// <inheritdoc/>
     public void SetLocalRelation(
         Entity<EntityRelationsComponent?> owner,
         ref EntityRelation? relation,
@@ -782,6 +792,7 @@ public partial class EntityManager
         relation = copy;
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelation(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
@@ -793,6 +804,7 @@ public partial class EntityManager
         relations.Add(copy);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelation(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
@@ -804,6 +816,7 @@ public partial class EntityManager
         relations.Add(copy);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
@@ -816,6 +829,7 @@ public partial class EntityManager
         relations.Add(copy, value);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
@@ -828,6 +842,7 @@ public partial class EntityManager
         relations.Add(key, copy);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelations(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
@@ -838,6 +853,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelations(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
@@ -848,6 +864,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelations(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
@@ -858,6 +875,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, true, entities);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelations(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
@@ -868,6 +886,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, true, entities);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
@@ -878,6 +897,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void AddLocalRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
@@ -888,6 +908,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void SetLocalRelations(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
@@ -897,6 +918,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void SetLocalRelations(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
@@ -906,6 +928,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void SetLocalRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
@@ -915,6 +938,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void SetLocalRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
@@ -924,6 +948,7 @@ public partial class EntityManager
         AddRelationsInternal(owner, relations, entities, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelations(EntityRelation relation, EntityRelationsComponent? relations = null)
     {
         if (relation.Entity == null)
@@ -935,16 +960,19 @@ public partial class EntityManager
         ClearRelationsInternal((relation.Entity.Value, relations), true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelations(Entity<EntityRelationsComponent?> ent)
     {
         ClearRelationsInternal(ent, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation)
     {
         ClearRelationInternal(ent, ref relation, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation? relation)
     {
         var copy = relation ?? EntityRelation.Null;
@@ -952,26 +980,31 @@ public partial class EntityManager
         relation = copy;
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelations(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
     {
         ClearRelationsInternal(ent, relations, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelations(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations)
     {
         ClearRelationsInternal(ent, relations, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations)
     {
         ClearRelationsInternal(ent, relations, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull
     {
         ClearRelationsInternal(ent, relations, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelation(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
@@ -980,6 +1013,7 @@ public partial class EntityManager
         ClearRelationInternal(owner, relations, entity, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelation(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
@@ -988,6 +1022,7 @@ public partial class EntityManager
         ClearRelationInternal(owner, relations, entity, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
@@ -996,6 +1031,7 @@ public partial class EntityManager
         ClearRelationInternal(owner, relations, entity, true);
     }
 
+    /// <inheritdoc/>
     public void ClearLocalRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,

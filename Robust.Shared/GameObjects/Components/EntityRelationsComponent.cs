@@ -37,6 +37,7 @@ public sealed partial class EntityRelationsComponent : Component
     /// <summary>
     /// If true, will remove the component when <see cref="Relations"/> list becomes empty.
     /// Setting this to false may be useful for custom performance sensitive EntityRelation interactions.
+    /// This must be set to false explicitly for <see cref="LocalRelations"/> to be supported.
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool RemoveOnEmpty = true;

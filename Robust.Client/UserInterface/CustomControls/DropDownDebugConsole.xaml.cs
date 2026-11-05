@@ -92,5 +92,13 @@ namespace Robust.Client.UserInterface.CustomControls
                 bar.ReleaseKeyboardFocus();
             }
         }
+
+        /// <summary>
+        /// Show the console without grabbing keyboard focus, used if it was opened automatically to not disrupt the player too much.
+        /// </summary>
+        public void ShowWithoutGrab()
+        {
+            MainControl.Visible = _targetVisible = true;
+        }
     }
 }

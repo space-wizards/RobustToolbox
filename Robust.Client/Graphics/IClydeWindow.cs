@@ -84,6 +84,8 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <remarks>
         /// This is not guaranteed to be respected, either by RT or by the OS.
+        /// This operation may be asynchronous, so the method can return before the window is maximized, if it is
+        /// maximized at all.
         /// </remarks>
         void Maximize();
     }

@@ -62,6 +62,7 @@ namespace Robust.Client.GameStates
         private readonly List<(NetEntity NetEntity, Entity<MetaDataComponent> Entity)> _detachEntities = new();
         private readonly List<(EntityState State, EntityUid Uid, MetaDataComponent Meta)> _resolvedEntityStates = new();
         private readonly Dictionary<NetEntity, GameTick> _detachedChunkEntities = new();
+        private readonly List<string> _compChanges = new();
 
         private readonly record struct StateData(
             EntityUid Uid,
@@ -893,8 +894,8 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    created++;
-                    CreateNewEntity(es, curState.ToSequence);
+                    if (CreateNewEntity(es, curState.ToSequence))
+                        created++;
                 }
 
                 _prof.WriteValue("Count", ProfData.Int32(created));
@@ -1120,12 +1121,21 @@ namespace Robust.Client.GameStates
                 _queuedBroadphaseUpdates.Add((data.Uid, xform));
         }
 
-        private void CreateNewEntity(EntityState state, GameTick toTick)
+        private bool CreateNewEntity(EntityState state, GameTick toTick)
         {
             // TODO GAME STATE
             // store MetaData & Transform information separately.
             if (!TryGetComponentChange(state, _metaCompNetId, out var metaChange))
-                throw new MissingMetadataException(state.NetEntity);
+            {
+                _compChanges.Clear();
+                foreach (ref readonly var change in state.ComponentChanges.Span)
+                {
+                    _compChanges.Add(change.ToString());
+                }
+                var changes = string.Join(", ", _compChanges);
+                _sawmill.Error($"Server state for new entity {state.NetEntity} on tick {toTick} was missing MetaData, its state had {_compChanges.Count} component changes: {changes}");
+                return false; // hopefully it's not an important entity
+            }
 
             if (metaChange.State is not MetaDataComponentState metaState)
                 throw new InvalidOperationException($"Server state for new entity {state.NetEntity} on tick {toTick} had wrong MetaData state change {metaChange}");
@@ -1147,7 +1157,7 @@ namespace Robust.Client.GameStates
 
             // Check if there's any component states awaiting this entity.
             if (!_entities.PendingNetEntityStates.Remove(state.NetEntity, out var value))
-                return;
+                return true;
 
             foreach (var (type, owner) in value)
             {
@@ -1158,6 +1168,8 @@ namespace Robust.Client.GameStates
                 var pending = _pendingReapplyNetStates.GetOrNew(owner);
                 pending.Add(netId.Value);
             }
+
+            return true;
         }
 
         /// <summary>

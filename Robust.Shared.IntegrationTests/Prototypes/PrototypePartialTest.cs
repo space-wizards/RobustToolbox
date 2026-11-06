@@ -25,6 +25,8 @@ internal sealed partial class PrototypePartialTest
     private static readonly EntProtoId TestPrototypeId = $"{nameof(PrototypePartialTest)}TestPrototype";
     private static readonly EntProtoId ParentChildId = $"{ParentId}Child";
     private static readonly EntProtoId ParentChildSingleId = $"{ParentId}ChildSingle";
+    private static readonly EntProtoId ParentChildSingleArrayId = $"{ParentId}ChildSingleArray";
+    private static readonly EntProtoId ParentSingleInheritorId = $"{ParentId}SingleInheritorId";
     private static readonly EntProtoId SequenceChildId = $"{SequenceId}Child";
 
     private static readonly string Sequence = $@"
@@ -377,6 +379,34 @@ internal sealed partial class PrototypePartialTest
 - type: entity
   parent: {ParentId}Parent1
   id: {ParentChildSingleId}
+
+- type: entity
+  parent: [ {ParentId}Parent1 ]
+  id: {ParentChildSingleArrayId}
+
+- type: entity
+  id: {ParentSingleInheritorId}Base
+  components:
+  - type: PrototypePartial
+    list: [ 1, 2, 3 ]
+
+- type: entity
+  parent: {ParentSingleInheritorId}Base
+  id: {ParentSingleInheritorId}Base1
+  components:
+  - type: PrototypePartial
+    int: 1
+
+- type: entity
+  parent: {ParentSingleInheritorId}Base
+  id: {ParentSingleInheritorId}Base2
+  components:
+  - type: PrototypePartial
+    int: 2
+
+- type: entity
+  parent: {ParentSingleInheritorId}Base1
+  id: {ParentSingleInheritorId}Inheritor
 ";
 
     private static readonly string ParentAdd = $@"
@@ -385,7 +415,7 @@ internal sealed partial class PrototypePartialTest
   id: {ParentChildId}
 ";
 
-    private static readonly string ParentSingleAdd = $@"
+    private static readonly string ParentSingleAddTwo = $@"
 - type: entity
   parent: [ {ParentId}Parent2, {ParentId}Parent3 ]
   id: {ParentChildSingleId}
@@ -395,6 +425,24 @@ internal sealed partial class PrototypePartialTest
 - type: entity
   parent: !Clear [ {ParentId}Parent2, {ParentId}Parent3 ]
   id: {ParentChildSingleId}
+";
+
+    private static readonly string ParentSingleReplaceSingle = $@"
+- type: entity
+  parent: {ParentId}Parent2
+  id: {ParentChildSingleId}
+";
+
+    private static readonly string ParentSingleReplace = $@"
+- type: entity
+  parent: !Clear {ParentId}Parent2
+  id: {ParentChildSingleId}
+";
+
+    private static readonly string ParentSingleInheritorReplace = $@"
+- type: entity
+  parent: {ParentSingleInheritorId}Base2
+  id: {ParentSingleInheritorId}Inheritor
 ";
 
     private static readonly string TestPrototype = $@"
@@ -1108,9 +1156,9 @@ internal sealed partial class PrototypePartialTest
     }
 
     [Test]
-    public void TestParentSingleAdd()
+    public void TestParentSingleAddTwo()
     {
-        var sim = StartSim(ymlToLoad: ParentSingleAdd);
+        var sim = StartSim(ymlToLoad: ParentSingleAddTwo);
 
         var comps = sim.Resolve<IComponentFactory>();
         var prototypes = sim.Resolve<IPrototypeManager>();
@@ -1147,6 +1195,61 @@ internal sealed partial class PrototypePartialTest
         Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
         Assert.That(comp, Is.Not.Null);
         Assert.That(comp.Int, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void TestParentSingleReplaceSingle()
+    {
+        var sim = StartSim(ymlToLoad: ParentSingleReplaceSingle);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index(ParentChildSingleId);
+
+        Assert.That(baseEnt.Parents, Is.Not.Null);
+        Assert.That(baseEnt.Parents, Has.Length.EqualTo(1));
+        Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentId}Parent2" ]));
+
+        Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
+        Assert.That(comp, Is.Not.Null);
+        Assert.That(comp.Int, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void TestParentSingleReplace()
+    {
+        var sim = StartSim(ymlToLoad: ParentSingleReplace);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index(ParentChildSingleId);
+
+        Assert.That(baseEnt.Parents, Is.Not.Null);
+        Assert.That(baseEnt.Parents, Has.Length.EqualTo(1));
+        Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentId}Parent2" ]));
+
+        Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
+        Assert.That(comp, Is.Not.Null);
+        Assert.That(comp.Int, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void TestParentInheritorReplace()
+    {
+        var sim = StartSim(ymlToLoad: ParentSingleInheritorReplace);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index($"{ParentSingleInheritorId}Inheritor");
+
+        Assert.That(baseEnt.Parents, Is.Not.Null);
+        Assert.That(baseEnt.Parents, Has.Length.EqualTo(1));
+        Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentSingleInheritorId}Base2" ]));
+
+        Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
+        Assert.That(comp, Is.Not.Null);
+        Assert.That(comp.Int, Is.EqualTo(2));
+        Assert.That(comp.List, Is.EqualTo([1, 2, 3]));
     }
 
     [Test]

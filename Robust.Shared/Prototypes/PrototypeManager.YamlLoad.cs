@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -479,6 +480,13 @@ public partial class PrototypeManager
             Func<string, string?>? onProcessAsMappingKey = kind == typeof(EntityPrototype)
                 ? key => key == "components" ? "type" : null
                 : null;
+
+            // Change the id below and uncomment it to debug a specific ID
+            // if (id == "RoboticistPDA")
+            // {
+            //     Debugger.Launch();
+            //     Debugger.Break();
+            // }
 
             CombineMapNode(existing, data, out var fullDeleted, onProcessAsMappingKey);
             if (fullDeleted && existing.IsEmpty)

@@ -22,7 +22,9 @@ internal sealed partial class PrototypePartialTest
     private static readonly EntProtoId InheritanceIdInheritor = $"{nameof(PrototypePartialTest)}InheritanceInheritor";
     private static readonly EntProtoId ReloadId = $"{nameof(PrototypePartialTest)}Reload";
     private static readonly EntProtoId ParentId = $"{nameof(PrototypePartialTest)}Parent";
+    private static readonly EntProtoId TestPrototypeId = $"{nameof(PrototypePartialTest)}TestPrototype";
     private static readonly EntProtoId ParentChildId = $"{ParentId}Child";
+    private static readonly EntProtoId ParentChildSingleId = $"{ParentId}ChildSingle";
     private static readonly EntProtoId SequenceChildId = $"{SequenceId}Child";
 
     private static readonly string Sequence = $@"
@@ -371,12 +373,40 @@ internal sealed partial class PrototypePartialTest
 - type: entity
   parent: [ {ParentId}Parent1, {ParentId}Parent2 ]
   id: {ParentChildId}
+
+- type: entity
+  parent: {ParentId}Parent1
+  id: {ParentChildSingleId}
 ";
 
     private static readonly string ParentAdd = $@"
 - type: entity
   parent: !Clear [ {ParentId}Parent3, {ParentId}Parent1, {ParentId}Parent2 ]
   id: {ParentChildId}
+";
+
+    private static readonly string ParentSingleAdd = $@"
+- type: entity
+  parent: [ {ParentId}Parent2, {ParentId}Parent3 ]
+  id: {ParentChildSingleId}
+";
+
+    private static readonly string ParentSingleClearAndAdd = $@"
+- type: entity
+  parent: !Clear [ {ParentId}Parent2, {ParentId}Parent3 ]
+  id: {ParentChildSingleId}
+";
+
+    private static readonly string TestPrototype = $@"
+- type: prototypePartialTest
+  id: {TestPrototypeId}
+  list: [ 1, 2, 3]
+";
+
+    private static readonly string TestPrototypeClearAndAdd = $@"
+- type: prototypePartialTest
+  id: {TestPrototypeId}
+  list: !Clear [ 4, 5, 6 ]
 ";
 
     private ISimulation StartSim(
@@ -410,6 +440,7 @@ internal sealed partial class PrototypePartialTest
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ReloadId)}.yml"), Reload);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ParentId)}.yml"), Parent);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(SequenceChildId)}.yml"), SequenceChild);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(TestPrototypeId)}.yml"), TestPrototype);
                 }
 
                 for (var i = 0; i < ymlToLoad.Length; i++)
@@ -423,6 +454,8 @@ internal sealed partial class PrototypePartialTest
             })
             .RegisterPrototypes(factory =>
             {
+                factory.RegisterKind(typeof(PrototypePartialTestPrototype));
+
                 if (loadOrder != null)
                     loadOrder.Invoke(factory);
                 else if (partial)
@@ -1074,6 +1107,62 @@ internal sealed partial class PrototypePartialTest
         Assert.That(comp.Int, Is.EqualTo(3));
     }
 
+    [Test]
+    public void TestParentSingleAdd()
+    {
+        var sim = StartSim(ymlToLoad: ParentSingleAdd);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index(ParentChildSingleId);
+
+        Assert.That(baseEnt.Parents, Is.Not.Null);
+        Assert.That(baseEnt.Parents, Has.Length.EqualTo(3));
+        Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentId}Parent1", $"{ParentId}Parent2", $"{ParentId}Parent3" ]));
+
+        Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
+        Assert.That(comp, Is.Not.Null);
+
+        // For the future maintainer, if you get a "2" here, that means that "1" is not being carried over from the
+        // original definition. This originally was because partial changes were not reflected in the extracted
+        // mapping data that is passed around in PrototypeManager.
+        // We are not clearing "parent" here before adding Parent2 and Parent3, so Parent1 should stick around,
+        // in the order Parent1, Parent2, Parent3 (order of original definition, order of partial definition)
+        Assert.That(comp.Int, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void TestParentSingleClearAndAdd()
+    {
+        var sim = StartSim(ymlToLoad: ParentSingleClearAndAdd);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index(ParentChildSingleId);
+
+        Assert.That(baseEnt.Parents, Is.Not.Null);
+        Assert.That(baseEnt.Parents, Has.Length.EqualTo(2));
+        Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentId}Parent2", $"{ParentId}Parent3" ]));
+
+        Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
+        Assert.That(comp, Is.Not.Null);
+        Assert.That(comp.Int, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void TestTestPrototypeClearAndAdd()
+    {
+        var sim = StartSim(ymlToLoad: TestPrototypeClearAndAdd);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index<PrototypePartialTestPrototype>(TestPrototypeId);
+
+        Assert.That(baseEnt.List, Is.Not.Null);
+        Assert.That(baseEnt.List, Has.Count.EqualTo(3));
+        Assert.That(baseEnt.List, Is.EqualTo([ 4, 5, 6 ]));
+    }
+
     internal sealed partial class PrototypePartialComponent : Component
     {
         [DataField]
@@ -1117,5 +1206,15 @@ internal sealed partial class PrototypePartialTest
 
         [DataField]
         public string Str = string.Empty;
+    }
+
+    [Prototype]
+    internal sealed partial class PrototypePartialTestPrototype : IPrototype
+    {
+        [IdDataField]
+        public string ID { get; set; } = default!;
+
+        [DataField]
+        public List<int> List = new();
     }
 }

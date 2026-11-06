@@ -5,9 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using JetBrains.Annotations;
 using Robust.Shared.Log;
-using Robust.Shared.Random;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -506,9 +504,21 @@ public partial class PrototypeManager
         if (kindData.Inheritance is { } inheritance)
         {
             if (parents != null)
+            {
+                // Partial prototypes may have modified the parents, which is not reflected in the extracted mapping data
+                // In that case, we parse it again, otherwise we may lose some data
+                if (existing != null &&
+                    TryGetParents(kindData, existing, out var updatedParents))
+                {
+                    parents = updatedParents;
+                }
+
                 inheritance.Add(id, parents);
+            }
             else if (!partial || existing == null) // If this is partial we don't want to mess up the inheritance graph
+            {
                 inheritance.Add(id);
+            }
         }
 
         if (changed == null)
@@ -787,7 +797,11 @@ public partial class PrototypeManager
             if (existing.TryGetValue(key, out var existingNode))
             {
                 var processAsMappingKey = onProcessAsMappingKey?.Invoke(key);
-                if (Combine(existingNode, dataNode, out _, processAsMappingKey))
+                var combined = Combine(ref existingNode, dataNode, out _, processAsMappingKey, out var replace);
+                if (replace)
+                    existing[key] = existingNode;
+
+                if (combined)
                     continue;
             }
 
@@ -802,6 +816,12 @@ public partial class PrototypeManager
 
     private void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data, string? processAsMappingKey)
     {
+        if (IsTag(data, PartialClearTag))
+        {
+            LogVerbose($"Sequence clearing");
+            existing.Clear();
+        }
+
         for (var i = 0; i < data.Count; i++)
         {
             LogVerbose($"Sequence processing index {i}");
@@ -905,14 +925,20 @@ public partial class PrototypeManager
         var index = ProcessPartialSeqNodeIndex(existing, indexStr, dataNode);
         LogVerbose($"Sequence index {i} found {PartialCombineIndexTag}");
 
-        if (existing.TryGetValue(index, out var existingNode) &&
-            Combine(existingNode, dataNode, out var fullDeleted, null))
+        if (existing.TryGetValue(index, out var existingNode))
         {
-            LogVerbose($"Sequence index {i} combined index {index}");
-            if (fullDeleted && existingNode.IsEmpty)
+            var combined = Combine(ref existingNode, dataNode, out var fullDeleted, null, out var replace);
+            if (replace)
+                existing[index] = existingNode;
+
+            if (combined)
             {
-                LogVerbose($"Sequence index {i} full deleted, removing it from the sequence");
-                existing.RemoveAt(i);
+                LogVerbose($"Sequence index {i} combined index {index}");
+                if (fullDeleted && existingNode.IsEmpty)
+                {
+                    LogVerbose($"Sequence index {i} full deleted, removing it from the sequence");
+                    existing.RemoveAt(i);
+                }
             }
         }
         else
@@ -947,17 +973,37 @@ public partial class PrototypeManager
         return index;
     }
 
-    private bool Combine(DataNode existing, DataNode data, out bool fullDeleted, string? processAsMappingKey)
+    private bool Combine(ref DataNode existing, DataNode data, out bool fullDeleted, string? processAsMappingKey, out bool replace)
     {
         fullDeleted = false;
+        replace = false;
         switch (existing, data)
         {
             case (MappingDataNode existingMapping, MappingDataNode dataMapping):
+            {
                 CombineMapNode(existingMapping, dataMapping, out fullDeleted);
                 return true;
+            }
             case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
+            {
                 CombineSeqNode(existingSequence, dataSequence, processAsMappingKey);
                 return true;
+            }
+            // For cases such as "parent", where original is a value and partial is a sequence
+            case (ValueDataNode existingValue, SequenceDataNode dataSequence):
+            {
+                existing = new SequenceDataNode(existingValue);
+                CombineSeqNode((SequenceDataNode) existing, dataSequence, processAsMappingKey);
+                replace = true;
+                return true;
+            }
+            // For cases such as "parent", where original is a sequence and partial is a value
+            case (SequenceDataNode existingSequence, ValueDataNode dataValue):
+            {
+                var dataSequence = new SequenceDataNode(dataValue);
+                CombineSeqNode(existingSequence, dataSequence, processAsMappingKey);
+                return true;
+            }
             default:
                 return false;
         }

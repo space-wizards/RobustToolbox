@@ -424,7 +424,7 @@ internal sealed partial class PrototypePartialTest
     private static readonly string ReparentToMiddle = $@"
 - type: !PartialOnly entity
   id: {ReparentIdChild}
-  parent: !Clear {ReparentIdMiddle}
+  parent: {ReparentIdMiddle}
 ";
 
     private static readonly string ReloadAddSequenceData = $@"
@@ -1336,7 +1336,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(comp.List, Has.Count.EqualTo(1));
         Assert.That(comp.List, Is.EqualTo([1]));
     }
-  
+
     [Test]
     public void ReparentInheritsGrandparentTest()
     {
@@ -1351,7 +1351,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(baseComp, Is.Not.Null);
         Assert.That(baseComp.Int, Is.EqualTo(1));
     }
-  
+
     [Test]
     public void TestParentAdd()
     {

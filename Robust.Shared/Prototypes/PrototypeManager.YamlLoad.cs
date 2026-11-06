@@ -823,10 +823,10 @@ public partial class PrototypeManager
                 continue;
             }
 
-            if (dataNode.Tag?.StartsWith(PartialIndexTag) ?? false)
+            if (StartsWithTagOrMappingKeyTag(dataNode, PartialIndexTag, out var indexTag))
             {
                 LogVerbose($"Sequence index {i} found {PartialIndexTag}");
-                var indexStr = dataNode.Tag.AsSpan(PartialIndexTag.Length);
+                var indexStr = indexTag.AsSpan(PartialIndexTag.Length);
                 var index = ProcessPartialSeqNodeIndex(existing, indexStr, dataNode);
                 LogVerbose($"Sequence index {i} inserting node{GetValueNodeValueToLog(dataNode)} at index {index}");
                 existing.Insert(index, dataNode);
@@ -976,7 +976,8 @@ public partial class PrototypeManager
 
     private bool StartsWithTagOrMappingKeyTag(DataNode dataNode, string tag, [NotNullWhen(true)] out string? actualTag)
     {
-        if (IsTag(dataNode, tag))
+        if (IsTag(dataNode, tag) ||
+            (dataNode.Tag?.StartsWith(tag) ?? false))
         {
             DebugTools.AssertNotNull(dataNode.Tag);
             actualTag = dataNode.Tag;

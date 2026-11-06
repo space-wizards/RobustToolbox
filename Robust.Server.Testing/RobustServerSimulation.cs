@@ -56,6 +56,7 @@ namespace Robust.UnitTesting.Server
     [PublicAPI]
     public interface ISimulationFactory
     {
+        ISimulationFactory RegisterReflection(ReflectionDelegate reflection);
         ISimulationFactory RegisterComponents(CompRegistrationDelegate factory);
         ISimulationFactory RegisterDependencies(DiContainerDelegate factory);
         ISimulationFactory RegisterEntitySystems(EntitySystemRegistrationDelegate factory);
@@ -107,6 +108,8 @@ namespace Robust.UnitTesting.Server
         }
     }
 
+    public delegate void ReflectionDelegate(IReflectionManager reflection);
+
     public delegate void DiContainerDelegate(IDependencyCollection diContainer);
 
     public delegate void CompRegistrationDelegate(IComponentFactory factory);
@@ -121,6 +124,7 @@ namespace Robust.UnitTesting.Server
 
     public sealed class RobustServerSimulation : ISimulation, ISimulationFactory
     {
+        private ReflectionDelegate? _reflectionDelegate;
         private DiContainerDelegate? _diFactory;
         private CompRegistrationDelegate? _regDelegate;
         private EntitySystemRegistrationDelegate? _systemDelegate;
@@ -142,6 +146,12 @@ namespace Robust.UnitTesting.Server
         }
 
         private RobustServerSimulation() { }
+
+        public ISimulationFactory RegisterReflection(ReflectionDelegate factory)
+        {
+            _reflectionDelegate += factory;
+            return this;
+        }
 
         public ISimulationFactory RegisterDependencies(DiContainerDelegate factory)
         {
@@ -214,6 +224,8 @@ namespace Robust.UnitTesting.Server
             container.Register<ITransferManager, ServerTransferManager>();
 
             var realReflection = new ServerReflectionManager();
+            _reflectionDelegate?.Invoke(realReflection);
+
             realReflection.LoadAssemblies(new List<Assembly>(2)
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),

@@ -23,6 +23,7 @@ internal sealed partial class PrototypePartialTest
     private static readonly EntProtoId ReloadId = $"{nameof(PrototypePartialTest)}Reload";
     private static readonly EntProtoId ParentId = $"{nameof(PrototypePartialTest)}Parent";
     private static readonly EntProtoId ParentChildId = $"{ParentId}Child";
+    private static readonly EntProtoId SequenceChildId = $"{SequenceId}Child";
 
     private static readonly string Sequence = $@"
 - type: entity
@@ -34,6 +35,10 @@ internal sealed partial class PrototypePartialTest
     - 2
     - 3
     arrayAdd: [1, 2, 3]
+    intStringList:
+    - int: 1
+    - int: 2
+    - int: 3
 ";
 
     private static readonly string AddSequence = $@"
@@ -100,12 +105,40 @@ internal sealed partial class PrototypePartialTest
     arrayNew: [1, 2, 3]
 ";
 
+    private static readonly string SequenceChild = $@"
+- type: entity
+  parent: {SequenceId}
+  id: {SequenceChildId}
+";
+
     private static readonly string ClearAndAddArraySequence = $@"
 - type: entity
   id: {SequenceId}
   components:
   - type: PrototypePartial
     arrayAdd: !Clear [4, 5, 6]
+";
+
+    private static readonly string Index012Sequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    arrayAdd:
+    - !Index:0 4
+    - !Index:1 5
+    - !Index:2 6
+";
+
+    private static readonly string Index012MappingSequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    intStringList:
+    - !Index:0 int: 4
+    - !Index:1 int: 5
+    - !Index:2 int: 6
 ";
 
     private static readonly string Mapping = $"""
@@ -356,6 +389,7 @@ internal sealed partial class PrototypePartialTest
         params string[] ymlToLoad)
     {
         return RobustServerSimulation.NewSimulation()
+            .RegisterReflection(factory => factory.LoadAssemblies(typeof(PrototypePartialTest).Assembly))
             .ChangeCVar(factory => changeCVar?.Invoke(factory))
             .RegisterDependencies(factory => dependencies?.Invoke(factory))
             .RegisterComponents(factory =>
@@ -375,6 +409,7 @@ internal sealed partial class PrototypePartialTest
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(InheritanceIdBase)}.yml"), Inheritance);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ReloadId)}.yml"), Reload);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ParentId)}.yml"), Parent);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(SequenceChildId)}.yml"), SequenceChild);
                 }
 
                 for (var i = 0; i < ymlToLoad.Length; i++)
@@ -547,6 +582,53 @@ internal sealed partial class PrototypePartialTest
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.ArrayAdd, Has.Length.EqualTo(3));
         Assert.That(partial.ArrayAdd, Is.EqualTo([4, 5, 6]));
+    }
+
+    [Test]
+    public void TestClearAndAddSequenceOrderChild()
+    {
+        var sim = StartSim(ymlToLoad: ClearAndAddArraySequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceChildId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.ArrayAdd, Has.Length.EqualTo(3));
+        Assert.That(partial.ArrayAdd, Is.EqualTo([4, 5, 6]));
+    }
+
+    [Test]
+    public void TestSequenceIndex012()
+    {
+        var sim = StartSim(ymlToLoad: Index012Sequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.ArrayAdd, Has.Length.EqualTo(6));
+        Assert.That(partial.ArrayAdd, Is.EqualTo([4, 5, 6, 1, 2, 3]));
+    }
+
+    [Test]
+    public void TestSequenceMappingIndex012()
+    {
+        var sim = StartSim(ymlToLoad: Index012MappingSequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.IntStringList, Has.Count.EqualTo(6));
+        Assert.That(partial.IntStringList[0].Int, Is.EqualTo(4));
+        Assert.That(partial.IntStringList[1].Int, Is.EqualTo(5));
+        Assert.That(partial.IntStringList[2].Int, Is.EqualTo(6));
+        Assert.That(partial.IntStringList[3].Int, Is.EqualTo(1));
+        Assert.That(partial.IntStringList[4].Int, Is.EqualTo(2));
+        Assert.That(partial.IntStringList[5].Int, Is.EqualTo(3));
     }
 
     [Test]
@@ -1014,6 +1096,9 @@ internal sealed partial class PrototypePartialTest
 
         [DataField]
         public int[] ArrayNew = [100, 101];
+
+        [DataField]
+        public List<IntString> IntStringList = new();
     }
 
     internal sealed partial class PrototypePartialBaseComponent : Component
@@ -1023,4 +1108,14 @@ internal sealed partial class PrototypePartialTest
     }
 
     internal sealed partial class PrototypePartialInheritorComponent : Component;
+
+    [DataDefinition]
+    internal sealed partial class IntString
+    {
+        [DataField]
+        public int Int;
+
+        [DataField]
+        public string Str = string.Empty;
+    }
 }

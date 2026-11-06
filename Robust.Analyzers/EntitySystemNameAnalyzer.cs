@@ -123,7 +123,7 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
             { FixedNameKey, fixedName }
         };
 
-        var primaryLocation = TypeSymbolHelper.GetPrimaryLocation(symbol);
+        var primaryLocation = symbol.GetPrimaryLocation();
         if (primaryLocation is not null)
         {
             context.ReportDiagnostic(

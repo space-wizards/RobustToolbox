@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Robust.Packaging console logging now has a minimum level of Debug and drops logs below the specified level.
 
 ### New features
 

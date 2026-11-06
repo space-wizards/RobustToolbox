@@ -53,6 +53,7 @@ namespace Robust.Shared.GameObjects
         public EntityQuery<TransformComponent> TransformQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<ActorComponent> _actorQuery;
+        private EntityQuery<EntityRelationsComponent> _relationsQuery;
 
         #endregion Dependencies
 
@@ -231,6 +232,7 @@ namespace Robust.Shared.GameObjects
             TransformQuery = GetEntityQuery<TransformComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _actorQuery = GetEntityQuery<ActorComponent>();
+            _relationsQuery = GetEntityQuery<EntityRelationsComponent>();
             _entityConsoleHost.Startup();
         }
 

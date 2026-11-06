@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
@@ -52,6 +54,12 @@ internal sealed partial class DataDefinitionTests : OurSerializationTest
         [DataField("nacm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public int? nacm = Int32.MaxValue;
         [DataField("nbcm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public DataDummyStruct? nbcm = new(){Value = "default"};
         [DataField("nccm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public DataDummyClass? nccm = new(){Value = "default"};
+    }
+
+    [DataDefinition]
+    internal sealed partial class GenericDataDefTestDummy<T>
+    {
+        [DataField("current")] public T Current = default!;
     }
 
     private static IEnumerable<object?[]> BaseFieldData = new[]
@@ -142,6 +150,42 @@ internal sealed partial class DataDefinitionTests : OurSerializationTest
     private object GetValue(DataDefTestDummy obj, string field) => obj.GetType().GetField(field)!.GetValue(obj)!;
 
     private void SetValue(DataDefTestDummy obj, string field, object? val) => obj.GetType().GetField(field)!.SetValue(obj, val);
+
+    [Test]
+    public void GenericTypeParameterDataField()
+    {
+        var mapping = new MappingDataNode { { "current", new ValueDataNode("someValue") } };
+#pragma warning disable CS0618 // Testing the generated serialization implementation directly.
+        var read = GenericDataDefTestDummy<string>.StaticInstantiate();
+        GenericDataDefTestDummy<string>.Read(
+            ref read,
+            mapping,
+            Serialization,
+            SerializationHookContext.DoSkipHooks,
+            null);
+        Assert.That(read.Current, Is.EqualTo("someValue"));
+
+        var source = new GenericDataDefTestDummy<string> { Current = "serializedValue" };
+        var written = new MappingDataNode();
+        GenericDataDefTestDummy<string>.Write(
+            source,
+            written,
+            Serialization,
+            null,
+            true,
+            ImmutableDictionary<string, object?>.Empty);
+        Assert.That(written, Has.Count.EqualTo(1));
+        Assert.That(written.Get<ValueDataNode>("current").Value, Is.EqualTo("serializedValue"));
+
+        var target = new GenericDataDefTestDummy<string> { Current = "oldValue" };
+        source.Copy(ref target, Serialization, SerializationHookContext.DoSkipHooks);
+        Assert.That(target.Current, Is.EqualTo(source.Current));
+        Assert.That(GenericDataDefTestDummy<string>.AreEqual(source, target, Serialization), Is.True);
+
+        target.Current = "different";
+        Assert.That(GenericDataDefTestDummy<string>.AreEqual(source, target, Serialization), Is.False);
+#pragma warning restore CS0618
+    }
 
     [TestCaseSource(nameof(NullableFieldsData))]
     public void Read_NT_NV<T>(string fieldName, DataNode node, Func<T> value, Func<T> altValue)

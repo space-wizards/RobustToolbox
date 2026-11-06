@@ -332,24 +332,31 @@ internal static class Types
 
     internal static (string Flat, string NonNullable) GetCleanNameForGenericType(ITypeSymbol type, out bool isNullableValueType)
     {
-        var typeName = type.ToDisplayString();
-        if (IsMultidimensionalArray(type))
-            typeName = typeName.Replace("*", "");
+        var typeName = GetNameForGenericTypeArgument(type);
 
         isNullableValueType = IsNullableValueType(type);
-        var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+        var nonNullableTypeName = GetNameForGenericTypeArgument(type.WithNullableAnnotation(NullableAnnotation.None));
         if (isNullableValueType)
             nonNullableTypeName = typeName.Substring(0, typeName.Length - 1);
 
         return (typeName, nonNullableTypeName);
     }
 
-    internal static string GetNonNullableNameForGenericParameter(ITypeSymbol type)
+    internal static string GetNameForGenericTypeArgument(ITypeSymbol type)
     {
         var typeName = type.ToDisplayString();
         if (IsMultidimensionalArray(type))
             typeName = typeName.Replace("*", "");
 
+        if (type.TypeKind == TypeKind.TypeParameter && typeName.EndsWith("?"))
+            typeName = typeName.Substring(0, typeName.Length - 1);
+
+        return typeName;
+    }
+
+    internal static string GetNonNullableNameForGenericParameter(ITypeSymbol type)
+    {
+        var typeName = GetNameForGenericTypeArgument(type);
         if (typeName.EndsWith("?"))
             typeName = typeName.Substring(0, typeName.Length - 1);
 

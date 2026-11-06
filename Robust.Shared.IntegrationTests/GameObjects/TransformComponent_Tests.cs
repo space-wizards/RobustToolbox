@@ -23,8 +23,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var xform = entManager.System<TransformSystem>();
 
-            var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            var ent2 = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 0f), mapId));
+            var ent1 = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
+            var ent2 = entManager.Spawn(null, new MapCoordinates(new Vector2(100f, 0f), mapId));
 
             var xform1 = entManager.GetComponent<TransformComponent>(ent1);
             var xform2 = entManager.GetComponent<TransformComponent>(ent2);
@@ -61,8 +61,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             mapSystem.SetTile(grid, new Vector2i(0, 0), new Tile(1));
             xformSystem.SetLocalPosition(grid, new Vector2(0f, 100f));
 
-            var ent1 = entManager.SpawnEntity(null, new EntityCoordinates(grid, Vector2.One * grid.Comp.TileSize / 2));
-            var ent2 = entManager.SpawnEntity(null, new EntityCoordinates(ent1, Vector2.Zero));
+            var ent1 = entManager.SpawnAttachedTo(null, new EntityCoordinates(grid, Vector2.One * grid.Comp.TileSize / 2));
+            var ent2 = entManager.SpawnAttachedTo(null, new EntityCoordinates(ent1, Vector2.Zero));
 
             var xform2 = entManager.GetComponent<TransformComponent>(ent2);
             Assert.That(xformSystem.GetWorldPosition(ent2), Is.EqualTo(new Vector2(0.5f, 100.5f)));

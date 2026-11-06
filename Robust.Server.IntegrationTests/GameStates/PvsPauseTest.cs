@@ -50,8 +50,8 @@ public sealed class PvsPauseTest : RobustIntegrationTest
             map = server.System<SharedMapSystem>().CreateMap();
             coords = new(map, default);
 
-            playerUid = sEntMan.SpawnEntity(null, coords);
-            sEnt = sEntMan.SpawnEntity(null, coords);
+            playerUid = sEntMan.SpawnAttachedTo(null, coords);
+            sEnt = sEntMan.SpawnAttachedTo(null, coords);
             // Attach player.
             var session = sPlayerMan.Sessions.First();
             server.PlayerMan.SetAttachedEntity(session, playerUid);

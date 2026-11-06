@@ -60,14 +60,14 @@ public abstract partial class ToolshedCommand
     /// </summary>
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? proto, EntityCoordinates coords)
-        => EntityManager.SpawnEntity(proto, coords);
+        => EntityManager.SpawnAttachedTo(proto, coords);
 
     /// <summary>
     ///     A shorthand for spawning an entity.
     /// </summary>
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? proto, MapCoordinates coords)
-        => EntityManager.SpawnEntity(proto, coords);
+        => EntityManager.Spawn(proto, coords);
 
     /// <summary>
     ///     A shorthand for deleting an entity.

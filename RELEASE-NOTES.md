@@ -54,6 +54,121 @@ END TEMPLATE-->
 *None yet*
 
 
+## 295.0.0
+
+### Breaking changes
+
+* NetSerializer is now referenced through the `SpaceWizards.NetSerializer` NuGet package instead of the `NetSerializer` git submodule. The assembly is now named `SpaceWizards.NetSerializer` instead of `Robust.NetSerializer`, the `NetSerializer` namespace is unchanged. Anything that references the old project or loads the old assembly by name needs updating.
+* The `NetSerializer` submodule has been removed. Run `git submodule deinit -f NetSerializer` (or re-clone) after updating. Projects that referenced `RobustToolbox/NetSerializer/NetSerializer/NetSerializer.csproj` must remove that reference. In particular, `SpaceStation14.slnx` must have its `/RobustToolbox/NetSerializer/` folder and project entry removed, or the solution will point at a missing project.
+
+### Bugfixes
+
+* Fix Windows Robust.Packaging not using correct path separators for zip archives.
+
+### Internal
+
+* NetSerializer is now versioned and published independently (`SpaceWizards.NetSerializer` 1.0.0 on NuGet, from `space-wizards/SpaceWizards.NetSerializer`), and is restored through `Directory.Packages.props`.
+
+
+## 294.0.1
+
+### New features
+
+* build.* CVars now include source information.
+
+### Bugfixes
+
+* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
+* Fix model transforms not being reset fully in RenderInRenderTarget.
+* Fix the debug connection screen throwing if the connect button is hit twice.
+
+
+## 294.0.0
+
+### Breaking changes
+
+- `MarkupDrawingContext.Tags` are now a `List<IMarkupTagHandler>` instead of `List<IMarkupTag>`, as `IMarkupTag` is obsolete.
+
+### New features
+
+- `MarkupDrawingContext` now provides a `TryGetStyleProperty{T}` method and a `MarkupDrawingContext(Control? owner, int capacity = 0)` constructor, which exposes `Control.TryGetStyleProperty{T}` to rich text markup tags. This lets you write tags that can read style properties set on their parents via stylesheets, just like any Control could.
+
+### Bugfixes
+
+* The default AnchorEntity method now snaps to tile center again.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRayClosest` and `CastShape` returning a grid-local hit point when a hit on a grid replaced a farther hit already found on the map or another grid.
+
+### Other
+
+- `MarkupDrawingContext` constructors without an `owner` parameter are now obsolete (use the new variants that take a `Control owner` parameter).
+
+
+## 293.0.1
+
+### Breaking changes
+
+* ImageSharp's dynamic/automatic decoder detection code (used in Image.Load()) no longer includes TIFF (due to security vulnerabilities)
+
+
+## 293.0.0
+
+### Breaking changes
+* Transform lerping rework from the previous release (292.0.0) has been reverted due to unforseen bugs. As a short summary, this should have the following impact: The lerping-related fields in TransformComponent (`NextPosition`, `NextRotation `, `PrevPosition `, `PrevRotation` , `ActivelyLerping` , `LastLerp` ) are back; The lerping-related cvars (`NetInterpMaxDistance`, `NetInterpMinDistance`, `NetInterpCorrectionHalfLife`, `NetInterpCorrectionMinTranslation`, `NetInterpCorrectionMinRotation`) and the `RenderTransform` struct are gone; The related functions in TransformSystem (i.e `ActivateLerp` , `GetRender...`, etc) have been removed.
+
+### Other
+
+* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
+
+
+## 292.0.0
+
+### Breaking changes
+
+* `BoundUserInterfaceMessageAttempt` is now a by-ref struct. It can no longer be assigned to `CancellableEntityEventArgs`.
+* TransformComponent.Anchored setter is now removed. All anchoring is done via TransformSystem.TryAnchor / TransformSystem.AnchorEntity.
+* ReAnchorEvent has been removed for grid splitting and now normal unanchor / anchor events are raised.
+* Transform lerping has been reworked to handle dropped ticks and position corrections in cases of mispredicts.
+  It will also no longer raise MoveEvent on FrameUpdates as the TransformComponent fields will reflect the simulation data.
+  To get the render position on client use the equivalent Render methods e.g. GetRenderWorldPosition. This will have any relevant corrections or lerping applied.
+  Any teleports should call SnapRenderTransform to ensure lerping isn't run in scenarios where it is unwanted.
+
+### New features
+
+* Added SpriteComponent.LayerData for read-only list access to layers.
+* Persist the entity spawn menu placement mode in a CVar.
+* Added GetIntersectingTrees to ComponentTreeSystem for an allocation-free way to get the relevant trees.
+* Expose IClyde.MouseMove as an event for when the mouse is moved.
+
+### Bugfixes
+
+* Rollback the LastModifiedTick for components when re-running state handling on the client.
+* Fix `display.compat` and `display.angle` being set to true at the same time crashing the game.
+* Fix the client sometimes not re-applying container states correctly when using `EnsureEntity`.
+* Added some PendingAck locks to fix some race conditions around client connection state and PvsSystem Acks.
+
+### Internal
+
+* Removed internal parallel solving for islands to simplify physics code and significantly reduce allocations. Now all islands will be solved in parallel regardless of size.
+* Fix BroadphaseContactJob allocations.
+
+
+## 291.0.0
+
+### Breaking changes
+
+* Ignore ctrl + alt key bindings while AltGr is held.
+* Serialize PVS states asynchronously.
+
+### Bugfixes
+
+* Fix more instances of stale fixture proxies being erroneously cleared on the wrong tree.
+
+### Internal
+
+* Remove global container subscription to entity initialization.
+
+
 ## 290.0.0
 
 ### Breaking changes

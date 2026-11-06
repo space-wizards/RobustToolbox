@@ -45,6 +45,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSetRelativeMouseMode(WindowReg window, bool enabled);
             void WindowRequestAttention(WindowReg window);
             void WindowSetProgress(WindowReg reg, WindowProgressState state, float value);
+            void WindowMaximize(WindowReg window);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);

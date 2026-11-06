@@ -53,21 +53,22 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
         if (diagnostic.Properties[EntitySystemNameAnalyzer.FixedNameKey] is not string fixedName)
             return;
 
-        context.RegisterCodeFix(CodeAction.Create(
+        var codeAction = CodeAction.Create(
             "Rename EntitySystem",
             createChangedSolution:
             c => RenameSystem(context.Document, classSymbol, fixedName, c),
             "RenameEntitySystem"
-        ), diagnostic);
+        );
+        context.RegisterCodeFix(codeAction, diagnostic);
     }
 
-    private async Task<Solution> RenameSystem(Document document, INamedTypeSymbol symbol, string fixedName, CancellationToken c)
+    private async Task<Solution> RenameSystem(Document document, INamedTypeSymbol symbol, string fixedName, CancellationToken ct)
     {
         var solution = document.Project.Solution;
 
         // Alright, so.
         //
-        // To rename an EntitySystem, we'll need to need to find all of the Locations
+        // To rename an EntitySystem, we'll need to find all the Locations
         // it's defined (in case of partials) and change all of those.
         //
         // We'll also need to find every place in the code that references the changed system, like
@@ -94,7 +95,7 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
         };
 
         // Here's where we express our gratitude to the dotnet developers for providing this API.
-        return await Renamer.RenameSymbolAsync(solution, symbol, options, fixedName);
+        return await Renamer.RenameSymbolAsync(solution, symbol, options, fixedName, ct);
     }
 
     /// <summary>
@@ -161,15 +162,15 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
 
             foreach (var documentDiagnostics in diagnosticsToFix)
             {
+                // Find the symbol for the type that triggered the diagnostic.
+                var document = documentDiagnostics.Key;
+                var root = await document.GetSyntaxRootAsync(context.CancellationToken);
+                var model = await document.GetSemanticModelAsync(context.CancellationToken);
+
                 foreach (var diagnostic in documentDiagnostics.Value)
                 {
                     if (diagnostic.Properties[EntitySystemNameAnalyzer.FixedNameKey] is not string fixedName)
                         continue;
-
-                    // Find the symbol for the type that triggered the diagnostic.
-                    var document = documentDiagnostics.Key;
-                    var root = await document.GetSyntaxRootAsync(context.CancellationToken);
-                    var model = await document.GetSemanticModelAsync(context.CancellationToken);
 
                     var span = diagnostic.Location.SourceSpan;
                     var token = root!.FindToken(span.Start);

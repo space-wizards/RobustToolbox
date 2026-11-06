@@ -802,7 +802,7 @@ public partial class PrototypeManager
 
     private void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data, string? processAsMappingKey)
     {
-        for (var i = data.Count - 1; i >= 0; i--)
+        for (var i = 0; i < data.Count; i++)
         {
             LogVerbose($"Sequence processing index {i}");
             var dataNode = data[i];

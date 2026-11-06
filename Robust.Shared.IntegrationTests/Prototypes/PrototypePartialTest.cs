@@ -33,6 +33,7 @@ internal sealed partial class PrototypePartialTest
     - 1
     - 2
     - 3
+    arrayAdd: [1, 2, 3]
 ";
 
     private static readonly string AddSequence = $@"
@@ -89,6 +90,22 @@ internal sealed partial class PrototypePartialTest
     list:
     - !Index:-999 4
     - !Index:999 5
+";
+
+    private static readonly string NewArraySequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    arrayNew: [1, 2, 3]
+";
+
+    private static readonly string ClearAndAddArraySequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    arrayAdd: !Clear [4, 5, 6]
 ";
 
     private static readonly string Mapping = $"""
@@ -425,7 +442,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(4));
-        Assert.That(partial.List, Is.EquivalentTo([1, 2, 3, 4]));
+        Assert.That(partial.List, Is.EqualTo([1, 2, 3, 4]));
         Assert.That(partial.Dictionary, Is.Empty);
     }
 
@@ -440,7 +457,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(2));
-        Assert.That(partial.List, Is.EquivalentTo([1, 3]));
+        Assert.That(partial.List, Is.EqualTo([1, 3]));
         Assert.That(partial.Dictionary, Is.Empty);
     }
 
@@ -455,7 +472,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(3));
-        Assert.That(partial.List, Is.EquivalentTo([1, 3, 4]));
+        Assert.That(partial.List, Is.EqualTo([1, 3, 4]));
         Assert.That(partial.Dictionary, Is.Empty);
     }
 
@@ -470,7 +487,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(4));
-        Assert.That(partial.List, Is.EquivalentTo([4, 1, 2, 3]));
+        Assert.That(partial.List, Is.EqualTo([4, 1, 2, 3]));
         Assert.That(partial.Dictionary, Is.Empty);
     }
 
@@ -485,7 +502,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(4));
-        Assert.That(partial.List, Is.EquivalentTo([1, 2, 4, 3]));
+        Assert.That(partial.List, Is.EqualTo([1, 2, 4, 3]));
         Assert.That(partial.Dictionary, Is.Empty);
     }
 
@@ -500,8 +517,36 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(5));
-        Assert.That(partial.List, Is.EquivalentTo([4, 1, 2, 3, 5]));
+        Assert.That(partial.List, Is.EqualTo([4, 1, 2, 3, 5]));
         Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void TestNewSequenceOrder()
+    {
+        var sim = StartSim(ymlToLoad: NewArraySequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.ArrayNew, Has.Length.EqualTo(3));
+        Assert.That(partial.ArrayNew, Is.EqualTo([1, 2, 3]));
+    }
+
+    [Test]
+    public void TestClearAndAddSequenceOrder()
+    {
+        var sim = StartSim(ymlToLoad: ClearAndAddArraySequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.ArrayAdd, Has.Length.EqualTo(3));
+        Assert.That(partial.ArrayAdd, Is.EqualTo([4, 5, 6]));
     }
 
     [Test]
@@ -688,7 +733,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(4));
-        Assert.That(partial.List, Is.EquivalentTo([1, 2, 3, 4]));
+        Assert.That(partial.List, Is.EqualTo([1, 2, 3, 4]));
         Assert.That(partial.Dictionary, Is.Empty);
     }
 
@@ -748,7 +793,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
         Assert.That(partial, Is.Not.Null);
         Assert.That(partial.List, Has.Count.EqualTo(1));
-        Assert.That(partial.List, Is.EquivalentTo([10]));
+        Assert.That(partial.List, Is.EqualTo([10]));
         Assert.That(partial.Dictionary, Is.Empty);
     }
 
@@ -913,7 +958,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.HasComp<PrototypePartialInheritorComponent>(comps), Is.False);
         Assert.That(comp.List, Is.Not.Empty);
         Assert.That(comp.List, Has.Count.EqualTo(1));
-        Assert.That(comp.List, Is.EquivalentTo([1]));
+        Assert.That(comp.List, Is.EqualTo([1]));
 
         // Reload again, should not add another 1 to the list
         changedPrototypes.Clear();
@@ -926,7 +971,7 @@ internal sealed partial class PrototypePartialTest
         Assert.That(ent.HasComp<PrototypePartialInheritorComponent>(comps), Is.False);
         Assert.That(comp.List, Is.Not.Empty);
         Assert.That(comp.List, Has.Count.EqualTo(1));
-        Assert.That(comp.List, Is.EquivalentTo([1]));
+        Assert.That(comp.List, Is.EqualTo([1]));
     }
 
     [Test]
@@ -940,7 +985,7 @@ internal sealed partial class PrototypePartialTest
 
         Assert.That(baseEnt.Parents, Is.Not.Null);
         Assert.That(baseEnt.Parents, Has.Length.EqualTo(3));
-        Assert.That(baseEnt.Parents, Is.EquivalentTo([ $"{ParentId}Parent3", $"{ParentId}Parent1", $"{ParentId}Parent2" ]));
+        Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentId}Parent3", $"{ParentId}Parent1", $"{ParentId}Parent2" ]));
 
         Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
         Assert.That(comp, Is.Not.Null);
@@ -963,6 +1008,12 @@ internal sealed partial class PrototypePartialTest
 
         [DataField]
         public int Int;
+
+        [DataField]
+        public int[] ArrayAdd = [100, 101];
+
+        [DataField]
+        public int[] ArrayNew = [100, 101];
     }
 
     internal sealed partial class PrototypePartialBaseComponent : Component

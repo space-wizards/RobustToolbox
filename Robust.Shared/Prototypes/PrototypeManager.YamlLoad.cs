@@ -178,16 +178,22 @@ public partial class PrototypeManager
             });
 
         var queue = Array.Empty<Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>?>();
+
+        void AppendMappingToQueue(int index, ResPath filePath, IEnumerable<ExtractedMappingData> mappings)
+        {
+            if (index >= queue.Length)
+                Array.Resize(ref queue, index + 1);
+
+            ref var indexQueue = ref queue[index];
+            indexQueue ??= new Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>();
+            indexQueue.Enqueue((filePath, mappings));
+        }
+
         foreach (var (file, result) in results)
         {
             if (IsFilePartial(file, out var index))
             {
-                if (index >= queue.Length)
-                    Array.Resize(ref queue, index + 1);
-
-                ref var indexQueue = ref queue[index];
-                indexQueue ??= new Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>();
-                indexQueue.Enqueue((file, result));
+                AppendMappingToQueue(index, file, result);
                 continue;
             }
 
@@ -195,14 +201,7 @@ public partial class PrototypeManager
             {
                 if (mapping.PartialIndex is {} partialIndex)
                 {
-                    if (partialIndex >= queue.Length)
-                        Array.Resize(ref queue, partialIndex + 1);
-
-                    ref var indexQueue = ref queue[partialIndex];
-                    indexQueue ??= new ();
-                    // We don't need to sort anything: all mappings would be in definition order
-                    indexQueue.Enqueue((file, [mapping]));
-
+                    AppendMappingToQueue(partialIndex, file, [mapping]);
                     continue;
                 }
 

@@ -610,7 +610,7 @@ namespace Robust.Shared.Prototypes
                 AllowSynchronousContinuations = true
             };
 
-            var hooksChannel = Channel.CreateUnbounded<ISerializationHooks>(hooksChannelOptions);
+            var hooksChannel = Channel.CreateUnbounded<DeferredHook>(hooksChannelOptions);
             var instantiateTask = Task.Run(() => InstantiatePrototypes(kinds, results, hooksChannel));
 
             // On the game thread: process AfterDeserialization hooks from the channel.
@@ -619,9 +619,11 @@ namespace Robust.Shared.Prototypes
             while (channelReader.WaitToReadAsync().AsTask().Result)
 #pragma warning restore RA0004
             {
-                while (channelReader.TryRead(out var hooks))
+                while (channelReader.TryRead(out var hook))
                 {
-                    hooks.AfterDeserialization();
+                    // Scope the description so a hook that logs a problem can name the prototype at fault.
+                    using var scope = SerializationHookContext.EnterRunningContext(hook.Context);
+                    hook.Hooks.AfterDeserialization();
                 }
             }
 
@@ -632,9 +634,8 @@ namespace Robust.Shared.Prototypes
         private void InstantiatePrototypes(
             KindData[] kinds,
             (KindData KindData, string Id, MappingDataNode Mapping, IPrototype? Instance)[] results,
-            Channel<ISerializationHooks> hooks)
+            Channel<DeferredHook> hooks)
         {
-            var hookCtx = new SerializationHookContext(hooks.Writer, false);
             try
             {
                 Parallel.For(0,
@@ -642,6 +643,15 @@ namespace Robust.Shared.Prototypes
                     i =>
                     {
                         ref var item = ref results[i];
+
+                        // A hook context per prototype, so any deferred hook it queues knows which prototype
+                        // it came from. Deferred hooks run later and out of order, so the id cannot be
+                        // recovered at that point any other way.
+                        var hookCtx = new SerializationHookContext(
+                            hooks.Writer,
+                            false,
+                            $"{item.KindData.Name} '{item.Id}'");
+
                         item.Instance = TryReadPrototype(item.KindData.Type, item.Id, item.Mapping, hookCtx);
                     });
 

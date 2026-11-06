@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
-using Microsoft.Extensions.ObjectPool;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Physics;
@@ -53,7 +52,6 @@ namespace Robust.Client.GameStates
         private readonly HashSet<NetEntity> _stateEnts = new();
         private readonly List<EntityUid> _toDelete = new();
         private readonly List<IComponent> _toRemove = new();
-        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
         private readonly HashSet<EntityUid> _sorted = new();
         private readonly List<NetEntity> _created = new();
@@ -73,9 +71,6 @@ namespace Robust.Client.GameStates
             EntityState? CurState,
             EntityState? NextState,
             HashSet<ushort>? PendingReapply);
-
-        private readonly ObjectPool<Dictionary<ushort, IComponentState?>> _compDataPool =
-            new DefaultObjectPool<Dictionary<ushort, IComponentState?>>(new DictPolicy<ushort, IComponentState?>(), 256);
 
         private uint _metaCompNetId;
         private uint _xformCompNetId;
@@ -788,28 +783,25 @@ namespace Robust.Client.GameStates
 #endif
                 }
 
-                var compData = _compDataPool.Get();
-                _outputData.Add(netEntity, compData);
+                var fullRep = _processor.GetLastServerStates(netEntity);
+                fullRep.EnsureCapacity(meta.NetComponents.Count);
 
                 foreach (var (netId, component) in meta.NetComponents)
                 {
                     DebugTools.Assert(component.NetSyncEnabled);
 
+                    // A full server state wins over implicit.
+                    // Only missing states (e.g. components not on the prototype) and initial deltas need a locally inferred baseline.
+                    if (fullRep.TryGetValue(netId, out var serverState) && serverState is not IComponentDeltaState)
+                        continue;
+
                     var state = _entities.GetComponentState(bus, component, null, GameTick.Zero);
                     DebugTools.Assert(state is not IComponentDeltaState);
-                    compData.Add(netId, state);
+                    _processor.MergeImplicitComponentState(netEntity, netId, state);
                 }
             }
 
             _created.Clear();
-            _processor.MergeImplicitData(_outputData);
-
-            foreach (var data in _outputData.Values)
-            {
-                _compDataPool.Return(data);
-            }
-
-            _outputData.Clear();
         }
 
         private void AckGameState(GameTick sequence)

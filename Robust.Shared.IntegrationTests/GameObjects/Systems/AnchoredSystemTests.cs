@@ -284,20 +284,21 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
          */
 
         [Test]
-        public void AnchorEntity_CurrentMapPosition_AnchorsToGridUnderEntity()
+        public void AnchorEntity_CurrentPosition_SnapsToTileCenter()
         {
             var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
             var mapUid = mapSys.GetMap(coords.MapId);
             var tileIndices = mapSys.TileIndicesFor(grid, coords);
             mapSys.SetTile(grid, tileIndices, new Tile(1));
 
-            var ent1 = entMan.SpawnEntity(null, new EntityCoordinates(mapUid, coords.Position));
+            var ent1 = entMan.SpawnEntity(null, new EntityCoordinates(grid.Owner, coords.Position));
 
             Assert.That(xformSys.AnchorEntity(ent1), Is.True);
             Assert.That(sim.Transform(ent1, entMan).Anchored, Is.True);
             Assert.That(sim.Transform(ent1, entMan).ParentUid, Is.EqualTo(grid.Owner));
             Assert.That(mapSys.GetAnchoredEntities(grid, tileIndices), Does.Contain(ent1));
-            Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(7f, 7f)));
+            // Check it snaps to tile center.
+            Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(7.5f, 7.5f)));
         }
 
         [Test]

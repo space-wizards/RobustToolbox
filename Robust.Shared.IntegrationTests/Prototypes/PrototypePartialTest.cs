@@ -21,6 +21,9 @@ internal sealed partial class PrototypePartialTest
     private static readonly EntProtoId InheritanceIdBase = $"{nameof(PrototypePartialTest)}InheritanceBase";
     private static readonly EntProtoId InheritanceIdInheritor = $"{nameof(PrototypePartialTest)}InheritanceInheritor";
     private static readonly EntProtoId ReloadId = $"{nameof(PrototypePartialTest)}Reload";
+    private static readonly EntProtoId ReparentIdBase = $"{nameof(PrototypePartialTest)}ReparentBase";
+    private static readonly EntProtoId ReparentIdMiddle = $"{nameof(PrototypePartialTest)}ReparentMiddle";
+    private static readonly EntProtoId ReparentIdChild = $"{nameof(PrototypePartialTest)}ReparentChild";
     private static readonly EntProtoId ParentId = $"{nameof(PrototypePartialTest)}Parent";
     private static readonly EntProtoId TestPrototypeId = $"{nameof(PrototypePartialTest)}TestPrototype";
     private static readonly EntProtoId ParentChildId = $"{ParentId}Child";
@@ -256,6 +259,60 @@ internal sealed partial class PrototypePartialTest
     - 4
 ";
 
+    private static readonly string PartialTagAddSequence = $@"
+- type: !Partial:0 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialTagIndex0Sequence = $@"
+- type: !Partial:0 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialTagIndex1Sequence = $@"
+- type: !Partial:1 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 5
+";
+
+    private static readonly string PartialTagNoIndexSequence = $@"
+- type: !Partial entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialOnlyTagWithIndexAddSequence = $@"
+- type: !PartialOnly:0 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialOnlyTagIndex1Sequence = $@"
+- type: !PartialOnly:1 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 5
+";
+
     private static readonly string RemoveComponent = $@"
 - type: entity
   id: {SequenceId}
@@ -342,6 +399,32 @@ internal sealed partial class PrototypePartialTest
   id: {ReloadId}
   components:
   - type: PrototypePartial
+";
+
+    private static readonly string Reparent = $@"
+- type: entity
+  id: {ReparentIdBase}
+  abstract: true
+  components:
+  - type: PrototypePartialBase
+    int: 1
+
+- type: entity
+  parent: {ReparentIdBase}
+  id: {ReparentIdMiddle}
+  abstract: true
+  components:
+  - type: PrototypePartialInheritor
+
+- type: entity
+  parent: {ReparentIdBase}
+  id: {ReparentIdChild}
+";
+
+    private static readonly string ReparentToMiddle = $@"
+- type: !PartialOnly entity
+  id: {ReparentIdChild}
+  parent: !Clear {ReparentIdMiddle}
 ";
 
     private static readonly string ReloadAddSequenceData = $@"
@@ -486,6 +569,7 @@ internal sealed partial class PrototypePartialTest
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(MappingSequenceId)}.yml"), MappingSequence);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(InheritanceIdBase)}.yml"), Inheritance);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ReloadId)}.yml"), Reload);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ReparentIdBase)}.yml"), Reparent);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ParentId)}.yml"), Parent);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(SequenceChildId)}.yml"), SequenceChild);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(TestPrototypeId)}.yml"), TestPrototype);
@@ -912,6 +996,122 @@ internal sealed partial class PrototypePartialTest
     }
 
     [Test]
+    public void PartialTagExistingAddSequenceTest()
+    {
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: PartialTagAddSequence
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([1, 2, 3, 4]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void PartialTagOrderingTest()
+    {
+        // Supply index 1 first and index 0 second; partial queue must process index 0 before index 1.
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: [PartialTagIndex1Sequence, PartialTagIndex0Sequence]
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(5));
+        Assert.That(partial.List, Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
+    }
+
+    [Test]
+    public void PartialTagWithoutIndexLogsError()
+    {
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            changeCVar: factory => factory.SetCVar(RTCVars.FailureLogLevel, LogLevel.Fatal),
+            ymlToLoad: PartialTagNoIndexSequence
+        );
+
+        Assert.That(
+            ((SpyLogManager)sim.Resolve<ILogManager>()).CountError,
+            Is.GreaterThanOrEqualTo(1)
+        );
+    }
+
+    [Test]
+    public void PartialOnlyTagWithIndexExistingAddSequenceTest()
+    {
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: PartialOnlyTagWithIndexAddSequence
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([1, 2, 3, 4]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void PartialOnlyTagWithIndexNoExistingNoPrototypeAddSequenceTest()
+    {
+        var sim = StartSim(
+            false,
+            addBase: false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: PartialOnlyTagWithIndexAddSequence
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        Assert.That(prototypes.HasIndex(SequenceId), Is.False);
+    }
+
+    [Test]
+    public void PartialOnlyTagOrderingTest()
+    {
+        // Supply index 1 first and index 0 second; partial queue must process index 0 before index 1.
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: [PartialOnlyTagIndex1Sequence, PartialOnlyTagWithIndexAddSequence]
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(5));
+        Assert.That(partial.List, Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
+    }
+
+    [Test]
     public void RemoveComponentTest()
     {
         var sim = StartSim(ymlToLoad: RemoveComponent);
@@ -1136,7 +1336,22 @@ internal sealed partial class PrototypePartialTest
         Assert.That(comp.List, Has.Count.EqualTo(1));
         Assert.That(comp.List, Is.EqualTo([1]));
     }
+  
+    [Test]
+    public void ReparentInheritsGrandparentTest()
+    {
+        var sim = StartSim(ymlToLoad: ReparentToMiddle);
 
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(ReparentIdChild);
+        Assert.That(ent.Parents, Is.EquivalentTo([ReparentIdMiddle.Id]));
+        Assert.That(ent.HasComp<PrototypePartialInheritorComponent>(comps), Is.True);
+        Assert.That(ent.TryComp(out PrototypePartialBaseComponent? baseComp, comps), Is.True);
+        Assert.That(baseComp, Is.Not.Null);
+        Assert.That(baseComp.Int, Is.EqualTo(1));
+    }
+  
     [Test]
     public void TestParentAdd()
     {

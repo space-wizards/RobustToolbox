@@ -1147,6 +1147,13 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> RenderTileEdges =
             CVarDef.Create("render.tile_edges", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// How many texture pixels map to one world meter (one tile).
+        /// The client applies the server's value on connect or cvar change, rebuilding sprite bounds and tile atlas.
+        /// </summary>
+        public static readonly CVarDef<int> DisplayPixelsPerMeter =
+            CVarDef.Create("display.pixels_per_meter", SharedEyeSystem.DefaultPixelsPerMeter, CVar.REPLICATED | CVar.SERVER);
+
         /*
          *  CONTROLS
          */

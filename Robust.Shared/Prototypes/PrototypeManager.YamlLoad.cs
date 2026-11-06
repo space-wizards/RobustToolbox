@@ -893,7 +893,7 @@ public partial class PrototypeManager
                 continue;
             }
 
-            if (IsTagWithParam(dataNode, PartialIndexTag, out var partialIndexTag))
+            if (IsTagOrMappingKeyWithParam(dataNode, PartialIndexTag, out var partialIndexTag))
             {
                 if (partialIndexTag is null)
                     throw new PrototypeLoadException($"{PartialIndexTag} is missing parameter");

@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Robust.Roslyn.Shared;
+using Robust.Shared.IoC;
 
 namespace Robust.Analyzers;
 
@@ -11,15 +12,23 @@ public sealed class DependencyNullableAnalyzer : DiagnosticAnalyzer
 {
     private const string DependencyAttributeType = "Robust.Shared.IoC.DependencyAttribute";
 
-    private static readonly DiagnosticDescriptor Rule = new (
+    private static readonly DiagnosticDescriptor RequiredRule = new (
         Diagnostics.IdDependencyNullable,
-        "Dependencies should not be nullable types",
-        "[Dependency] field '{0}' is a nullable type. This has no effect and will be disallowed in the future.",
+        "Required dependencies should not be nullable types",
+        "[Dependency] field '{0}' is a nullable type",
         "Usage",
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Error,
         true);
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
+    private static readonly DiagnosticDescriptor OptionalRule = new (
+        Diagnostics.IdDependencyNotNullable,
+        "Optional dependencies must be nullable types",
+        "[Dependency(IoCMode.Optional)] field '{0}' is not a nullable type",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true);
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [RequiredRule, OptionalRule];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -37,26 +46,46 @@ public sealed class DependencyNullableAnalyzer : DiagnosticAnalyzer
 
     private static void CheckField(SymbolAnalysisContext ctx, INamedTypeSymbol attrSymbol)
     {
-        if (ctx.Symbol is not IFieldSymbol symbol)
+        if (ctx.Symbol is not IFieldSymbol symbol || !AttributeHelper.HasAttribute(symbol, attrSymbol, out var attribute))
             return;
-
-        if (!AttributeHelper.HasAttribute(symbol, DependencyAttributeType, out _))
-            return;
-
-        if (symbol.Type.NullableAnnotation == NullableAnnotation.Annotated)
+        var mode = IoCMode.Required;
+        if (attribute.ConstructorArguments.Length > 0 && attribute.ConstructorArguments[0].Value is int posValue)
         {
-            if (symbol.DeclaringSyntaxReferences.Length == 0)
-                return;
-
-            var declarator = symbol.DeclaringSyntaxReferences[0]
-                .GetSyntax()
-                .FirstAncestorOrSelf<VariableDeclarationSyntax>();
-
-            if (declarator == null)
-                return;
-
-            ctx.ReportDiagnostic(
-                Diagnostic.Create(Rule, declarator.Type.GetLocation(), symbol.Name));
+            mode = (IoCMode)posValue;
         }
+        else if (attribute.NamedArguments.Any(na => na.Key == "Mode"))
+        {
+            var modeArg = attribute.NamedArguments.First(na => na.Key == "Mode").Value;
+            if (modeArg.Value is int namedValue)
+            {
+                mode = (IoCMode)namedValue;
+            }
+        }
+        DiagnosticDescriptor descriptor;
+        switch (mode)
+        {
+            case IoCMode.Required:
+            case IoCMode.Differed:
+                if (symbol.Type.NullableAnnotation != NullableAnnotation.Annotated)
+                    return;
+                descriptor = RequiredRule;
+                break;
+            case IoCMode.Optional:
+            case IoCMode.DifferedOptional:
+                if (symbol.Type.NullableAnnotation == NullableAnnotation.Annotated)
+                    return;
+                descriptor = OptionalRule;
+                break;
+            default:
+                return;
+        }
+        if (symbol.DeclaringSyntaxReferences.Length == 0)
+            return;
+        var declarator = symbol.DeclaringSyntaxReferences[0]
+            .GetSyntax()
+            .FirstAncestorOrSelf<VariableDeclarationSyntax>();
+        if (declarator == null)
+            return;
+        ctx.ReportDiagnostic(Diagnostic.Create(descriptor, declarator.Type.GetLocation(), symbol.Name));
     }
 }

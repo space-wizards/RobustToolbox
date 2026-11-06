@@ -49,6 +49,22 @@ public static class AttributeHelper
         return defaultValue;
     }
 
+    public static TEnum GetNamedArgumentEnum<TEnum>(AttributeData data, string name, TEnum defaultValue)
+    where TEnum: struct,Enum
+    {
+        foreach (var kv in data.NamedArguments)
+        {
+            if (kv.Key != name)
+                continue;
+
+            if (kv.Value is { Kind: TypedConstantKind.Enum, Value: TEnum })
+            {
+                return (TEnum)Enum.ToObject(typeof(TEnum), kv.Value);
+            }
+        }
+        return defaultValue;
+    }
+
     public static bool HasAttribute(
         ISymbol symbol,
         ITypeSymbol attribute,

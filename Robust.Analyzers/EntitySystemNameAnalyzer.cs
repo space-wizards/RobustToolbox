@@ -68,6 +68,7 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
             // If this assembly isn't marked with our attribute, we can ignore it.
             if (!AttributeHelper.HasAttribute(ctx.Compilation.Assembly, assemblySideAttributeType, out var sideAttributeData))
                 return;
+
             // Get the Side of this assembly.
             var side = (AssemblySide)sideAttributeData.ConstructorArguments[0].Value!;
 
@@ -96,10 +97,10 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         SymbolAnalysisContext context,
         AssemblySide side,
         ref TypeSymbols symbols
-        )
+    )
     {
         // Filter out anything that isn't a class.
-        if (context.Symbol is not INamedTypeSymbol symbol || symbol.TypeKind != TypeKind.Class)
+        if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Class } symbol)
             return;
 
         // Filter out anything that isn't an EntitySystem.
@@ -109,22 +110,26 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         // Compare the prefix of the name written in the code with the correct name.
         var expectedPrefix = GetExpectedPrefix(symbol, side);
         var actualPrefix = GetPrefix(symbol);
-        if (actualPrefix != expectedPrefix)
+        if (actualPrefix == expectedPrefix)
+            return;
+
+        var baseName = GetBaseName(symbol);
+        var fixedName = $"{expectedPrefix}{baseName}";
+
+        var props = new Dictionary<string, string?>
         {
-            var baseName = GetBaseName(symbol);
-            var fixedName = $"{expectedPrefix}{baseName}";
+            // Include the correct replacement name in the diagnostic,
+            // so the CodeFix can use it.
+            { FixedNameKey, fixedName }
+        };
 
-            var props = new Dictionary<string, string?>
-            {
-                // Include the correct replacement name in the diagnostic,
-                // so the CodeFix can use it.
-                { FixedNameKey, fixedName }
-            };
-
+        var primaryLocation = TypeSymbolHelper.GetPrimaryLocation(symbol);
+        if (primaryLocation is not null)
+        {
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     EntitySystemNamingRule,
-                    TypeSymbolHelper.GetPrimaryLocation(symbol),
+                    primaryLocation,
                     props.ToImmutableDictionary(),
                     symbol.Name,
                     fixedName

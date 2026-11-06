@@ -498,6 +498,12 @@ internal sealed partial class PrototypePartialTest
   id: {ParentChildId}
 ";
 
+    private static readonly string ParentClearAndAddSingle = $@"
+- type: entity
+  parent: !Clear {ParentId}Parent3
+  id: {ParentChildId}
+";
+
     private static readonly string ParentSingleAddTwo = $@"
 - type: entity
   parent: [ {ParentId}Parent2, {ParentId}Parent3 ]
@@ -1364,6 +1370,24 @@ internal sealed partial class PrototypePartialTest
         Assert.That(baseEnt.Parents, Is.Not.Null);
         Assert.That(baseEnt.Parents, Has.Length.EqualTo(3));
         Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentId}Parent3", $"{ParentId}Parent1", $"{ParentId}Parent2" ]));
+
+        Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
+        Assert.That(comp, Is.Not.Null);
+        Assert.That(comp.Int, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void TestParentClearAndAddSingle()
+    {
+        var sim = StartSim(ymlToLoad: ParentClearAndAddSingle);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index(ParentChildId);
+
+        Assert.That(baseEnt.Parents, Is.Not.Null);
+        Assert.That(baseEnt.Parents, Has.Length.EqualTo(1));
+        Assert.That(baseEnt.Parents, Is.EqualTo([ $"{ParentId}Parent3" ]));
 
         Assert.That(baseEnt.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
         Assert.That(comp, Is.Not.Null);

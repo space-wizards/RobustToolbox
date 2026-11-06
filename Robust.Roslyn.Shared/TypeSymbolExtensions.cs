@@ -1,3 +1,5 @@
+#nullable enable
+
 using Microsoft.CodeAnalysis;
 
 namespace Robust.Roslyn.Shared;

@@ -33,10 +33,10 @@ jobs:
           mkdir "release/${{ steps.parse_version.outputs.version }}"
           mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
 
-      - name: Upload files to Dropwig
+      - name: Upload files to robust-builds
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345
         with:
-          host: robust-builds.cdn.spacestation14.com
+          host: robust-builds.fallback.cdn.spacestation14.com
           port: 62222
           username: robust-build-push
           key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
@@ -47,7 +47,7 @@ jobs:
       - name: Update manifest JSON
         uses: appleboy/ssh-action@ff85246acaad7bdce478db94a363cd2bf7c90345
         with:
-          host: robust-builds.cdn.spacestation14.com
+          host: robust-builds.fallback.cdn.spacestation14.com
           port: 62222
           username: robust-build-push
           key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}

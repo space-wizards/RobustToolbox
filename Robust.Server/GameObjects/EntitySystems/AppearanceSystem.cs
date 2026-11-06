@@ -3,7 +3,7 @@ using Robust.Shared.GameStates;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class AppearanceSystem : SharedAppearanceSystem
+public sealed partial class AppearanceSystem : SharedAppearanceSystem
 {
     protected override void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
     {

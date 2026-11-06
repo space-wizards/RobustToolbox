@@ -10,7 +10,7 @@
 // Texture coordinates.
 /*layout (location = 1)*/ attribute vec2 tCoord;
 
-varying vec2 UV;
+varying highp vec2 UV;
 
 void main()
 {

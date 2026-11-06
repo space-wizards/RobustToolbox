@@ -205,6 +205,60 @@ internal sealed partial class PrototypePartialTest
     - 4
 ";
 
+    private static readonly string PartialTagAddSequence = $@"
+- type: !Partial:0 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialTagIndex0Sequence = $@"
+- type: !Partial:0 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialTagIndex1Sequence = $@"
+- type: !Partial:1 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 5
+";
+
+    private static readonly string PartialTagNoIndexSequence = $@"
+- type: !Partial entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialOnlyTagWithIndexAddSequence = $@"
+- type: !PartialOnly:0 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 4
+";
+
+    private static readonly string PartialOnlyTagIndex1Sequence = $@"
+- type: !PartialOnly:1 entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 5
+";
+
     private static readonly string RemoveComponent = $@"
 - type: entity
   id: {SequenceId}
@@ -731,6 +785,122 @@ internal sealed partial class PrototypePartialTest
 
         var prototypes = sim.Resolve<IPrototypeManager>();
         Assert.That(prototypes.HasIndex(SequenceId), Is.False);
+    }
+
+    [Test]
+    public void PartialTagExistingAddSequenceTest()
+    {
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: PartialTagAddSequence
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([1, 2, 3, 4]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void PartialTagOrderingTest()
+    {
+        // Supply index 1 first and index 0 second; partial queue must process index 0 before index 1.
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: [PartialTagIndex1Sequence, PartialTagIndex0Sequence]
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(5));
+        Assert.That(partial.List, Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
+    }
+
+    [Test]
+    public void PartialTagWithoutIndexLogsError()
+    {
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            changeCVar: factory => factory.SetCVar(RTCVars.FailureLogLevel, LogLevel.Fatal),
+            ymlToLoad: PartialTagNoIndexSequence
+        );
+
+        Assert.That(
+            ((SpyLogManager)sim.Resolve<ILogManager>()).CountError,
+            Is.GreaterThanOrEqualTo(1)
+        );
+    }
+
+    [Test]
+    public void PartialOnlyTagWithIndexExistingAddSequenceTest()
+    {
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: PartialOnlyTagWithIndexAddSequence
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([1, 2, 3, 4]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void PartialOnlyTagWithIndexNoExistingNoPrototypeAddSequenceTest()
+    {
+        var sim = StartSim(
+            false,
+            addBase: false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: PartialOnlyTagWithIndexAddSequence
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        Assert.That(prototypes.HasIndex(SequenceId), Is.False);
+    }
+
+    [Test]
+    public void PartialOnlyTagOrderingTest()
+    {
+        // Supply index 1 first and index 0 second; partial queue must process index 0 before index 1.
+        var sim = StartSim(
+            false,
+            dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+            ymlToLoad: [PartialOnlyTagIndex1Sequence, PartialOnlyTagWithIndexAddSequence]
+        );
+
+        Assert.That(((SpyLogManager)sim.Resolve<ILogManager>()).CountError, Is.Zero);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(5));
+        Assert.That(partial.List, Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
     }
 
     [Test]

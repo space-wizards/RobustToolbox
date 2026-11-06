@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added the `rng:seed` and `rng:randomize` Toolshed commands to either set or randomize the shared RNG's seed for debugging purposes.
 
 ### Bugfixes
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
@@ -32,9 +31,9 @@ namespace Robust.Shared.Serialization
             private string[]? _mappedStrings;
             private FrozenDictionary<string, int>? _stringMapping;
 
-            // HashSet<string> of strings that we are currently building.
-            // This should be added to in a thread-safe manner with TryAddString during building.
-            private readonly HashSet<string> _buildingStrings = new();
+            // Strings collected while building the mapping. This is released once the mapping is finalized.
+            private HashSet<string>? _buildingStrings = new(StringComparer.Ordinal);
+            private readonly object _buildingLock = new();
 
             public int StringCount => _mappedStrings?.Length ?? 0;
 
@@ -45,11 +44,17 @@ namespace Robust.Shared.Serialization
 
             public void FinalizeMapping()
             {
-                Locked = true;
+                HashSet<string> buildingStrings;
+                lock (_buildingLock)
+                {
+                    Locked = true;
+                    buildingStrings = _buildingStrings ?? throw new InvalidOperationException("Mapped strings have already been finalized.");
+                    _buildingStrings = null;
+                }
 
                 // Sort to ensure determinism even if addition order is different.
-                _mappedStrings = _buildingStrings.ToArray();
-                Array.Sort(_mappedStrings);
+                _mappedStrings = buildingStrings.ToArray();
+                Array.Sort(_mappedStrings, StringComparer.Ordinal);
 
                 // Create dictionary.
                 _stringMapping = GenMapDict(_mappedStrings);
@@ -57,14 +62,14 @@ namespace Robust.Shared.Serialization
 
             private FrozenDictionary<string, int> GenMapDict(string[] strings)
             {
-                var dict = new Dictionary<string, int>();
+                var dict = new Dictionary<string, int>(strings.Length, StringComparer.Ordinal);
                 for (var i = 0; i < strings.Length; i++)
                 {
                     dict.Add(strings[i], i);
                 }
 
                 var st = RStopwatch.StartNew();
-                var frozen = dict.ToFrozenDictionary();
+                var frozen = dict.ToFrozenDictionary(StringComparer.Ordinal);
                 _sawmill.Verbose($"Freezing mapped strings took {st.Elapsed.TotalMilliseconds:f2}ms");
                 return frozen;
             }
@@ -97,7 +102,7 @@ namespace Robust.Shared.Serialization
 
             private static string[] ReadStringPackage(Stream stream, out byte[] hash)
             {
-                var buf = ArrayPool<byte>.Shared.Rent(4096);
+                Span<byte> buf = stackalloc byte[MaxMappedStringSize];
                 using var zs = new ZStdDecompressStream(stream, ownStream: false);
                 using var hasherStream = Blake2BHasherStream.CreateReader(zs, ReadOnlySpan<byte>.Empty, 32);
 
@@ -107,8 +112,11 @@ namespace Robust.Shared.Serialization
                 for (var i = 0; i < count; ++i)
                 {
                     Primitives.ReadPrimitive(hasherStream, out uint lu);
+                    if (lu > MaxMappedStringSize)
+                        throw new InvalidDataException("Mapped string package contains an overly long string.");
+
                     var l = (int) lu;
-                    var span = buf.AsSpan(0, l);
+                    var span = buf[..l];
                     hasherStream.ReadExact(span);
 
                     var str = Encoding.UTF8.GetString(span);
@@ -136,12 +144,15 @@ namespace Robust.Shared.Serialization
 
                 foreach (var str in strings)
                 {
-                    // Ok so the code checks the goddamn string size before encoding to UTF-8 to check length.
-                    // Yes, this code sucks, but I don't care to fix it right now.
-                    if (str.Length > MaxMappedStringSize || Encoding.UTF8.GetByteCount(str) > MaxMappedStringSize)
-                        throw new Exception("Attempted to map a string that exceeds the maximum length.");
-
-                    var l = Encoding.UTF8.GetBytes(str, buf);
+                    int l;
+                    try
+                    {
+                        l = Encoding.UTF8.GetBytes(str, buf);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        throw new InvalidDataException("Attempted to map a string that exceeds the maximum length.", e);
+                    }
 
                     Primitives.WritePrimitive(hasherStream, (uint) l);
                     hasherStream.Write(buf[..l]);
@@ -159,14 +170,17 @@ namespace Robust.Shared.Serialization
             /// </exception>
             public void ClearStrings()
             {
-                if (Locked)
+                lock (_buildingLock)
                 {
-                    throw new InvalidOperationException("Mapped strings are locked, will not clear.");
-                }
+                    if (Locked)
+                    {
+                        throw new InvalidOperationException("Mapped strings are locked, will not clear.");
+                    }
 
-                _buildingStrings.Clear();
-                _mappedStrings = null;
-                _stringMapping = null;
+                    _buildingStrings = new HashSet<string>(StringComparer.Ordinal);
+                    _mappedStrings = null;
+                    _stringMapping = null;
+                }
             }
 
             /// <summary>
@@ -189,6 +203,11 @@ namespace Robust.Shared.Serialization
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
+                AddStringCore(str, batch: null);
+            }
+
+            private void AddStringCore(string str, HashSet<string>? batch)
+            {
                 if (string.IsNullOrEmpty(str))
                 {
                     return;
@@ -211,7 +230,7 @@ namespace Robust.Shared.Serialization
 
                 if (str.Length <= MinMappedStringSize) return;
 
-                if (!TryAddString(str))
+                if (!TryAddString(str, batch))
                 {
                     return;
                 }
@@ -219,21 +238,21 @@ namespace Robust.Shared.Serialization
                 var symTrimmedStr = str.Trim(TrimmableSymbolChars);
                 if (symTrimmedStr != str)
                 {
-                    AddString(symTrimmedStr);
+                    AddStringCore(symTrimmedStr, batch);
                 }
 
                 if (str.Contains('/'))
                 {
                     foreach (var substr in str.Split("/", StringSplitOptions.RemoveEmptyEntries))
                     {
-                        AddString(substr);
+                        AddStringCore(substr, batch);
                     }
                 }
                 else if (str.Contains("_"))
                 {
                     foreach (var substr in str.Split("_", StringSplitOptions.RemoveEmptyEntries))
                     {
-                        AddString(substr);
+                        AddStringCore(substr, batch);
                     }
                 }
                 else if (str.Contains(" "))
@@ -242,7 +261,7 @@ namespace Robust.Shared.Serialization
                     {
                         if (substr == str) continue;
 
-                        AddString(substr);
+                        AddStringCore(substr, batch);
                     }
                 }
                 else
@@ -252,20 +271,9 @@ namespace Robust.Shared.Serialization
                     {
                         if (substr == str) continue;
 
-                        AddString(substr);
+                        AddStringCore(substr, batch);
                     }
 
-                    for (var si = 0; si < parts.Length; ++si)
-                    {
-                        for (var sl = 1; sl <= parts.Length - si; ++sl)
-                        {
-                            // Don't ask me what the original was doing; we just skip by si and take sl
-                            // Can be reduced even further if you know what you're doin
-                            var end = si + sl;
-                            var subBetter = string.Concat(parts[si..^(parts.Length - end)]);
-                            AddString(subBetter);
-                        }
-                    }
                 }
             }
 
@@ -284,6 +292,7 @@ namespace Robust.Shared.Serialization
                 if (!asm.TryGetRawMetadata(out var blob, out var len))
                     return;
 
+                var batch = new HashSet<string>(StringComparer.Ordinal);
                 var reader = new MetadataReader(blob, len);
                 var usrStrHandle = default(UserStringHandle);
                 do
@@ -293,7 +302,7 @@ namespace Robust.Shared.Serialization
                     {
                         // Because these strings are in a loaded assembly they're already interned.
                         // This intern call retrieves the interned instance.
-                        AddString(string.Intern(userStr.Normalize()));
+                        AddStringCore(string.Intern(userStr.Normalize()), batch);
                     }
 
                     usrStrHandle = reader.GetNextHandle(usrStrHandle);
@@ -306,11 +315,12 @@ namespace Robust.Shared.Serialization
                     if (str != "")
                     {
                         // Ditto about interning.
-                        AddString(string.Intern(str.Normalize()));
+                        AddStringCore(string.Intern(str.Normalize()), batch);
                     }
 
                     strHandle = reader.GetNextHandle(strHandle);
                 } while (strHandle != default);
+                MergeBatch(batch);
             }
 
             /// <summary>
@@ -327,6 +337,7 @@ namespace Robust.Shared.Serialization
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
+                var batch = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var doc in yaml)
                 {
                     foreach (var node in doc.AllNodes)
@@ -334,13 +345,13 @@ namespace Robust.Shared.Serialization
                         var a = node.Anchor;
                         if (!a.IsEmpty)
                         {
-                            AddString(a.Value);
+                            AddStringCore(a.Value, batch);
                         }
 
                         var t = node.Tag;
                         if (!t.IsEmpty)
                         {
-                            AddString(t.Value);
+                            AddStringCore(t.Value, batch);
                         }
 
                         if (node is not YamlScalarNode scalar)
@@ -352,9 +363,10 @@ namespace Robust.Shared.Serialization
                             continue;
                         }
 
-                        AddString(v);
+                        AddStringCore(v, batch);
                     }
                 }
+                MergeBatch(batch);
             }
 
             public void AddStrings(DataNode dataNode)
@@ -364,11 +376,12 @@ namespace Robust.Shared.Serialization
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
+                var batch = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var node in DataNodeHelpers.GetAllNodes(dataNode))
                 {
                     var t = node.Tag;
                     if (!string.IsNullOrEmpty(t))
-                        AddString(t);
+                        AddStringCore(t, batch);
 
                     if (node is not ValueDataNode value)
                         continue;
@@ -377,8 +390,9 @@ namespace Robust.Shared.Serialization
                     if (string.IsNullOrEmpty(v))
                         continue;
 
-                    AddString(v);
+                    AddStringCore(v, batch);
                 }
+                MergeBatch(batch);
             }
 
             /// <summary>
@@ -392,22 +406,37 @@ namespace Robust.Shared.Serialization
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
+                var batch = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var str in strings)
                 {
-                    AddString(str);
+                    AddStringCore(str, batch);
+                }
+                MergeBatch(batch);
+            }
+
+            private void MergeBatch(HashSet<string> batch)
+            {
+                lock (_buildingLock)
+                {
+                    if (Locked)
+                        throw new InvalidOperationException("Mapped strings are locked, will not add.");
+
+                    var buildingStrings = _buildingStrings ?? throw new InvalidOperationException("Mapped strings have already been finalized.");
+                    buildingStrings.UnionWith(batch);
                 }
             }
 
-            private bool TryAddString(string str)
+            private bool TryAddString(string str, HashSet<string>? batch)
             {
                 if (str.Length > MaxMappedStringSize || Encoding.UTF8.GetByteCount(str) > MaxMappedStringSize)
                     return false;
 
-                // Yes this spends like half the CPU time of AddString in lock contention.
-                // But it's still faster than all my other attempts, so...
-                lock (_buildingStrings)
+                if (batch != null)
+                    return batch.Add(str);
+
+                lock (_buildingLock)
                 {
-                    return _buildingStrings.Add(str);
+                    return _buildingStrings?.Add(str) == true;
                 }
             }
 

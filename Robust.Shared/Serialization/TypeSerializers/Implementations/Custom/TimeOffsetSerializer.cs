@@ -8,6 +8,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -29,28 +30,17 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
-        if (context is {WritingReadingPrototypes: true})
-            return TimeSpan.Zero;
+        if (TimeSpanExt.TryTimeSpan(node, out var time))
+            return time;
 
-        if (context is not EntityDeserializer {CurrentReadingEntity.PostInit: true} ctx)
-            return TimeSpan.Zero;
-
-        var timing = ctx.Timing;
-        var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-        var time = TimeSpan.FromSeconds(seconds);
-        
-        // Checks if adding time and curTime will overflow.
-        if(time > TimeSpan.MaxValue - timing.CurTime)
-            return TimeSpan.MaxValue;
-        
-        return time + timing.CurTime;
+        throw new FormatException($"The input string '{node.Value}' can't be converted to TimeSpan");
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+        return TimeSpanExt.TryTimeSpan(node, out _)
             ? new ValidatedValueNode(node)
             : new ErrorNode(node, "Failed parsing TimeSpan");
     }
@@ -89,6 +79,28 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         SerializationHookContext hookCtx,
         ISerializationContext? context = null)
     {
-        return source;
+        var timing = context switch
+        {
+            EntityDeserializer {CurrentReadingEntity.PostInit: true} deserializer => deserializer.Timing,
+            EntityDeserializer => null,
+            _ => dependencies.Resolve<IGameTiming>(),
+        };
+
+        if (timing == null)
+            return source;
+
+        return ApplyOffset(source, timing.CurTime);
+    }
+
+    internal static TimeSpan ApplyOffset(TimeSpan source, TimeSpan offset)
+    {
+        // Checks if adding time and curTime will overflow.
+        if (offset > TimeSpan.Zero && source > TimeSpan.MaxValue - offset)
+            return TimeSpan.MaxValue;
+
+        if (offset < TimeSpan.Zero && source < TimeSpan.MinValue - offset)
+            return TimeSpan.MinValue;
+
+        return source + offset;
     }
 }

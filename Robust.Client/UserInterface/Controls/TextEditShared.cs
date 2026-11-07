@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -117,6 +121,23 @@ internal static class TextEditShared
         Other,
         AlphaNumeric,
         Whitespace
+    }
+
+    internal sealed class DoubleClickState
+    {
+        private TimeSpan? _lastTime;
+        private Vector2? _lastPosition;
+
+        public bool Check(Vector2 position, TimeSpan now, IConfigurationManager configuration)
+        {
+            var result = _lastTime is { } lastTime && _lastPosition is { } lastPosition
+                && now - lastTime <= TimeSpan.FromMilliseconds(configuration.GetCVar(CVars.DoubleClickDelay))
+                && (lastPosition - position).IsShorterThan(configuration.GetCVar(CVars.DoubleClickRange));
+
+            _lastTime = now;
+            _lastPosition = position;
+            return result;
+        }
     }
 
     /// <summary>

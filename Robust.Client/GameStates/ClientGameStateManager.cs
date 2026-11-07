@@ -1453,7 +1453,7 @@ namespace Robust.Client.GameStates
 
                 if (!xforms.TryComp(uid, out var xform))
                 {
-                    _sawmill.Warning($"Server state said to detach entity {netEntity} / {_entities.ToPrettyString(uid, metadata)} but it had no transform?!");
+                    _sawmill.Warning($"Server state said to detach entity {netEntity} / {_entities.ToPrettyString(uid, metadata)} but it had no transform");
                     continue;
                 }
 

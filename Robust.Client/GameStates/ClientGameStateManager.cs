@@ -62,6 +62,7 @@ namespace Robust.Client.GameStates
         private readonly List<(NetEntity NetEntity, Entity<MetaDataComponent> Entity)> _detachEntities = new();
         private readonly List<(EntityState State, EntityUid Uid, MetaDataComponent Meta)> _resolvedEntityStates = new();
         private readonly Dictionary<NetEntity, GameTick> _detachedChunkEntities = new();
+        private readonly List<string> _compChanges = new();
 
         private readonly record struct StateData(
             EntityUid Uid,
@@ -134,6 +135,11 @@ namespace Robust.Client.GameStates
         public event Action<GameStateAppliedArgs>? GameStateApplied;
 
         public event Action<MsgStateLeavePvs>? PvsLeave;
+
+        /// <summary>
+        /// Invoked whenever a state error occurs that requires a full state refresh.
+        /// </summary>
+        public event Action? OnStateError;
 
 #if DEBUG
         /// <summary>
@@ -888,8 +894,8 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    created++;
-                    CreateNewEntity(es, curState.ToSequence);
+                    if (TryCreateNewEntity(es, curState.ToSequence))
+                        created++;
                 }
 
                 _prof.WriteValue("Count", ProfData.Int32(created));
@@ -1050,6 +1056,21 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
         }
 
+        private void ProcessStateError(EntityUid uid)
+        {
+            try
+            {
+                OnStateError?.Invoke();
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error($"Caught exception in a OnStateError handler for {uid}: {e}");
+            }
+
+            _brokenEnts.Add(uid);
+            RequestFullState();
+        }
+
         private void ApplyEntState(in StateData data, GameTick toTick)
         {
             try
@@ -1059,8 +1080,7 @@ namespace Robust.Client.GameStates
             catch (Exception e)
             {
                 _sawmill.Error($"Caught exception while applying entity state. Entity: {_entities.ToPrettyString(data.Uid)}. Exception: {e}");
-                _brokenEnts.Add(data.Uid);
-                RequestFullState();
+                ProcessStateError(data.Uid);
 #if !EXCEPTION_TOLERANCE
                 throw;
 #else
@@ -1079,8 +1099,7 @@ namespace Robust.Client.GameStates
                 {
                     _sawmill.Error(
                         $"Caught exception while initializing or starting entity: {_entities.ToPrettyString(data.Uid)}. Exception: {e}");
-                    _brokenEnts.Add(data.Uid);
-                    RequestFullState();
+                    ProcessStateError(data.Uid);
 #if !EXCEPTION_TOLERANCE
                     throw;
 #else
@@ -1102,13 +1121,24 @@ namespace Robust.Client.GameStates
                 _queuedBroadphaseUpdates.Add((data.Uid, xform));
         }
 
-        private void CreateNewEntity(EntityState state, GameTick toTick)
+        private bool TryCreateNewEntity(EntityState state, GameTick toTick)
         {
             // TODO GAME STATE
             // store MetaData & Transform information separately.
-            if (!TryGetComponentChange(state, _metaCompNetId, out var metaChange) ||
-                metaChange.State is not MetaDataComponentState metaState)
-                throw new MissingMetadataException(state.NetEntity);
+            if (!TryGetComponentChange(state, _metaCompNetId, out var metaChange))
+            {
+                _compChanges.Clear();
+                foreach (ref readonly var change in state.ComponentChanges.Span)
+                {
+                    _compChanges.Add(change.ToString());
+                }
+                var changes = string.Join(", ", _compChanges);
+                _sawmill.Error($"Server state for new entity {state.NetEntity} on tick {toTick} was missing MetaData, its state had {_compChanges.Count} component changes: {changes}");
+                return false; // hopefully it's not an important entity
+            }
+
+            if (metaChange.State is not MetaDataComponentState metaState)
+                throw new InvalidOperationException($"Server state for new entity {state.NetEntity} on tick {toTick} had wrong MetaData state change {metaChange}");
 
             // record the entity we created to the profiler
             using var group = _prof.Group($"Create entity {metaState.PrototypeId}");
@@ -1127,7 +1157,7 @@ namespace Robust.Client.GameStates
 
             // Check if there's any component states awaiting this entity.
             if (!_entities.PendingNetEntityStates.Remove(state.NetEntity, out var value))
-                return;
+                return true;
 
             foreach (var (type, owner) in value)
             {
@@ -1138,6 +1168,8 @@ namespace Robust.Client.GameStates
                 var pending = _pendingReapplyNetStates.GetOrNew(owner);
                 pending.Add(netId.Value);
             }
+
+            return true;
         }
 
         /// <summary>
@@ -1419,7 +1451,11 @@ namespace Robust.Client.GameStates
                 if (lastStateApplied.HasValue)
                     metadata.LastStateApplied = lastStateApplied.Value;
 
-                var xform = xforms.GetComponent(uid);
+                if (!xforms.TryComp(uid, out var xform))
+                {
+                    _sawmill.Warning($"Server state said to detach entity {netEntity} / {_entities.ToPrettyString(uid, metadata)} but it had no transform");
+                    continue;
+                }
 
                 // TODO PVS DETACH
                 // Why is this if block here again? If a null-space entity gets sent to a player via some PVS override,

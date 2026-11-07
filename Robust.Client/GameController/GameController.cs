@@ -28,6 +28,7 @@ using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio;
+using Robust.Shared.ColorNaming;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -69,6 +70,7 @@ namespace Robust.Client
         [Dependency] private ITimerManager _timerManager = default!;
         [Dependency] private IClientEntityManager _entityManager = default!;
         [Dependency] private IPlacementManager _placementManager = default!;
+        [Dependency] private IPaletteManager _paletteMan = default!;
         [Dependency] private IClientGameStateManager _gameStateManager = default!;
         [Dependency] private IOverlayManagerInternal _overlayManager = default!;
         [Dependency] private ILogManager _logManager = default!;
@@ -147,7 +149,7 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _loadscr.Initialize(41);
+            _loadscr.Initialize(42);
 
             _loadscr.BeginLoadingSection("Init graphics", dontRender: true);
             _clyde.InitializePostWindowing();
@@ -233,6 +235,7 @@ namespace Robust.Client
             _prototypeManager.LoadDefaultPrototypes();
             _resourceCache.AfterDeserialization();
             _loadscr.EndLoadingSection();
+            _loadscr.LoadingStep(_paletteMan.Initialize, _paletteMan);
             _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
             _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);
             _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);

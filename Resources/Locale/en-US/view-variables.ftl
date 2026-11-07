@@ -11,6 +11,8 @@ view-variable-instance-entity-server-components-search-bar-placeholder = Search
 view-variable-instance-entity-add-window-server-components = Add Component [S]
 view-variable-instance-entity-add-window-client-components = Add Component [C]
 
+view-variables-property-type = Type:
+view-variables-property-documentation = Documentation:
 
 ## SoundSpecifier
 vv-sound-none = None

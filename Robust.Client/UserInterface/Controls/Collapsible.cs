@@ -115,14 +115,16 @@ namespace Robust.Client.UserInterface.Controls
             set => Label.Text = value;
         }
 
+        public BoxContainer Box { get; }
+
         public CollapsibleHeading()
         {
             ToggleMode = true;
-            var box = new BoxContainer();
-            AddChild(box);
-            box.AddChild(_chevron);
+            Box = new BoxContainer();
+            AddChild(Box);
+            Box.AddChild(_chevron);
             Label = new Label();
-            box.AddChild(Label);
+            Box.AddChild(Label);
         }
 
         public CollapsibleHeading(string title) : this()

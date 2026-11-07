@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../MSBuild/Robust.Engine.props" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <OutputPath>../bin/XmlDocTool</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+</Project>

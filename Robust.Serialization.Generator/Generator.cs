@@ -663,7 +663,7 @@ public class Generator : IIncrementalGenerator
         {
             // TODO make abstract once data definitions are forced to be partial
             builder.AppendLine($$"""
-                /// <seealso cref="ISerializationManager.CreateCopy"/>
+                /// <seealso cref="ISerializationManager.CreateCopy{T}(T, ISerializationContext, bool, bool)"/>
                 [Obsolete("Use ISerializationManager.CreateCopy instead")]
                 public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
                 {
@@ -675,7 +675,7 @@ public class Generator : IIncrementalGenerator
         {
             var requiredFields = GetRequiredFieldsPropertiesAssigners(definition.Type, string.Empty);
             builder.AppendLine($$"""
-                /// <seealso cref="ISerializationManager.CreateCopy"/>
+                /// <seealso cref="ISerializationManager.CreateCopy{T}(T, ISerializationContext, bool, bool)"/>
                 [Obsolete("Use ISerializationManager.CreateCopy instead")]
                 public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
                 {

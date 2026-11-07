@@ -234,8 +234,12 @@ public sealed partial class EntitySerializer : ISerializationContext,
                 throw new Exception($"{EntMan.ToPrettyString(uid)} is not serializable");
         }
 
+        var stopwatch = new RStopwatch();
+        stopwatch.Start();
+
         ReserveYamlIds(entities);
         SerializeEntitiesInternal(entities);
+        _log.Debug($"Serialized {entities.Count} entities in {stopwatch.Elapsed}");
     }
 
     /// <summary>

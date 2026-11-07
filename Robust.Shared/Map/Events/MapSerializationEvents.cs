@@ -2,6 +2,7 @@
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map.Events;
 
@@ -9,8 +10,14 @@ namespace Robust.Shared.Map.Events;
 /// This event is broadcast just before the map loader reads the entity section. It can be used to somewhat modify
 /// how the map data is read, as a super basic kind of map migration tool.
 /// </summary>
-public sealed class BeforeEntityReadEvent
+public sealed class BeforeEntityReadEvent(FileCategory Category = FileCategory.Unknown)
 {
+    /// <summary>
+    /// Expected file category that is being read.
+    /// Can be used this to apply migrations only to specific file categories.
+    /// </summary>
+    public readonly FileCategory ExpectedCategory = Category;
+
     /// <summary>
     /// Set of deleted entity prototypes.
     /// </summary>
@@ -40,6 +47,11 @@ public readonly record struct BeforeSerializationEvent(
     FileCategory Category = FileCategory.Unknown);
 
 /// <summary>
-/// This event is broadcast just after entities (and their children) have been serialized, but before it gets written to a yaml file.
+/// This event is broadcast just after entities (and their children) have been serialized, but before it gets written to a save file.
 /// </summary>
 public readonly record struct AfterSerializationEvent(HashSet<EntityUid> Entities, MappingDataNode Node, FileCategory Category);
+
+/// <summary>
+/// This event is broadcast after the serialized data about some entities were written into a save file.
+/// </summary>
+public readonly record struct AfterSerializationWriteEvent(ResPath SavedPath);

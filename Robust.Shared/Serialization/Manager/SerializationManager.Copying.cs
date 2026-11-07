@@ -341,7 +341,7 @@ public sealed partial class SerializationManager
             return false;
         }
 
-        definition.CopyTo(source, ref target, hookCtx, context);
+        definition.CopyTo(source, ref target, this, hookCtx, context);
         return true;
     }
 

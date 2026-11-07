@@ -36,6 +36,7 @@ namespace Robust.Shared.Prototypes
         private const int DEFAULT_RANGE = 200;
 
         [DataField("loc")]
+        [NeverPushInheritance]
         private Dictionary<string, string>? _locPropertiesSet;
 
         /// <summary>
@@ -51,12 +52,15 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         /// <seealso cref="Name"/>
         [DataField("name")]
+        [NeverPushInheritance]
         public string? SetName { get; private set; }
 
         [DataField("description")]
+        [NeverPushInheritance]
         public string? SetDesc { get; private set; }
 
         [DataField("suffix")]
+        [NeverPushInheritance]
         public string? SetSuffix { get; private set; }
 
         [DataField("categories"), Access(typeof(PrototypeManager))]

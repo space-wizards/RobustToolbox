@@ -108,6 +108,7 @@ public abstract partial class OccluderSystem : ComponentTreeSystem<OccluderTreeC
     private static void UpdatePolygonCache(OccluderComponent occluder)
     {
         occluder.LocalBounds = CalculateLocalBounds(occluder.Polygon);
+        occluder.CachedShape = occluder.Polygon.Length >= 3 ? new Polygon(occluder.PolygonArray) : default;
     }
 
     #region InRangeUnoccluded
@@ -219,7 +220,7 @@ public abstract partial class OccluderSystem : ComponentTreeSystem<OccluderTreeC
             return false;
 
         // Narrowphase check
-        var polygon = new Polygon(occluder.PolygonArray);
+        ref readonly var polygon = ref occluder.CachedShape;
         return polygon.VertexCount >= 3 &&
                _fixtureSystem.TestPoint(polygon, new Transform(worldPosition, worldRotation), point);
     }

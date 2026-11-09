@@ -50,13 +50,13 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
         await Server.WaitPost(() =>
         {
             Map = Server.System<SharedMapSystem>().CreateMap(out MapId);
-            Parent = EntMan.SpawnEntity(null, new EntityCoordinates(Map, new(1,2)));
-            ChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
-            ChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
-            GrandChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
-            GrandChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
-            GreatGrandChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
-            GreatGrandChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
+            Parent = EntMan.SpawnAttachedTo(null, new EntityCoordinates(Map, new(1,2)));
+            ChildA = EntMan.SpawnAttachedTo(null, new EntityCoordinates(Map, default));
+            ChildB = EntMan.SpawnAttachedTo(null, new EntityCoordinates(Map, default));
+            GrandChildA = EntMan.SpawnAttachedTo(null, new EntityCoordinates(Map, default));
+            GrandChildB = EntMan.SpawnAttachedTo(null, new EntityCoordinates(Map, default));
+            GreatGrandChildA = EntMan.SpawnAttachedTo(null, new EntityCoordinates(Map, default));
+            GreatGrandChildB = EntMan.SpawnAttachedTo(null, new EntityCoordinates(Map, default));
             Container.Insert(ChildA, Container.EnsureContainer<TestContainer>(Parent, "childA"));
             Container.Insert(ChildB, Container.EnsureContainer<TestContainer>(Parent, "childB"));
             Container.Insert(GrandChildA, Container.EnsureContainer<TestContainer>(ChildA, "grandChildA"));

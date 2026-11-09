@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using JetBrains.Annotations;
 using Robust.Shared.Log;
-using Robust.Shared.Random;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -54,6 +53,12 @@ public partial class PrototypeManager
     private const string CreateVariantsTag = "!type:CreateVariants";
 
     /// <summary>
+    /// This tag marks prototype as partial
+    /// without using <see cref="PartialDirectory"/> or <see cref="PartialFile"/>
+    /// </summary>
+    internal const string PartialTag = "!Partial";
+
+    /// <summary>
     /// Mapping data nodes with this tag will not throw an error when the type
     /// key is missing in <see cref="ComponentRegistrySerializer"/>.
     /// This tag marks a component as having been modified by a partial.
@@ -71,7 +76,7 @@ public partial class PrototypeManager
     /// <summary>
     /// Tag used to position a partial addition to a sequence at a specific index.
     /// </summary>
-    private const string PartialIndexTag = "!Index:";
+    private const string PartialIndexTag = "!Index";
 
     /// <summary>
     /// Tag used to remove a node.
@@ -86,7 +91,7 @@ public partial class PrototypeManager
     /// <summary>
     /// Tag used to combine a node at an index on a sequence, instead of adding to it.
     /// </summary>
-    private const string PartialCombineIndexTag = "!CombineIndex:";
+    private const string PartialCombineIndexTag = "!CombineIndex";
 
     /// <inheritdoc />
     public void LoadDirectory(ResPath path, bool overwrite = false,
@@ -172,21 +177,33 @@ public partial class PrototypeManager
             });
 
         var queue = Array.Empty<Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>?>();
+
+        void AppendMappingToQueue(int index, ResPath filePath, IEnumerable<ExtractedMappingData> mappings)
+        {
+            if (index >= queue.Length)
+                Array.Resize(ref queue, index + 1);
+
+            ref var indexQueue = ref queue[index];
+            indexQueue ??= new Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>();
+            indexQueue.Enqueue((filePath, mappings));
+        }
+
         foreach (var (file, result) in results)
         {
             if (IsFilePartial(file, out var index))
             {
-                if (index >= queue.Length)
-                    Array.Resize(ref queue, index + 1);
-
-                ref var indexQueue = ref queue[index];
-                indexQueue ??= new Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>();
-                indexQueue.Enqueue((file, result));
+                AppendMappingToQueue(index, file, result);
                 continue;
             }
 
             foreach (var mapping in result)
             {
+                if (mapping.PartialIndex is {} partialIndex)
+                {
+                    AppendMappingToQueue(partialIndex, file, [mapping]);
+                    continue;
+                }
+
                 try
                 {
                     MergeMapping(mapping, overwrite, changed, false, file);
@@ -326,7 +343,28 @@ public partial class PrototypeManager
         var kindData = _kinds[kind];
         Dictionary<string, ExtractedMappingData>? variantData = null;
 
-        var partialOnly = IsTag(typeNode, PartialOnlyTag);
+        var partialOnly = IsTagWithParam(typeNode, PartialOnlyTag, out var partialIndexStr);
+        // If its partialOnly, then partial index isn't required.
+        if (!partialOnly)
+        {
+            if (IsTagWithParam(typeNode, PartialTag, out partialIndexStr))
+            {
+                // It is marked as partial, that means its probably out of partial directory/file.
+                // Cause of that we force it to define index
+                if (partialIndexStr is null)
+                    throw new PrototypeLoadException($"{PartialTag} should define \":index\"");
+            }
+        }
+
+        int? partialIndex = null;
+        if (partialIndexStr is not null)
+        {
+            if (!int.TryParse(partialIndexStr, out var index) || index < 0)
+                throw new PrototypeLoadException($"Expected positive number, found \"{partialIndexStr}\"");
+
+            partialIndex = index;
+        }
+
         if (!dataNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
         {
             // Check if the ID node is a CreateVariants node instead of a value.
@@ -358,7 +396,7 @@ public partial class PrototypeManager
 
                         // Gather the outputs.
                         TryGetParents(kindData, clonedNode, out var clonedNodeParents);
-                        variantData.Add(clonedIdNode.Value, new ExtractedMappingData(kind, clonedIdNode.Value, clonedNodeParents, clonedNode, partialOnly));
+                        variantData.Add(clonedIdNode.Value, new ExtractedMappingData(kind, clonedIdNode.Value, clonedNodeParents, clonedNode, partialIndex, partialOnly));
                         variantCollection.Add(clonedIdNode.Value);
                     }
 
@@ -390,7 +428,7 @@ public partial class PrototypeManager
         }
 
         TryGetParents(kindData, dataNode, out var parents);
-        return new ExtractedMappingData(kind, idNode.Value, parents, dataNode, partialOnly, variantData);
+        return new ExtractedMappingData(kind, idNode.Value, parents, dataNode, partialIndex, partialOnly, variantData);
     }
 
     private bool TryGetParents(KindData kindData, MappingDataNode mappingDataNode, [NotNullWhen(true)] out string[]? parents)
@@ -413,7 +451,8 @@ public partial class PrototypeManager
         bool partial,
         ResPath? file)
     {
-        var (kind, id, _, _, _, _) = mapping;
+        partial |= mapping.PartialIndex != null;
+        var (kind, id, _, _, _, _, _) = mapping;
 
         var kindData = _kinds[kind];
 
@@ -435,7 +474,7 @@ public partial class PrototypeManager
         MappingDataNode? existing,
         ResPath? file)
     {
-        var (kind, id, parents, data, partialOnly, _) = mapping;
+        var (kind, id, parents, data, _, partialOnly, _) = mapping;
         int? existingPartialDataIndex = null;
         if (existing != null && partial)
         {
@@ -482,6 +521,13 @@ public partial class PrototypeManager
                 ? key => key == "components" ? "type" : null
                 : null;
 
+            // Change the id below and uncomment it to debug a specific ID
+            // if (id == "RoboticistPDA")
+            // {
+            //     Debugger.Launch();
+            //     Debugger.Break();
+            // }
+
             CombineMapNode(existing, data, out var fullDeleted, onProcessAsMappingKey);
             if (fullDeleted && existing.IsEmpty)
             {
@@ -506,9 +552,21 @@ public partial class PrototypeManager
         if (kindData.Inheritance is { } inheritance)
         {
             if (parents != null)
+            {
+                // Partial prototypes may have modified the parents, which is not reflected in the extracted mapping data
+                // In that case, we parse it again, otherwise we may lose some data
+                if (existing != null &&
+                    TryGetParents(kindData, existing, out var updatedParents))
+                {
+                    parents = updatedParents;
+                }
+
                 inheritance.Add(id, parents);
+            }
             else if (!partial || existing == null) // If this is partial we don't want to mess up the inheritance graph
+            {
                 inheritance.Add(id);
+            }
         }
 
         if (changed == null)
@@ -787,7 +845,11 @@ public partial class PrototypeManager
             if (existing.TryGetValue(key, out var existingNode))
             {
                 var processAsMappingKey = onProcessAsMappingKey?.Invoke(key);
-                if (Combine(existingNode, dataNode, out _, processAsMappingKey))
+                var combined = Combine(ref existingNode, dataNode, out _, processAsMappingKey, out var replace);
+                if (replace)
+                    existing[key] = existingNode;
+
+                if (combined)
                     continue;
             }
 
@@ -802,15 +864,23 @@ public partial class PrototypeManager
 
     private void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data, string? processAsMappingKey)
     {
-        for (var i = data.Count - 1; i >= 0; i--)
+        if (IsTag(data, PartialClearTag))
+        {
+            LogVerbose($"Sequence clearing");
+            existing.Clear();
+        }
+
+        for (var i = 0; i < data.Count; i++)
         {
             LogVerbose($"Sequence processing index {i}");
             var dataNode = data[i];
 
             // - !CombineIndex:0 "a": 1
-            if (StartsWithTagOrMappingKeyTag(dataNode, PartialCombineIndexTag, out var actualTag))
+            if (IsTagOrMappingKeyWithParam(dataNode, PartialCombineIndexTag, out var patialCombineIndexTag))
             {
-                SequenceCombineIndex(existing, dataNode, actualTag, i);
+                if (patialCombineIndexTag is null)
+                    throw new PrototypeLoadException($"{PartialCombineIndexTag} is missing parameter");
+                SequenceCombineIndex(existing, dataNode, patialCombineIndexTag, i);
                 continue;
             }
 
@@ -823,12 +893,14 @@ public partial class PrototypeManager
                 continue;
             }
 
-            if (dataNode.Tag?.StartsWith(PartialIndexTag) ?? false)
+            if (IsTagOrMappingKeyWithParam(dataNode, PartialIndexTag, out var partialIndexTag))
             {
+                if (partialIndexTag is null)
+                    throw new PrototypeLoadException($"{PartialIndexTag} is missing parameter");
+
                 LogVerbose($"Sequence index {i} found {PartialIndexTag}");
-                var indexStr = dataNode.Tag.AsSpan(PartialIndexTag.Length);
-                var index = ProcessPartialSeqNodeIndex(existing, indexStr, dataNode);
-                LogVerbose($"Sequence index {i} inserting node{GetValueNodeValueToLog(dataNode)} at index {index}");
+                var index = ProcessPartialSeqNodeIndex(existing, partialIndexTag, dataNode);
+                LogVerbose($"Sequence index {i} inserting node {GetValueNodeValueToLog(dataNode)} at index {index}");
                 existing.Insert(index, dataNode);
                 continue;
             }
@@ -901,18 +973,23 @@ public partial class PrototypeManager
 
     private void SequenceCombineIndex(SequenceDataNode existing, DataNode dataNode, ReadOnlySpan<char> tag, int i)
     {
-        var indexStr = tag[PartialCombineIndexTag.Length..];
-        var index = ProcessPartialSeqNodeIndex(existing, indexStr, dataNode);
+        var index = ProcessPartialSeqNodeIndex(existing, tag, dataNode);
         LogVerbose($"Sequence index {i} found {PartialCombineIndexTag}");
 
-        if (existing.TryGetValue(index, out var existingNode) &&
-            Combine(existingNode, dataNode, out var fullDeleted, null))
+        if (existing.TryGetValue(index, out var existingNode))
         {
-            LogVerbose($"Sequence index {i} combined index {index}");
-            if (fullDeleted && existingNode.IsEmpty)
+            var combined = Combine(ref existingNode, dataNode, out var fullDeleted, null, out var replace);
+            if (replace)
+                existing[index] = existingNode;
+
+            if (combined)
             {
-                LogVerbose($"Sequence index {i} full deleted, removing it from the sequence");
-                existing.RemoveAt(i);
+                LogVerbose($"Sequence index {i} combined index {index}");
+                if (fullDeleted && existingNode.IsEmpty)
+                {
+                    LogVerbose($"Sequence index {i} full deleted, removing it from the sequence");
+                    existing.RemoveAt(i);
+                }
             }
         }
         else
@@ -947,17 +1024,37 @@ public partial class PrototypeManager
         return index;
     }
 
-    private bool Combine(DataNode existing, DataNode data, out bool fullDeleted, string? processAsMappingKey)
+    private bool Combine(ref DataNode existing, DataNode data, out bool fullDeleted, string? processAsMappingKey, out bool replace)
     {
         fullDeleted = false;
+        replace = false;
         switch (existing, data)
         {
             case (MappingDataNode existingMapping, MappingDataNode dataMapping):
+            {
                 CombineMapNode(existingMapping, dataMapping, out fullDeleted);
                 return true;
+            }
             case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
+            {
                 CombineSeqNode(existingSequence, dataSequence, processAsMappingKey);
                 return true;
+            }
+            // For cases such as "parent", where original is a value and partial is a sequence
+            case (ValueDataNode existingValue, SequenceDataNode dataSequence):
+            {
+                existing = new SequenceDataNode(existingValue);
+                CombineSeqNode((SequenceDataNode) existing, dataSequence, processAsMappingKey);
+                replace = true;
+                return true;
+            }
+            // For cases such as "parent", where original is a sequence and partial is a value
+            case (SequenceDataNode existingSequence, ValueDataNode dataValue):
+            {
+                var dataSequence = new SequenceDataNode(dataValue);
+                CombineSeqNode(existingSequence, dataSequence, processAsMappingKey);
+                return true;
+            }
             default:
                 return false;
         }
@@ -974,26 +1071,51 @@ public partial class PrototypeManager
         return IsTag(node.Tag, tag);
     }
 
-    private bool StartsWithTagOrMappingKeyTag(DataNode dataNode, string tag, [NotNullWhen(true)] out string? actualTag)
+    private bool IsTagWithParam(DataNode dataNode, string tag, out string? param)
     {
-        if (IsTag(dataNode, tag))
-        {
-            DebugTools.AssertNotNull(dataNode.Tag);
-            actualTag = dataNode.Tag;
-            return true;
-        }
+        param = null;
 
-        if (dataNode is MappingDataNode dataNodeMapping &&
-            dataNodeMapping.Count > 0 &&
-            dataNodeMapping.GetKeyTag(dataNodeMapping[0].Key) is { } keyTag &&
-            keyTag.StartsWith(tag))
-        {
-            actualTag = keyTag;
-            return true;
-        }
+        if (dataNode.Tag is not { } dataNodeTag)
+            return false;
 
-        actualTag = null;
-        return false;
+        if (!dataNodeTag.StartsWith(tag, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (dataNodeTag.Length == tag.Length)
+            return true; // Exact match (no param)
+
+        if (dataNodeTag[tag.Length] != ':')
+            return false;
+
+        param = dataNodeTag[(tag.Length + 1)..];
+        return true;
+    }
+
+    /// <param name="param">Null, if no ":[parameter]" is present, otherwise "[parameter]"</param>
+    /// <returns>true, if exact tag is matched</returns>
+    private bool IsTagOrMappingKeyWithParam(DataNode dataNode, string tag, out string? param)
+    {
+        param = null;
+
+        if (IsTagWithParam(dataNode, tag, out param))
+            return true;
+
+        // If first mapping key:
+        if (dataNode is not MappingDataNode dataNodeMapping ||
+            dataNodeMapping.Count <= 0 ||
+            dataNodeMapping.GetKeyTag(dataNodeMapping[0].Key) is not { } keyTag ||
+            !keyTag.StartsWith(tag, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (keyTag.Length == tag.Length)
+            return true; // Exact match (no param)
+
+        if (keyTag[tag.Length] != ':')
+            return false;
+
+        param = keyTag[(tag.Length+1)..];
+        return true;
+
     }
 
     private void LogVerbose([InterpolatedStringHandlerArgument] ref DefaultInterpolatedStringHandler handler)
@@ -1014,6 +1136,7 @@ public partial class PrototypeManager
         string Id,
         string[]? Parents,
         MappingDataNode Data,
+        int? PartialIndex, // Null, if not partial
         bool PartialOnly,
         Dictionary<string, ExtractedMappingData>? VariantData = null
     );

@@ -716,19 +716,12 @@ public interface IPrototypeManager
     ///   id: MyEntityOne
     ///   components:
     ///   - type: MyComponent
-    ///     dictionary: !Remove
+    ///     dictionary: !Clear
     ///       "a": 1
     /// </code>
     /// </example>
     /// <example>
     /// Remove a component:
-    /// <code>
-    /// - type: entity
-    ///   id: MyEntityOne
-    ///   components:
-    ///   - !Remove type: MyComponent
-    /// </code>
-    /// Removing a component can be done the other way around as well:
     /// <code>
     /// - type: entity
     ///   id: MyEntityOne

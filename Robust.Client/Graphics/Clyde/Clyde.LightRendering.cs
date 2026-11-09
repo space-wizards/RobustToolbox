@@ -8,13 +8,13 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
@@ -30,6 +30,8 @@ namespace Robust.Client.Graphics.Clyde
 
     internal partial class Clyde
     {
+        private ValueList<(EntityUid Uid, OccluderTreeComponent Comp)> _occluderTrees = new();
+
         // Horizontal width, in pixels, of the shadow maps used to render regular lights.
         private const int ShadowMapSize = 512;
 
@@ -759,8 +761,9 @@ namespace Robust.Client.Graphics.Clyde
             // Do a narrow tree query around the light and only run the expensive polygon TestPoint
             // for occluders whose cached AABB can contain the light.
             var pointBounds = new Box2(lightPosition, lightPosition).Enlarged(SharedOccluderEdgeTolerance);
-
-            foreach (var (treeUid, comp) in _occluderSystem.GetIntersectingTrees(map, pointBounds))
+            _occluderTrees.Clear();
+            _occluderSystem.GetIntersectingTrees(map, pointBounds, ref _occluderTrees);
+            foreach (var (treeUid, comp) in _occluderTrees)
             {
                 var treeBounds = _transformSystem.GetInvWorldMatrix(treeUid, xforms).TransformBox(pointBounds);
                 var state = new LightEmbeddedOccluderQueryState(
@@ -783,16 +786,15 @@ namespace Robust.Client.Graphics.Clyde
             in ComponentTreeEntry<OccluderComponent> entry)
         {
             var occluder = entry.Component;
-            if (!occluder.Enabled)
+            if (!occluder.Enabled || occluder.CachedShape.VertexCount < 3)
                 return true;
 
             var (worldPosition, worldRotation) = state.TransformSystem.GetWorldPositionRotation(
                 entry.Transform,
                 state.Xforms);
 
-            if (!OccluderOverlapsPoint(
-                    state.FixtureSystem,
-                    occluder.PolygonArray,
+            if (!state.FixtureSystem.TestPoint(
+                    occluder.CachedShape,
                     new Transform(worldPosition, worldRotation),
                     state.LightPosition))
             {
@@ -1255,19 +1257,6 @@ namespace Robust.Client.Graphics.Clyde
             edges.Add(edge);
         }
 
-        private static bool OccluderOverlapsPoint(
-            FixtureSystem fixtures,
-            Vector2[] polygon,
-            in Transform occluderTransform,
-            Vector2 worldPoint)
-        {
-            if (polygon.Length < 3)
-                return false;
-
-            var occluderShape = new Polygon(polygon);
-            return occluderShape.VertexCount >= 3 && fixtures.TestPoint(occluderShape, occluderTransform, worldPoint);
-        }
-
         private static bool PointsMatch(Vector2 a, Vector2 b)
         {
             return Vector2.DistanceSquared(a, b) <= SharedOccluderEdgeToleranceSquared;
@@ -1688,7 +1677,9 @@ namespace Robust.Client.Graphics.Clyde
                 // Include one tile around the rendered area so shared corners on the edge of the viewport have
                 // complete topology. Visible geometry is filtered back to expandedBounds below.
                 var boundaryBounds = expandedBounds.Enlarged(SharedOccluderNeighbourQueryPadding);
-                foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, boundaryBounds))
+                _occluderTrees.Clear();
+                _occluderSystem.GetIntersectingTrees(map, boundaryBounds, ref _occluderTrees);
+                foreach (var (uid, comp) in _occluderTrees)
                 {
                     var treeBounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(boundaryBounds);
 

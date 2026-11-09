@@ -98,7 +98,7 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
             _gridCoords2 = new EntityCoordinates(grid, .5f, .6f);
             _mapCoords = new EntityCoordinates(map, 100, 100);
 
-            var playerUid = _entMan.SpawnEntity(null, _mapCoords);
+            var playerUid = _entMan.SpawnAttachedTo(null, _mapCoords);
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -13,7 +13,7 @@ namespace Robust.Client.ViewVariables.Editors
 
         private readonly Dictionary<int, Button> _buttons = new();
 
-        private int _invalidOptionId;
+        private int _invalidOptionId = -1;
 
         private int _value;
         private bool _flagEnum;

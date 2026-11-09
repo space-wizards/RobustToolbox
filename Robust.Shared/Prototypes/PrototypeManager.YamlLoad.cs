@@ -938,7 +938,11 @@ public partial class PrototypeManager
                     }
 
                     LogVerbose($"Sequence index {i} found mapping with key {key}, combining mapping nodes");
-                    CombineMapNode(_compFactory.GetRegistration(key.Value).Type, existingMapping, dataNodeMap, out var fullDeleted);
+
+                    var keyType = _compFactory.TryGetRegistration(key.Value, out var registration)
+                        ? registration
+                        : null;
+                    CombineMapNode(keyType?.Type, existingMapping, dataNodeMap, out var fullDeleted);
                     if (fullDeleted && existingMapping.IsEmpty)
                     {
                         LogVerbose($"Sequence index {i} found mapping with key {key} that full deleted, removing from sequence");

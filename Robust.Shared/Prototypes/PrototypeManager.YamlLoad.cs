@@ -513,14 +513,6 @@ public partial class PrototypeManager
 
             LogVerbose($"Combining {kind.Name} {id} with partial");
 
-            // Also known as, components pretend to be a list, while being a dictionary
-            // Chaos ensues
-            // You could expose this someway if Content decided to also do this
-            // for whatever reason
-            Func<string, string?>? onProcessAsMappingKey = kind == typeof(EntityPrototype)
-                ? key => key == "components" ? "type" : null
-                : null;
-
             // Change the id below and uncomment it to debug a specific ID
             // if (id == "RoboticistPDA")
             // {
@@ -528,7 +520,7 @@ public partial class PrototypeManager
             //     Debugger.Break();
             // }
 
-            CombineMapNode(existing, data, out var fullDeleted, onProcessAsMappingKey);
+            CombineMapNode(kind, existing, data, out var fullDeleted);
             if (fullDeleted && existing.IsEmpty)
             {
                 LogVerbose($"Full deleted and empty, removing prototype data");
@@ -787,14 +779,19 @@ public partial class PrototypeManager
     }
 
     private void CombineMapNode(
+        Type? type,
         MappingDataNode existing,
         MappingDataNode data,
-        out bool fullDeleted,
-        Func<string, string?>? onProcessAsMappingKey = null)
+        out bool fullDeleted)
     {
         fullDeleted = false;
         foreach (var (key, dataNode) in data)
         {
+            Type? keyType = null;
+
+            if (type != null)
+                _serializationManager.TryGetVariableType(type, key, out keyType);
+
             LogVerbose($"Mapping processing key {key}");
             if (IsTag(data.GetKeyTag(key), PartialClearTag) ||
                 IsTag(dataNode, PartialClearTag))
@@ -844,8 +841,7 @@ public partial class PrototypeManager
 
             if (existing.TryGetValue(key, out var existingNode))
             {
-                var processAsMappingKey = onProcessAsMappingKey?.Invoke(key);
-                var combined = Combine(ref existingNode, dataNode, out _, processAsMappingKey, out var replace);
+                var combined = Combine(keyType, ref existingNode, dataNode, out _, out var replace);
                 if (replace)
                     existing[key] = existingNode;
 
@@ -862,7 +858,7 @@ public partial class PrototypeManager
         }
     }
 
-    private void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data, string? processAsMappingKey)
+    private void CombineSeqNode(Type? type, SequenceDataNode existing, SequenceDataNode data)
     {
         if (IsTag(data, PartialClearTag))
         {
@@ -880,7 +876,7 @@ public partial class PrototypeManager
             {
                 if (patialCombineIndexTag is null)
                     throw new PrototypeLoadException($"{PartialCombineIndexTag} is missing parameter");
-                SequenceCombineIndex(existing, dataNode, patialCombineIndexTag, i);
+                SequenceCombineIndex(type, existing, dataNode, patialCombineIndexTag, i);
                 continue;
             }
 
@@ -905,9 +901,9 @@ public partial class PrototypeManager
                 continue;
             }
 
-            if (processAsMappingKey != null)
+            if (type == typeof(ComponentRegistry))
             {
-                LogVerbose($"Sequence index {i} being processed as a mapping using key {processAsMappingKey}");
+                LogVerbose($"Sequence index {i} being processed as a mapping using key \"type\"");
                 if (dataNode is not MappingDataNode dataNodeMap)
                 {
                     LogVerbose($"Sequence index {i} is not a {nameof(MappingDataNode)}, cannot process as a mapping, skipping");
@@ -920,7 +916,7 @@ public partial class PrototypeManager
                     continue;
                 }
 
-                if (!dataNodeMap.TryGet(processAsMappingKey, out ValueDataNode? key))
+                if (!dataNodeMap.TryGet("type", out ValueDataNode? key))
                 {
                     LogVerbose($"Sequence index {i} mapping has no {nameof(ValueDataNode)} key {key}, cannot process as a mapping, skipping");
                     continue;
@@ -935,14 +931,14 @@ public partial class PrototypeManager
                         continue;
                     }
 
-                    if (!existingMapping.TryGet(processAsMappingKey, out ValueDataNode? existingKey) ||
+                    if (!existingMapping.TryGet("type", out ValueDataNode? existingKey) ||
                         existingKey.Value != key.Value)
                     {
                         continue;
                     }
 
                     LogVerbose($"Sequence index {i} found mapping with key {key}, combining mapping nodes");
-                    CombineMapNode(existingMapping, dataNodeMap, out var fullDeleted);
+                    CombineMapNode(_compFactory.GetRegistration(key.Value).Type, existingMapping, dataNodeMap, out var fullDeleted);
                     if (fullDeleted && existingMapping.IsEmpty)
                     {
                         LogVerbose($"Sequence index {i} found mapping with key {key} that full deleted, removing from sequence");
@@ -971,14 +967,14 @@ public partial class PrototypeManager
         }
     }
 
-    private void SequenceCombineIndex(SequenceDataNode existing, DataNode dataNode, ReadOnlySpan<char> tag, int i)
+    private void SequenceCombineIndex(Type? type, SequenceDataNode existing, DataNode dataNode, ReadOnlySpan<char> tag, int i)
     {
         var index = ProcessPartialSeqNodeIndex(existing, tag, dataNode);
         LogVerbose($"Sequence index {i} found {PartialCombineIndexTag}");
 
         if (existing.TryGetValue(index, out var existingNode))
         {
-            var combined = Combine(ref existingNode, dataNode, out var fullDeleted, null, out var replace);
+            var combined = Combine(type, ref existingNode, dataNode, out var fullDeleted, out var replace);
             if (replace)
                 existing[index] = existingNode;
 
@@ -1024,7 +1020,7 @@ public partial class PrototypeManager
         return index;
     }
 
-    private bool Combine(ref DataNode existing, DataNode data, out bool fullDeleted, string? processAsMappingKey, out bool replace)
+    private bool Combine(Type? type, ref DataNode existing, DataNode data, out bool fullDeleted, out bool replace)
     {
         fullDeleted = false;
         replace = false;
@@ -1032,19 +1028,19 @@ public partial class PrototypeManager
         {
             case (MappingDataNode existingMapping, MappingDataNode dataMapping):
             {
-                CombineMapNode(existingMapping, dataMapping, out fullDeleted);
+                CombineMapNode(type, existingMapping, dataMapping, out fullDeleted);
                 return true;
             }
             case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
             {
-                CombineSeqNode(existingSequence, dataSequence, processAsMappingKey);
+                CombineSeqNode(type, existingSequence, dataSequence);
                 return true;
             }
             // For cases such as "parent", where original is a value and partial is a sequence
             case (ValueDataNode existingValue, SequenceDataNode dataSequence):
             {
                 existing = new SequenceDataNode(existingValue);
-                CombineSeqNode((SequenceDataNode) existing, dataSequence, processAsMappingKey);
+                CombineSeqNode(type, (SequenceDataNode) existing, dataSequence);
                 replace = true;
                 return true;
             }
@@ -1052,7 +1048,7 @@ public partial class PrototypeManager
             case (SequenceDataNode existingSequence, ValueDataNode dataValue):
             {
                 var dataSequence = new SequenceDataNode(dataValue);
-                CombineSeqNode(existingSequence, dataSequence, processAsMappingKey);
+                CombineSeqNode(type, existingSequence, dataSequence);
                 return true;
             }
             default:

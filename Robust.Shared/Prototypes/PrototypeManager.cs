@@ -37,6 +37,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private IComponentFactory _factory = default!;
         [Dependency] private IEntityManager _entMan = default!;
         [Dependency] private IRobustRandom _random = default!;
+        [Dependency] private IComponentFactory _compFactory = default!;
 
         private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
 

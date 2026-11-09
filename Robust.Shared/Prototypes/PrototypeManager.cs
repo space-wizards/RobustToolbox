@@ -48,7 +48,7 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Guards <see cref="KindData.UnfrozenVariants"/> against concurrent modification.
         /// </summary>
-        private readonly object _variantRegistrationLock = new();
+        private readonly Lock _variantRegistrationLock = new();
 
         protected ISawmill Sawmill = default!;
 

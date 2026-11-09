@@ -40,12 +40,14 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added a new !Partial:N tag for defining partials outside the explicitly marked partial files and partial directories.
+* !PartialOnly now also optionally accepts a number in the format !PartialOnly:N, which works the same way as the new !Partial:N tag. If N isn't defined, !PartialOnly works the same way as before.
 
 ### Bugfixes
 
 * Fixed a race condition in parallel prototype loading that could corrupt the prototype variant collection and throw an `ArgumentNullException` when freezing prototype kinds.
 * Fixed a prototype losing its inherited data when a partial prototype changes its `parent:`.
+* Fixed partials not working with component registries defined inside components, or top-level on non-entity prototypes.
 
 ### Other
 

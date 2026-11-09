@@ -110,7 +110,7 @@ public abstract partial class SharedContainerSystem
         _transform.SetCoordinates(toInsert, transform, new EntityCoordinates(container.Owner, Vector2.Zero), Angle.Zero);
         transform.Broadphase = old;
 
-        // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
+        // Re-parenting could previously result in the flag being unset, so check that this hasn't happened.
         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after insertion");
 
         // Implementation specific insert logic

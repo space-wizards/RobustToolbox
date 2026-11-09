@@ -48,7 +48,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Duplicate subscription errors now tell you the first subscriber's system type.
 
 ### Internal
 

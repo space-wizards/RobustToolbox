@@ -46,6 +46,11 @@ internal sealed partial class PrototypePartialTest
     - int: 1
     - int: 2
     - int: 3
+    components:
+    - type: PrototypePartial
+      int: 1
+      intStringList:
+      - int: 0
 ";
 
     private static readonly string AddSequence = $@"
@@ -146,6 +151,17 @@ internal sealed partial class PrototypePartialTest
     - !Index:0 int: 4
     - !Index:1 int: 5
     - !Index:2 int: 6
+";
+
+    private static readonly string ComponentsUpdateInSequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    components:
+    - type: PrototypePartial
+      intStringList:
+      - int: 1
 ";
 
     private static readonly string Mapping = $"""
@@ -538,12 +554,26 @@ internal sealed partial class PrototypePartialTest
 - type: prototypePartialTest
   id: {TestPrototypeId}
   list: [ 1, 2, 3]
+  components:
+  - type: PrototypePartial
+    int: 1
+    list:
+    - 0
 ";
 
     private static readonly string TestPrototypeClearAndAdd = $@"
 - type: prototypePartialTest
   id: {TestPrototypeId}
   list: !Clear [ 4, 5, 6 ]
+";
+
+    private static readonly string TestPrototypeUpdateComponent = $@"
+- type: prototypePartialTest
+  id: {TestPrototypeId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 1
 ";
 
     private ISimulation StartSim(
@@ -800,6 +830,25 @@ internal sealed partial class PrototypePartialTest
         Assert.That(partial.IntStringList[3].Int, Is.EqualTo(1));
         Assert.That(partial.IntStringList[4].Int, Is.EqualTo(2));
         Assert.That(partial.IntStringList[5].Int, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void TestComponentsAddToSequence()
+    {
+        var sim = StartSim(ymlToLoad: ComponentsUpdateInSequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.Components, Has.Count.EqualTo(1));
+        Assert.That(partial.Components.TryGetComponent(comps, out PrototypePartialComponent? subPartial), Is.True);
+        Assert.That(subPartial, Is.Not.Null);
+        Assert.That(subPartial.Int, Is.EqualTo(1));
+        Assert.That(subPartial.IntStringList, Has.Count.EqualTo(2));
+        Assert.That(subPartial.IntStringList[0].Int, Is.EqualTo(0));
+        Assert.That(subPartial.IntStringList[1].Int, Is.EqualTo(1));
     }
 
     [Test]
@@ -1496,13 +1545,29 @@ internal sealed partial class PrototypePartialTest
     {
         var sim = StartSim(ymlToLoad: TestPrototypeClearAndAdd);
 
-        var comps = sim.Resolve<IComponentFactory>();
         var prototypes = sim.Resolve<IPrototypeManager>();
         var baseEnt = prototypes.Index<PrototypePartialTestPrototype>(TestPrototypeId);
 
         Assert.That(baseEnt.List, Is.Not.Null);
         Assert.That(baseEnt.List, Has.Count.EqualTo(3));
         Assert.That(baseEnt.List, Is.EqualTo([ 4, 5, 6 ]));
+    }
+
+    [Test]
+    public void TestTestPrototypeUpdateComponent()
+    {
+        var sim = StartSim(ymlToLoad: TestPrototypeUpdateComponent);
+
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var comps = sim.Resolve<IComponentFactory>();
+        var baseEnt = prototypes.Index<PrototypePartialTestPrototype>(TestPrototypeId);
+
+        Assert.That(baseEnt.Components, Has.Count.EqualTo(1));
+        Assert.That(baseEnt.Components.TryGetComponent(comps, out PrototypePartialComponent? partial));
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.Int, Is.EqualTo(1));
+        Assert.That(partial.List, Has.Count.EqualTo(2));
+        Assert.That(partial.List, Is.EqualTo([ 0, 1 ]));
     }
 
     internal sealed partial class PrototypePartialComponent : Component
@@ -1530,6 +1595,9 @@ internal sealed partial class PrototypePartialTest
 
         [DataField]
         public List<IntString> IntStringList = new();
+
+        [DataField]
+        public ComponentRegistry Components = new();
     }
 
     internal sealed partial class PrototypePartialBaseComponent : Component
@@ -1558,5 +1626,9 @@ internal sealed partial class PrototypePartialTest
 
         [DataField]
         public List<int> List = new();
+
+        [DataField]
+        [AlwaysPushInheritance]
+        public ComponentRegistry Components = new();
     }
 }

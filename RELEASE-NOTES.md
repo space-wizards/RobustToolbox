@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-- `lsmap` and `lsgrid` no longer throw an exception when there are no maps or grids
+*None yet*
 
 ### Other
 
@@ -37,10 +37,65 @@ END TEMPLATE-->
 
 * Obsolete LocalRotation in favor of the system method. The angle is now also normalized to 2PI and no longer grows indefinitely.
 * Removed the obsolete TransformComponent methods. The remaining methods have been marked as obsolete and are subject to removal in future.
+* Fixed adding to lists with partial prototypes adding the elements in reverse order. Before this change, clearing a list and adding [4, 5, 6] to it would result in [6, 5, 4]. Now it correctly results in [4, 5, 6]. If you were accounting for this in your partial YML, you will need to fix your existing sequences to be in the expected order.
+* Fixed mixed sequence-value pairs in partial prototypes not being read correctly. If both are values, as in they have no dashes and no square brackets, the partial value will replace the original value. If both are sequences, they will be combined together, optionally clearing if the !Clear tag is present in the partial. If one is a sequence, and another is a value, both are treated as sequences, and a !Clear present on the partial's value will clear the original's sequence. This affects partial prototype parent changes. If your game gets stuck loading, check that your partial prototype YML is not adding the same parent twice, for example by not !Clear-ing the parent field first, with parent: !Clear Parent1 or parent: !Clear [ Parent1, Parent2 ]. For more detail, see https://docs.spacestation14.com/en/robust-toolbox/partial-prototypes.html
 
 ### New features
 
 *None yet*
+
+### Bugfixes
+
+* Fixed a race condition in parallel prototype loading that could corrupt the prototype variant collection and throw an `ArgumentNullException` when freezing prototype kinds.
+* Fixed a prototype losing its inherited data when a partial prototype changes its `parent:`.
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 295.0.0
+
+### Breaking changes
+
+* NetSerializer is now referenced through the `SpaceWizards.NetSerializer` NuGet package instead of the `NetSerializer` git submodule. The assembly is now named `SpaceWizards.NetSerializer` instead of `Robust.NetSerializer`, the `NetSerializer` namespace is unchanged. Anything that references the old project or loads the old assembly by name needs updating.
+* The `NetSerializer` submodule has been removed. Run `git submodule deinit -f NetSerializer` (or re-clone) after updating. Projects that referenced `RobustToolbox/NetSerializer/NetSerializer/NetSerializer.csproj` must remove that reference. In particular, `SpaceStation14.slnx` must have its `/RobustToolbox/NetSerializer/` folder and project entry removed, or the solution will point at a missing project.
+
+### Bugfixes
+
+* Fix Windows Robust.Packaging not using correct path separators for zip archives.
+
+### Internal
+
+* NetSerializer is now versioned and published independently (`SpaceWizards.NetSerializer` 1.0.0 on NuGet, from `space-wizards/SpaceWizards.NetSerializer`), and is restored through `Directory.Packages.props`.
+
+
+## 294.0.1
+
+### New features
+
+* build.* CVars now include source information.
+
+### Bugfixes
+
+* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
+* Fix model transforms not being reset fully in RenderInRenderTarget.
+* Fix the debug connection screen throwing if the connect button is hit twice.
+
+
+## 294.0.0
+
+### Breaking changes
+
+- `MarkupDrawingContext.Tags` are now a `List<IMarkupTagHandler>` instead of `List<IMarkupTag>`, as `IMarkupTag` is obsolete.
+
+### New features
+
+- `MarkupDrawingContext` now provides a `TryGetStyleProperty{T}` method and a `MarkupDrawingContext(Control? owner, int capacity = 0)` constructor, which exposes `Control.TryGetStyleProperty{T}` to rich text markup tags. This lets you write tags that can read style properties set on their parents via stylesheets, just like any Control could.
 
 ### Bugfixes
 
@@ -50,11 +105,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
-
-### Internal
-
-*None yet*
+- `MarkupDrawingContext` constructors without an `owner` parameter are now obsolete (use the new variants that take a `Control owner` parameter).
 
 
 ## 293.0.1

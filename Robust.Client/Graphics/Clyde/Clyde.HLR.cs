@@ -664,7 +664,7 @@ namespace Robust.Client.Graphics.Clyde
             PopRenderStateFull(state);
             _updateUniformConstants(_currentRenderTarget.Size);
 
-            _currentMatrixModel = oldTransform;
+            DrawSetModelTransform(oldTransform);
 
             DebugTools.Assert(oldCaps.Equals(_glCaps));
             DebugTools.Assert(_currentMatrixModel.Equals(oldTransform));

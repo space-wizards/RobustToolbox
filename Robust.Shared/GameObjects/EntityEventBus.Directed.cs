@@ -250,7 +250,7 @@ namespace Robust.Shared.GameObjects
                 handler(uid, (TComp) comp, tev);
             }
 
-            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), handler.Method.DeclaringType, EventHandler);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(
@@ -267,7 +267,7 @@ namespace Robust.Shared.GameObjects
                 handler(uid, (TComp) comp, tev);
             }
 
-            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler, orderType, before, after);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), handler.Method.DeclaringType, EventHandler, orderType, before, after);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler)
@@ -279,7 +279,7 @@ namespace Robust.Shared.GameObjects
                 handler(uid, (TComp) comp, ref tev);
             }
 
-            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), handler.Method.DeclaringType, EventHandler);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler, Type orderType,
@@ -292,7 +292,7 @@ namespace Robust.Shared.GameObjects
                 handler(uid, (TComp) comp, ref tev);
             }
 
-            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler, orderType, before, after);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), handler.Method.DeclaringType, EventHandler, orderType, before, after);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(EntityEventRefHandler<TComp, TEvent> handler, Type orderType,
@@ -305,7 +305,7 @@ namespace Robust.Shared.GameObjects
                 handler(new Entity<TComp>(uid, (TComp) comp), ref tev);
             }
 
-            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), EventHandler, orderType, before, after);
+            EntAddSubscription(CompIdx.Index<TComp>(), typeof(TComp), typeof(TEvent), handler.Method.DeclaringType, EventHandler, orderType, before, after);
         }
 
         /// <inheritdoc />
@@ -342,6 +342,7 @@ namespace Robust.Shared.GameObjects
             {
                 CompIdx.RefArray(ref _eventSubsUnfrozen, reg.Idx) ??= new();
                 CompIdx.RefArray(ref _compEventSubsUnfrozen, reg.Idx) ??= new();
+                CompIdx.RefArray(ref _compEventSubsDeclaringTypes, reg.Idx) ??= new();
             }
         }
 
@@ -385,6 +386,7 @@ namespace Robust.Shared.GameObjects
             CompIdx compType,
             Type compTypeObj,
             Type eventType,
+            Type? declaringType,
             DirectedEventHandler handler,
             Type? orderType = null,
             Type[]? before = null,
@@ -404,7 +406,12 @@ namespace Robust.Shared.GameObjects
             if (eventType.GetCustomAttribute<ComponentEventAttribute>() is { } attr)
             {
                 if (!_compEventSubsUnfrozen[compType.Value]!.TryAdd(eventType, handler))
-                    throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
+                {
+                    var original = _compEventSubsDeclaringTypes[compType.Value]![(eventType, true)]?.Name;
+                    throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}, original={original}, new={declaringType?.Name}");
+                }
+
+                _compEventSubsDeclaringTypes[compType.Value]![(eventType, true)] = declaringType;
 
                 // An exclusive component-event is only raised via RaiseComponentEvent, hence it don't need a normal
                 // directed event subscription
@@ -416,7 +423,12 @@ namespace Robust.Shared.GameObjects
             var reg = new DirectedRegistration(orderData, handler);
 
             if (!_eventSubsUnfrozen[compType.Value]!.TryAdd(eventType, reg))
-                throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
+            {
+                var original = _compEventSubsDeclaringTypes[compType.Value]![(eventType, false)]?.Name;
+                throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}, original={original}, new={declaringType?.Name}");
+            }
+
+            _compEventSubsDeclaringTypes[compType.Value]![(eventType, false)] = declaringType;
 
             RegisterCommon(eventType, reg.Ordering, out _);
             _eventSubsInv.GetOrNew(eventType).Add(compType);
@@ -734,6 +746,7 @@ namespace Robust.Shared.GameObjects
             _eventSubs = null!;
             _eventSubsUnfrozen = null!;
             _compEventSubsUnfrozen = null!;
+            _compEventSubsDeclaringTypes = null!;
             _eventSubsInv = null!;
         }
 

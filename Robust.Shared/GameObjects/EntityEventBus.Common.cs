@@ -46,6 +46,7 @@ internal sealed partial class EntityEventBus : IEventBus
     // pre-freeze event subscription data
     private Dictionary<Type, DirectedRegistration>?[] _eventSubsUnfrozen = [];
     private Dictionary<Type, DirectedEventHandler>?[] _compEventSubsUnfrozen = [];
+    private Dictionary<(Type, bool Comp), Type?>?[] _compEventSubsDeclaringTypes = [];
 
     /// <summary>
     /// Inverse of <see cref="_eventSubs"/>, mapping event types to sets of components.

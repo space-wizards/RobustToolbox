@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
+    <PackageReference Include="SpaceWizards.NetSerializer" />
     <ProjectReference Include="..\Robust.Shared.Maths.Tests\Robust.Shared.Maths.Tests.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj"/>
     <ProjectReference Include="..\Robust.Shared.Maths.Testing\Robust.Shared.Maths.Testing.csproj"/>

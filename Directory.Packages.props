@@ -46,6 +46,7 @@
     <PackageVersion Include="NUnit.Analyzers" Version="4.11.2" />
     <PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
     <PackageVersion Include="Nett" Version="0.15.0" />
+    <PackageVersion Include="SpaceWizards.NetSerializer" Version="1.1.1" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
     <PackageVersion Include="OpenTK.Audio.OpenAL" Version="4.9.4" />
     <PackageVersion Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />

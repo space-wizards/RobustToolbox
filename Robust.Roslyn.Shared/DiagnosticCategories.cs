@@ -3,6 +3,10 @@ namespace Robust.Roslyn.Shared;
 /// <summary>
 /// Standardized categories for use in diagnostic descriptors.
 /// </summary>
+/// <remarks>
+/// These are based on the internal diagnostic categories used by DotNet.
+/// </remarks>
+/// <seealso href="https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/categories" />
 public static class DiagnosticCategories
 {
     /// <summary>

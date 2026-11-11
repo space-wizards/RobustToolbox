@@ -410,6 +410,11 @@ namespace Robust.Shared.IoC
 
             return resolved;
         }
+        public T? TryResolveInject<T>(Type owningType)
+        {
+            TryResolveType(out T? instance);
+            return instance;
+        }
 
         public T ResolveInject<T>(Type owningType)
         {

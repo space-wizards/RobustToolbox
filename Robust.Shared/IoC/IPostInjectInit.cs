@@ -1,18 +1,33 @@
-namespace Robust.Shared.IoC
+namespace Robust.Shared.IoC;
+
+/// <summary>
+/// If implemented on a type instantiated by IoC,
+/// <see cref="IPostInjectInit.PostInject" /> will be called after all dependencies have been injected.
+/// Do not assume any order in the initialization of other managers,
+/// Or the availability of things through <see cref="IoCManager.Resolve{T}()" />
+/// </summary>
+/// <seealso cref="IoCManager" />
+/// <seealso cref="DependencyAttribute" />
+public interface IPostInjectInit
 {
     /// <summary>
-    /// If implemented on a type instantiated by IoC,
-    /// <see cref="IPostInjectInit.PostInject" /> will be called after all dependencies have been injected.
-    /// Do not assume any order in the initialization of other managers,
-    /// Or the availability of things through <see cref="IoCManager.Resolve{T}()" />
+    /// Essentially functions as a constructor after dependencies have been injected.
     /// </summary>
-    /// <seealso cref="IoCManager" />
-    /// <seealso cref="DependencyAttribute" />
-    public interface IPostInjectInit
-    {
-        /// <summary>
-        /// Essentially functions as a constructor after dependencies have been injected.
-        /// </summary>
-        void PostInject();
-    }
+    void PostInject();
+}
+
+public interface IPostInjectHandler
+{
+    /// <summary>
+    /// Handler method called after initial dependencies have been resolved
+    /// </summary>
+    void PostInject();
+}
+
+public interface IDifferedInjectHandler
+{
+    /// <summary>
+    /// Handler method called after differed dependencies have been resolved
+    /// </summary>
+    void PostDifferedInject();
 }

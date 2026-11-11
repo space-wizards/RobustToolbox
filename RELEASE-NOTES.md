@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* InitialCapacity has been removed from ComponentTreeSystem.
 
 ### New features
 

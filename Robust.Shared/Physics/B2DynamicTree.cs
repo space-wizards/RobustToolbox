@@ -245,7 +245,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public B2DynamicTree(float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null) :
+        public B2DynamicTree(float aabbExtendSize = 1f / 32, int capacity = MinimumCapacity, Func<int, int>? growthFunc = null) :
             base(aabbExtendSize, growthFunc)
         {
             capacity = Math.Max(MinimumCapacity, capacity);

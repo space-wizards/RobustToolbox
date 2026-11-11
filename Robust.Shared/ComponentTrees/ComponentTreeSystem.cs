@@ -50,11 +50,6 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
     protected abstract bool DoTickUpdate { get; }
 
     /// <summary>
-    ///     Initial tree capacity. Note that client-side trees will remove entities as they leave PVS range.
-    /// </summary>
-    protected virtual int InitialCapacity { get; } = 256;
-
-    /// <summary>
     ///     If true, this tree requires all children to be recursively updated whenever ANY entity moves. If false, this
     ///     will only update when an entity with the given component moves.
     /// </summary>
@@ -164,7 +159,7 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
 
     protected virtual void OnTreeAdd(EntityUid uid, TTreeComp component, ComponentAdd args)
     {
-        component.Tree = new(ExtractAabb, capacity: InitialCapacity);
+        component.Tree = new(ExtractAabb);
     }
 
     protected virtual void OnTreeRemove(EntityUid uid, TTreeComp component, ComponentRemove args)

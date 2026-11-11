@@ -20,7 +20,6 @@ public abstract partial class SharedLightTreeSystem : ComponentTreeSystem<LightT
     protected override bool DoFrameUpdate => true;
     protected override bool DoTickUpdate => false;
     protected override bool Recursive => true;
-    protected override int InitialCapacity => 128;
     protected override bool Enabled => _net.IsClient || _cfg.GetCVar(CVars.LookupEnableServerLightTree);
 
     protected override Box2 ExtractAabb(in ComponentTreeEntry<SharedPointLightComponent> entry, Vector2 pos, Angle rot)

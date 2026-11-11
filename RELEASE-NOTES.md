@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Reduce the default DynamicTree capacities to 16 to potentially reduce unnecessary memory overhead for small grids / maps.
 
 ### Internal
 

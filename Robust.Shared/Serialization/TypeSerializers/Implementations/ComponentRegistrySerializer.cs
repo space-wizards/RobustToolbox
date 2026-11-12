@@ -30,6 +30,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         internal bool CacheComponents;
         private readonly ConcurrentDictionary<MappingDataNode, Component> _cache = new(new ComponentMappingComparer());
 
+        internal void ClearCache() => _cache.Clear();
+
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
@@ -223,7 +225,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             SequenceDataNode parent,
             IDependencyCollection dependencies, ISerializationContext? context)
         {
-            var newCompReg = child.Copy();
+            // Only the sequence entries that match a parent component are replaced below. Keeping
+            // the component mappings shared avoids retaining a deep clone for every inheriting
+            // entity prototype.
+            var newCompReg = child.ShallowClone();
             var newCompRegDict = ToTypeIndexedDictionary(newCompReg);
             var parentDict = ToTypeIndexedDictionary(parent);
 

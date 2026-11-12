@@ -151,10 +151,10 @@ public partial class SerializationManager
         //todo implement different inheritancebehaviours for yamlfield
         // I have NFI what this comment means.
 
-        var result = child.Copy();
+        var result = child.ShallowClone();
         foreach (var entry in parent)
         {
-            result.Add(entry.Copy());
+            result.Add(entry);
         }
 
         return result;
@@ -167,10 +167,10 @@ public partial class SerializationManager
         // I still don't know what it means, but if it's talking about the always/never push inheritance attributes,
         // make sure it doesn't break entity serialization.
 
-        var result = child.Copy();
+        var result = child.ShallowClone();
         foreach (var (k, v) in parent)
         {
-            result.TryAddCopy(k, v);
+            result.TryAdd(k, v);
         }
 
         return result;
@@ -179,7 +179,9 @@ public partial class SerializationManager
     private MappingDataNode PushInheritanceDefinition(MappingDataNode child, MappingDataNode parent,
         DataDefinition definition, SerializationManager serializationManager, ISerializationContext? context = null)
     {
-        var newMapping = child.Copy();
+        // Inheritance only changes entries on this mapping. Keep its nested nodes shared with the
+        // loaded source mapping, and allocate replacement nodes only for fields that compose.
+        var newMapping = child.ShallowClone();
         var processedTags = new HashSet<string>();
         var fieldQueue = new Queue<DataFieldDefinition>(definition.BaseFieldDefinitions);
         while (fieldQueue.TryDequeue(out var field))

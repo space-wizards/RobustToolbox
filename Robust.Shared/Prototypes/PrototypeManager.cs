@@ -39,10 +39,6 @@ namespace Robust.Shared.Prototypes
         [Dependency] private IRobustRandom _random = default!;
         [Dependency] private IComponentFactory _compFactory = default!;
 
-        private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
-
-        private readonly Dictionary<string, MappingDataNode> _tempMappingData = new();
-
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
 
@@ -203,7 +199,7 @@ namespace Robust.Shared.Prototypes
             if (!_kinds.TryGetValue(typeof(T), out var kindData))
                 throw new UnknownPrototypeException(id, typeof(T));
 
-            if (!kindData.Results.ContainsKey(id))
+            if (!kindData.RawResults.ContainsKey(id))
                 yield break;
 
             IPrototype? uncast;
@@ -222,7 +218,7 @@ namespace Robust.Shared.Prototypes
             var queue = new Queue<string>(parents);
             while (queue.TryDequeue(out var prototypeId))
             {
-                if (!kindData.Results.ContainsKey(prototypeId))
+                if (!kindData.RawResults.ContainsKey(prototypeId))
                 {
                     Sawmill.Error($"Encountered invalid prototype while enumerating parents. Kind: {typeof(T).Name}. Child: {id}. Invalid: {prototypeId}");
                     continue;
@@ -302,6 +298,11 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
+            _prototypeStringInterner.Clear();
+            InvalidateMappingCaches();
+            Categories = FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>>.Empty;
+            if (_initialized)
+                _prototypeLoadContext = new PrototypeLoadContext(_serializationManager);
         }
 
         /// <inheritdoc />
@@ -370,6 +371,7 @@ namespace Robust.Shared.Prototypes
             Dictionary<Type, HashSet<string>>? removed,
             bool throwOnFailure)
         {
+            using var loadScope = BeginPrototypeLoadScope();
             var prototypeTypeOrder = modified.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
@@ -443,9 +445,12 @@ namespace Robust.Shared.Prototypes
 
                             if (parents.Length == 1)
                             {
+                                if (!TryGetResolvedMapping(kind, kindData, parents[0], out var parent))
+                                    throw new InvalidOperationException($"Missing parent prototype {parents[0]} for {id}");
+
                                 kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
                                     kind,
-                                    kindData.Results[parents[0]],
+                                    parent,
                                     kindData.RawResults[id]);
                             }
                             else
@@ -453,7 +458,10 @@ namespace Robust.Shared.Prototypes
                                 var parentMaps = new MappingDataNode[parents.Length];
                                 for (var i = 0; i < parentMaps.Length; i++)
                                 {
-                                    parentMaps[i] = kindData.Results[parents[i]];
+                                    if (!TryGetResolvedMapping(kind, kindData, parents[i], out var parent))
+                                        throw new InvalidOperationException($"Missing parent prototype {parents[i]} for {id}");
+
+                                    parentMaps[i] = parent;
                                 }
 
                                 kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
@@ -558,6 +566,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         public void ResolveResults()
         {
+            using var loadScope = BeginPrototypeLoadScope();
             // Oh god I butchered this poor method in the name of my Ryzen CPU.
 
             // Run inheritance pushing concurrently to the rest of prototype loading.
@@ -566,26 +575,33 @@ namespace Robust.Shared.Prototypes
             // Entity prototypes have priority -1 right now, so they have to be read last. This works out great!
             // We'll already be done pushing inheritance for them by the time we get to reading them.
             var inheritanceTasks = new Dictionary<Type, Task>();
-            foreach (var (k, v) in _kinds)
+            try
             {
-                if (v.Inheritance == null)
-                    continue;
+                foreach (var (k, v) in _kinds)
+                {
+                    if (v.Inheritance == null)
+                        continue;
 
-                var task = Task.Run(() => PushKindInheritance(k, v));
-                inheritanceTasks.Add(k, task);
+                    var task = Task.Run(() => PushKindInheritance(k, v));
+                    inheritanceTasks.Add(k, task);
+                }
+
+                var priorities = _kinds.Keys
+                    .GroupBy(k => _kindPriorities[k])
+                    .OrderByDescending(k => k.Key);
+
+                foreach (var group in priorities)
+                {
+                    var kinds = group.Select(k => _kinds[k]).ToArray();
+                    InstantiateKinds(kinds, inheritanceTasks);
+                }
+
+                UpdateCategories();
             }
-
-            var priorities = _kinds.Keys
-                .GroupBy(k => _kindPriorities[k])
-                .OrderByDescending(k => k.Key);
-
-            foreach (var group in priorities)
+            finally
             {
-                var kinds = group.Select(k => _kinds[k]).ToArray();
-                InstantiateKinds(kinds, inheritanceTasks);
+                Task.WhenAll(inheritanceTasks.Values).GetAwaiter().GetResult();
             }
-
-            UpdateCategories();
         }
 
         private void InstantiateKinds(KindData[] kinds, Dictionary<Type, Task> inheritanceTasks)
@@ -619,20 +635,23 @@ namespace Robust.Shared.Prototypes
             var hooksChannel = Channel.CreateUnbounded<ISerializationHooks>(hooksChannelOptions);
             var instantiateTask = Task.Run(() => InstantiatePrototypes(kinds, results, hooksChannel));
 
-            // On the game thread: process AfterDeserialization hooks from the channel.
-            var channelReader = hooksChannel.Reader;
-#pragma warning disable RA0004
-            while (channelReader.WaitToReadAsync().AsTask().Result)
-#pragma warning restore RA0004
+            try
             {
-                while (channelReader.TryRead(out var hooks))
+                var channelReader = hooksChannel.Reader;
+#pragma warning disable RA0004
+                while (channelReader.WaitToReadAsync().AsTask().Result)
+#pragma warning restore RA0004
                 {
-                    hooks.AfterDeserialization();
+                    while (channelReader.TryRead(out var hooks))
+                    {
+                        hooks.AfterDeserialization();
+                    }
                 }
             }
-
-            // Join task in case an exception was raised.
-            instantiateTask.Wait();
+            finally
+            {
+                instantiateTask.GetAwaiter().GetResult();
+            }
         }
 
         private void InstantiatePrototypes(
@@ -947,18 +966,21 @@ namespace Robust.Shared.Prototypes
                 throw new UnknownPrototypeException(id, typeof(T));
             }
 
-            return index.Results.ContainsKey(id);
+            return index.RawResults.ContainsKey(id);
         }
 
         /// <inheritdoc />
         public bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings)
         {
-            return _kinds[kind].Results.TryGetValue(id, out mappings);
+            var kindData = _kinds[kind];
+            return TryGetResolvedMapping(kind, kindData, id, out mappings);
         }
 
         public bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings)
         {
-            return _kinds[typeof(T)].Results.TryGetValue(id, out mappings);
+            var kind = typeof(T);
+            var kindData = _kinds[kind];
+            return TryGetResolvedMapping(kind, kindData, id, out mappings);
         }
 
         public bool HasKind(string kind)
@@ -1204,14 +1226,14 @@ namespace Robust.Shared.Prototypes
             /// This will not have an element for a given ID if there are no partial prototypes
             /// affecting that ID.
             /// </summary>
-            public readonly Dictionary<string, MappingDataNode> PartialOriginals = new();
+            public Dictionary<string, MappingDataNode> PartialOriginals = new();
 
             /// <summary>
             /// The original mapping before it was modified by a partial prototype.
             /// This will not have an element for a given ID if there are no partial prototypes
             /// affecting that ID.
             /// </summary>
-            public readonly Dictionary<string, List<(ExtractedMappingData Data, ResPath? File)>> Partials = new();
+            public Dictionary<string, List<(ExtractedMappingData Data, ResPath? File)>> Partials = new();
 
             /// <summary>
             /// The unfrozen instance of <see cref="Variants"/>.
@@ -1269,49 +1291,7 @@ namespace Robust.Shared.Prototypes
 
         private void OnReload(PrototypesReloadedEventArgs args)
         {
-            if (args.ByType.TryGetValue(typeof(EntityPrototype), out var modified))
-            {
-                foreach (var id in modified.Modified.Keys)
-                {
-                    _prototypeDataCache.Remove(id);
-                }
-            }
-
-            if (args.Removed == null || !args.Removed.TryGetValue(typeof(EntityPrototype), out var removed))
-                return;
-
-            foreach (var id in removed)
-            {
-                _prototypeDataCache.Remove(id);
-            }
-        }
-
-        public IReadOnlyDictionary<string, MappingDataNode> GetPrototypeData(EntityPrototype prototype)
-        {
-            if (_prototypeDataCache.TryGetValue(prototype.ID, out var data))
-                return data;
-
-            _tempMappingData.Clear();
-
-            if (TryGetMapping<EntityPrototype>(prototype.ID, out var mapping)
-                && mapping.TryGet<SequenceDataNode>("components", out var components))
-            {
-                foreach (var component in components)
-                {
-                    if (component is not MappingDataNode componentMapping
-                        || !componentMapping.TryGet<ValueDataNode>("type", out var type))
-                    {
-                        continue;
-                    }
-
-                    var copy = componentMapping.CopyNoType();
-                    _tempMappingData[type.Value] = copy;
-                }
-            }
-
-            data = _tempMappingData.ToFrozenDictionary();
-            _prototypeDataCache[prototype.ID] = data;
-            return data;
+            InvalidateMappingCaches();
         }
 
         public bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype

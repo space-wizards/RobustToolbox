@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Robust.Shared.Collections;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -99,6 +100,7 @@ public partial class PrototypeManager
     public void LoadDirectory(ResPath path, bool overwrite = false,
         Dictionary<Type, HashSet<string>>? changed = null)
     {
+        InvalidateMappingCaches();
         _hasEverBeenReloaded = true;
         var streams = Resources.ContentFindFiles(path)
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
@@ -272,6 +274,7 @@ public partial class PrototypeManager
 
     public void LoadFile(ResPath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
     {
+        InvalidateMappingCaches();
         try
         {
             var ignored = IsFileAbstract(file);
@@ -577,6 +580,7 @@ public partial class PrototypeManager
         Dictionary<Type, HashSet<string>>? changed = null,
         bool partial = false)
     {
+        InvalidateMappingCaches();
         _hasEverBeenReloaded = true;
 
         var i = 0;
@@ -624,6 +628,7 @@ public partial class PrototypeManager
 
     public void RemoveString(string prototypes)
     {
+        InvalidateMappingCaches();
         var reader = new StringReader(prototypes);
 
         var modified = new HashSet<KindData>();
@@ -641,6 +646,9 @@ public partial class PrototypeManager
                 var kindData = _kinds[kind];
 
                 var id = node.Get<ValueDataNode>("id").Value;
+
+                kindData.PartialOriginals.Remove(id);
+                kindData.Partials.Remove(id);
 
                 if (kindData.Inheritance is { } tree)
                     tree.Remove(id, true);
@@ -1147,11 +1155,16 @@ public partial class PrototypeManager
     {
         public SerializationManager.SerializerProvider SerializerProvider { get; }
         public bool WritingReadingPrototypes { get; }
+        private readonly ComponentRegistrySerializer? _componentSerializer;
+
+        public void ClearComponentCache() => _componentSerializer?.ClearCache();
 
         public PrototypeLoadContext(ISerializationManager serialization)
         {
             SerializerProvider = new SerializationManager.SerializerProvider(serialization);
-            SerializerProvider.RegisterSerializer<ComponentRegistrySerializer>()?.CacheComponents = true;
+            _componentSerializer = SerializerProvider.RegisterSerializer<ComponentRegistrySerializer>();
+            if (_componentSerializer != null)
+                _componentSerializer.CacheComponents = true;
         }
     }
 }

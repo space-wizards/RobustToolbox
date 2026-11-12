@@ -216,7 +216,7 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             var hash = new HashCode();
             hash.Add(typeof(SequenceDataNode));
             hash.Add(Tag);
-            foreach (var child in _nodes)
+            foreach (var child in this)
             {
                 hash.Add(child.GetCanonicalHashCode());
             }

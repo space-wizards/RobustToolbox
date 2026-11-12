@@ -30,6 +30,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         internal bool CacheComponents;
         private readonly ConcurrentDictionary<MappingDataNode, Component> _cache = new(new ComponentMappingComparer());
 
+        internal void ClearCache() => _cache.Clear();
+
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,

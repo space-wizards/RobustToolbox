@@ -38,11 +38,6 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         /// </summary>
         private Dictionary<string, string>? _keyTags;
 
-        public override bool IsEmpty => _children.Count == 0;
-        public int Count => _children.Count;
-        public bool IsReadOnly => false;
-        public IReadOnlyDictionary<string, DataNode> Children => _children;
-
         private int SmallCount
         {
             get
@@ -286,20 +281,24 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         public bool Remove(string key)
         {
             if (!IsSmall)
-                return Dictionary.Remove(key);
+            {
+                if (!Dictionary.Remove(key))
+                    return false;
 
-            _keyTags?.Remove(key);
-
-            var index = IndexOf(key);
-            if (index == -1)
-                throw new Exception("Key exists in Children, but not list?");
-
-                Array.Copy(entries, index + 1, entries, index, count - index - 1);
-                entries[count - 1] = default;
+                _keyTags?.Remove(key);
                 return true;
             }
 
-            return false;
+            var index = IndexOf(key);
+            if (index == -1)
+                return false;
+
+            var entries = SmallEntries;
+            var count = SmallCount;
+            Array.Copy(entries, index + 1, entries, index, count - index - 1);
+            entries[count - 1] = default;
+            _keyTags?.Remove(key);
+            return true;
         }
 
         public T Cast<T>(string key) where T : DataNode
@@ -425,26 +424,27 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             }
 
             newMapping._keyNodes = _keyNodes;
-            newMapping._keyTags = _keyTags;
+            newMapping._keyTags = _keyTags == null ? null : new Dictionary<string, string>(_keyTags);
             return newMapping;
         }
 
         internal MappingDataNode CopyNoType()
         {
-            var newMapping = new MappingDataNode(_children.Count)
+            var newMapping = new MappingDataNode(Count)
             {
                 Tag = Tag,
                 Start = Start,
                 End = End
             };
 
-            foreach (var (key, val) in _list)
+            foreach (var (key, val) in this)
             {
                 if (key != "type")
                     newMapping.Add(key, val.Copy());
             }
 
             newMapping._keyNodes = _keyNodes;
+            newMapping._keyTags = _keyTags == null ? null : new Dictionary<string, string>(_keyTags);
             return newMapping;
         }
 
@@ -466,6 +466,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             }
 
             newMapping._keyNodes = _keyNodes;
+            newMapping._keyTags = _keyTags == null ? null : new Dictionary<string, string>(_keyTags);
             return newMapping;
         }
 
@@ -567,7 +568,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         internal override int GetCanonicalHashCode()
         {
             var entriesHash = 0;
-            foreach (var (key, value) in _list)
+            foreach (var (key, value) in this)
             {
                 entriesHash ^= HashCode.Combine(StringComparer.Ordinal.GetHashCode(key), value.GetCanonicalHashCode());
             }
@@ -584,8 +585,6 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
         public void Clear()
         {
-            _children.Clear();
-            _list.Clear();
             _keyTags = null;
             if (IsSmall)
                 Array.Clear(SmallEntries);
@@ -681,6 +680,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         {
             _keyTags ??= new Dictionary<string, string>();
             _keyTags[key] = tag;
+        }
+
         private void PromoteToDictionary()
         {
             var entries = SmallEntries;

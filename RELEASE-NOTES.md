@@ -35,10 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Robust.Packaging console logging now has a minimum level of Debug and drops logs below the specified level.
-* Fixed adding to lists with partial prototypes adding the elements in reverse order. Before this change, clearing a list and adding [4, 5, 6] to it would result in [6, 5, 4]. Now it correctly results in [4, 5, 6]. If you were accounting for this in your partial YML, you will need to fix your existing sequences to be in the expected order.
-* Fixed mixed sequence-value pairs in partial prototypes not being read correctly. If both are values, as in they have no dashes and no square brackets, the partial value will replace the original value. If both are sequences, they will be combined together, optionally clearing if the !Clear tag is present in the partial. If one is a sequence, and another is a value, both are treated as sequences, and a !Clear present on the partial's value will clear the original's sequence. This affects partial prototype parent changes. If your game gets stuck loading, check that your partial prototype YML is not adding the same parent twice, for example by not !Clear-ing the parent field first, with parent: !Clear Parent1 or parent: !Clear [ Parent1, Parent2 ]. For more detail, see https://docs.spacestation14.com/en/robust-toolbox/partial-prototypes.html
-* InitialCapacity has been removed from ComponentTreeSystem.
+*None yet*
 
 ### New features
 
@@ -50,11 +47,37 @@ END TEMPLATE-->
 
 ### Other
 
-* Reduce the default DynamicTree capacities to 16 to potentially reduce unnecessary memory overhead for small grids / maps.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 296.0.0
+
+### Breaking changes
+
+* Robust.Packaging console logging now has a minimum level of Debug and drops logs below the specified level.
+* Fixed adding to lists with partial prototypes adding the elements in reverse order. Before this change, clearing a list and adding [4, 5, 6] to it would result in [6, 5, 4]. Now it correctly results in [4, 5, 6]. If you were accounting for this in your partial YML, you will need to fix your existing sequences to be in the expected order.
+* Fixed mixed sequence-value pairs in partial prototypes not being read correctly. If both are values, as in they have no dashes and no square brackets, the partial value will replace the original value. If both are sequences, they will be combined together, optionally clearing if the !Clear tag is present in the partial. If one is a sequence, and another is a value, both are treated as sequences, and a !Clear present on the partial's value will clear the original's sequence. This affects partial prototype parent changes. If your game gets stuck loading, check that your partial prototype YML is not adding the same parent twice, for example by not !Clear-ing the parent field first, with parent: !Clear Parent1 or parent: !Clear [ Parent1, Parent2 ]. For more detail, see https://docs.spacestation14.com/en/robust-toolbox/partial-prototypes.html
+* InitialCapacity has been removed from ComponentTreeSystem.
+* EnteredTree and ExitedTree now have [MustCallBase] as they require cleanup. To fix it add base.OnEnteredTree / base.OnExitedTree to your control overrides.
+* Analyzer categories were standardized under DiagnosticCategories.
+
+### New features
+
+* Added an error for duplicate parent IDs.
+* Make yaml linter errors more descriptive with kind and ID.
+* IClydeWindow.Maximize exists to maximize the game window.
+
+### Other
+
+* Reduce the default DynamicTree capacities to 16 to potentially reduce unnecessary memory overhead for small grids / maps.
+
+### Internal
+
+* Reduce memory usage of MappedStringDict.
 
 
 ## 295.0.3

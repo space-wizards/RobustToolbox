@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Minor performance improvement to mapped string startup.
 
 
 ## 295.0.3

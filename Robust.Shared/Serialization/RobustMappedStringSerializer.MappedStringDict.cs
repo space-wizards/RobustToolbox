@@ -49,7 +49,7 @@ namespace Robust.Shared.Serialization
 
                 // Sort to ensure determinism even if addition order is different.
                 _mappedStrings = _buildingStrings.ToArray();
-                Array.Sort(_mappedStrings);
+                Array.Sort(_mappedStrings, StringComparer.Ordinal);
 
                 // Create dictionary.
                 _stringMapping = GenMapDict(_mappedStrings);
@@ -57,7 +57,7 @@ namespace Robust.Shared.Serialization
 
             private FrozenDictionary<string, int> GenMapDict(string[] strings)
             {
-                var dict = new Dictionary<string, int>();
+                var dict = new Dictionary<string, int>(strings.Length, StringComparer.Ordinal);
                 for (var i = 0; i < strings.Length; i++)
                 {
                     dict.Add(strings[i], i);

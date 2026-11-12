@@ -18,6 +18,8 @@ namespace Robust.Client.Graphics
     {
         private const int SheetWidth = 256;
         private const int SheetHeight = 256;
+        // FreeType's stroker radius is expressed in 26.6 fixed-point pixel units.
+        private const float FreeType26Dot6Scale = 64f;
 
         private readonly IClyde _clyde;
         private readonly ISawmill _sawmill;
@@ -339,16 +341,48 @@ namespace Robust.Client.Graphics
                 _scaledData.Clear();
             }
 
-            public Texture? GetCharTexture(Rune codePoint, float scale)
+            public bool TryGetGlyph(
+                Rune codePoint,
+                float scale,
+                float outlineThickness,
+                out CharMetrics metrics,
+                out Texture? texture,
+                out OutlinedGlyph? outlinedGlyph)
             {
                 var glyph = GetGlyph(codePoint);
                 if (glyph == 0)
-                    return null;
+                {
+                    metrics = default;
+                    texture = null;
+                    outlinedGlyph = null;
+                    return false;
+                }
 
                 var scaled = GetScaleDatum(scale);
                 var glyphInfo = _fontManager.EnsureGlyphCached(this, scaled, scale, glyph);
+                metrics = glyphInfo.Metrics;
+                texture = glyphInfo.Texture;
+                outlinedGlyph = null;
 
-                return glyphInfo.Texture;
+                // An outline is never rendered without the normal glyph, so avoid generating or
+                // looking up outline data when the glyph has no bitmap.
+                if (texture == null || outlineThickness <= 0)
+                    return true;
+
+                var radius = (int) MathF.Round(outlineThickness * scale * FreeType26Dot6Scale);
+                if (radius <= 0)
+                    return true;
+
+                var outlinedInfo = _fontManager.EnsureOutlinedGlyphCached(this, scaled, scale, glyph, radius);
+                if (outlinedInfo.Texture != null)
+                    outlinedGlyph = new OutlinedGlyph(outlinedInfo.Texture, outlinedInfo.Left, outlinedInfo.Top);
+
+                return true;
+            }
+
+            public Texture? GetCharTexture(Rune codePoint, float scale)
+            {
+                return TryGetGlyph(codePoint, scale, 0, out _, out var texture, out _) ? texture : null;
             }
 
             public OutlinedGlyph? GetOutlinedChar(Rune codePoint, float scale, float thickness)
@@ -360,7 +394,7 @@ namespace Robust.Client.Graphics
                 if (glyph == 0)
                     return null;
 
-                var radius = (int) MathF.Round(thickness * scale * 64f);
+                var radius = (int) MathF.Round(thickness * scale * FreeType26Dot6Scale);
                 if (radius <= 0)
                     return null;
 
@@ -374,16 +408,7 @@ namespace Robust.Client.Graphics
 
             public CharMetrics? GetCharMetrics(Rune codePoint, float scale)
             {
-                var glyph = GetGlyph(codePoint);
-                if (glyph == 0)
-                {
-                    return null;
-                }
-
-                var scaled = GetScaleDatum(scale);
-                var info = _fontManager.EnsureGlyphCached(this, scaled, scale, glyph);
-
-                return info.Metrics;
+                return TryGetGlyph(codePoint, scale, 0, out var metrics, out _, out _) ? metrics : null;
             }
 
             public int GetAscent(float scale)

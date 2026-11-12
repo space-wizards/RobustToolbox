@@ -103,14 +103,14 @@ public static class DataNodeParser
         return node;
     }
 
-    private static string ParseKey(Parser parser, ParserState state)
+    private static (string value, string tag) ParseKey(Parser parser, DocumentState state)
     {
         var ev = parser.Consume<Scalar>();
 
         if (!ev.Anchor.IsEmpty)
             throw new NotSupportedException();
 
-        return state.InternMappingKey(ev.Value);
+        return (ev.Value, ConvertTag(ev.Tag, state.ParserState));
     }
 
     private static SequenceDataNode ParseSequence(Parser parser, DocumentState state)
@@ -153,10 +153,14 @@ public static class DataNodeParser
         MappingEnd mapEnd;
         while (!parser.TryConsume(out mapEnd))
         {
-            var key = ParseKey(parser, state.ParserState);
+            var (key, tag) = ParseKey(parser, state);
+            key = state.ParserState.InternString(key);
             var value = Parse(parser, state);
 
             node.Add(key, value);
+
+            if (tag != null)
+                node.SetKeyTag(key, tag);
 
             unresolvedAlias |= value is DataNodeAlias;
         }

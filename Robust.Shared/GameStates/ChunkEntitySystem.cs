@@ -10,6 +10,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameStates;
@@ -31,7 +32,9 @@ public abstract partial class ChunkEntitySystem : EntitySystem
     [Dependency] private EntityQuery<MetaDataComponent> _metaQuery;
     [Dependency] private EntityQuery<MapComponent> _mapQuery;
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery;
+    [Dependency] private EntityQuery<TransformComponent> _xformQuery;
     [Dependency] private EntityQuery<ChunkContainerComponent> _containerQuery;
+    [Dependency] private IGameTiming _timing = default!;
     [Dependency] private MetaDataSystem _metaData = default!;
 
     /// <summary>
@@ -51,6 +54,8 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         SubscribeLocalEvent<ChunkEntityComponent, EntityTerminatingEvent>(OnChunkTerminating);
         SubscribeLocalEvent<ChunkEntityComponent, AfterAutoHandleStateEvent>(OnChunkHandleState);
         SubscribeLocalEvent<ChunkContainerComponent, MapInitEvent>(OnContainerMapInit);
+        SubscribeLocalEvent<ChunkContainerComponent, EntityPausedEvent>(OnRootPaused);
+        SubscribeLocalEvent<ChunkContainerComponent, EntityUnpausedEvent>(OnRootUnpaused);
         SubscribeLocalEvent<BeforeSerializationEvent>(OnBeforeSerialization);
         SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
@@ -231,6 +236,16 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         _tempUids.Clear();
     }
 
+    private void OnRootPaused(Entity<ChunkContainerComponent> ent, ref EntityPausedEvent args)
+    {
+        SyncRootChunks(ent.Comp);
+    }
+
+    private void OnRootUnpaused(Entity<ChunkContainerComponent> ent, ref EntityUnpausedEvent args)
+    {
+        SyncRootChunks(ent.Comp);
+    }
+
     private void OnMapRemoved(MapRemovedEvent ev)
     {
         DeleteRootChunks(ev.Uid);
@@ -306,7 +321,26 @@ public abstract partial class ChunkEntitySystem : EntitySystem
             EntityManager.RunMapInit(chunk.Owner, chunk.Comp2);
         }
 
-        _metaData.SetEntityPaused(chunk.Owner, rootMeta.EntityPaused, chunk.Comp2);
+        _metaData.SetEntityPaused(chunk.Owner, IsRootPaused(chunk.Comp1.Root, rootMeta), chunk.Comp2);
+    }
+
+    private bool IsRootPaused(EntityUid root, MetaDataComponent rootMeta)
+    {
+        if (rootMeta.EntityPaused)
+            return true;
+
+        if (_mapQuery.TryComp(root, out var map))
+            return map.MapPaused || !map.MapInitialized;
+
+        if (!_gridQuery.HasComp(root) ||
+            !_xformQuery.TryComp(root, out var xform) ||
+            xform.MapUid is not { } mapUid ||
+            !_mapQuery.TryComp(mapUid, out map))
+        {
+            return false;
+        }
+
+        return map.MapPaused || !map.MapInitialized;
     }
 
     private void AddRootChunks(ChunkContainerComponent container, HashSet<EntityUid> entities)
@@ -346,7 +380,17 @@ public abstract partial class ChunkEntitySystem : EntitySystem
                 return;
             }
 
-            DebugTools.Assert($"Duplicate chunk entity for root {ToPrettyString(comp.Root)} and chunk {comp.Chunk}.");
+            if (_timing.ApplyingState)
+            {
+                // State application can receive a replacement chunk before the old
+                // chunk's deletion has been processed. Clear the stale slot so the
+                // incoming authoritative chunk state can own it.
+                RemoveChunk(oldChunk);
+            }
+            else
+            {
+                DebugTools.Assert($"Duplicate chunk entity for root {ToPrettyString(comp.Root)} and chunk {comp.Chunk}.");
+            }
         }
 
         meta.Flags |= MetaDataFlags.ChunkEntity;

@@ -1,0 +1,162 @@
+using NUnit.Framework;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Localization;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Upload;
+using Robust.Shared.Utility;
+
+namespace Robust.UnitTesting.Shared.Upload;
+
+[TestFixture]
+internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
+{
+    protected override Type[] ExtraComponents => [typeof(UploadTestTargetComponent)];
+
+    private const string FirstId = "first";
+    private const string SecondId = "second";
+    private const string UploadTestIdA = "UploadTestA";
+    private const string UploadTestIdB = "UploadTestB";
+
+    private IComponentFactory _facts = default!;
+    private IPrototypeManager _prototype = default!;
+    private TestPrototypeLoadManager _prototypeLoad = default!;
+
+    [OneTimeSetUp]
+    public void Setup()
+    {
+        IoCManager.Resolve<ISerializationManager>().Initialize();
+        IoCManager.Resolve<ILocalizationManager>().Initialize();
+        _prototype = IoCManager.Resolve<IPrototypeManager>();
+        _prototype.RegisterKind(typeof(PrototypeUploadTestPrototype));
+
+        _facts = IoCManager.Resolve<IComponentFactory>();
+
+        _prototypeLoad = new TestPrototypeLoadManager();
+        IoCManager.InjectDependencies(_prototypeLoad);
+        _prototypeLoad.Initialize();
+    }
+
+    [Test]
+    public void TestBadPrototypeUploadIsDropped()
+    {
+        const string badFirstPrototype = @"- type: prototypeUploadTest
+  id: first
+  number: not an integer";
+
+        const string firstPrototype = @"- type: prototypeUploadTest
+  id: first
+  number: 5";
+
+        const string badSecondPrototype = @"- type: prototypeUploadTest
+  id: second
+  number: not an integer";
+
+        const string partiallyBadPrototype = @"- type: prototypeUploadTest
+  id: first
+  number: 10
+- type: prototypeUploadTest
+  id: second
+  number: not an integer";
+
+        const string invalidPathPrototype = @"- type: prototypeUploadTest
+  id: second
+  path: Textures/not-a-real-upload-test-file.png";
+
+        const string secondPrototype = @"- type: prototypeUploadTest
+  id: second";
+
+        Assert.That(_prototypeLoad.TryLoad(badFirstPrototype), Is.False);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Is.Empty);
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.False);
+
+        Assert.That(_prototypeLoad.TryLoad(firstPrototype), Is.True);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(1));
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.True);
+        Assert.That(_prototype.Index<PrototypeUploadTestPrototype>(FirstId).Number, Is.EqualTo(5));
+
+        Assert.That(_prototypeLoad.TryLoad(badFirstPrototype), Is.False);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(1));
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.True);
+        Assert.That(_prototype.Index<PrototypeUploadTestPrototype>(FirstId).Number, Is.EqualTo(5));
+
+        Assert.That(_prototypeLoad.TryLoad(badSecondPrototype), Is.False);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(1));
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.True);
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.False);
+
+        Assert.That(_prototypeLoad.TryLoad(partiallyBadPrototype), Is.False);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(1));
+        Assert.That(_prototype.Index<PrototypeUploadTestPrototype>(FirstId).Number, Is.EqualTo(5));
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.False);
+
+        Assert.That(_prototypeLoad.TryLoad(invalidPathPrototype), Is.False);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(1));
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.True);
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.False);
+
+        Assert.That(_prototypeLoad.TryLoad(secondPrototype), Is.True);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(2));
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.True);
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.True);
+    }
+
+    [Test]
+    public void TestUploadWithCrossReferencingPrototypes()
+    {
+        const string upload = @$"
+- type: entity
+  id: {UploadTestIdA}
+  components:
+  - type: UploadTestTarget
+    target: {UploadTestIdB}
+- type: entity
+  id: {UploadTestIdB}
+  components:
+  - type: UploadTestTarget
+    target: {UploadTestIdA}
+";
+
+        Assert.That(_prototypeLoad.TryLoad(upload), Is.True);
+        Assert.That(_prototype.HasIndex<EntityPrototype>(UploadTestIdA), Is.True);
+        Assert.That(_prototype.HasIndex<EntityPrototype>(UploadTestIdB), Is.True);
+
+        var a = _prototype.Index<EntityPrototype>(UploadTestIdA);
+        var b = _prototype.Index<EntityPrototype>(UploadTestIdB);
+        Assert.That(a.Components.TryGetComponent(_facts, out UploadTestTargetComponent? compA), Is.True);
+        Assert.That(b.Components.TryGetComponent(_facts, out UploadTestTargetComponent? compB), Is.True);
+        Assert.That(compA!.Target, Is.EqualTo(new EntProtoId(UploadTestIdB)));
+        Assert.That(compB!.Target, Is.EqualTo(new EntProtoId(UploadTestIdA)));
+    }
+
+    private sealed class TestPrototypeLoadManager : SharedPrototypeLoadManager
+    {
+        public bool TryLoad(string prototype) => TryLoadPrototypeData(prototype);
+
+        public override void SendGamePrototype(string prototype)
+        {
+            TryLoadPrototypeData(prototype);
+        }
+    }
+}
+
+[Prototype]
+internal sealed partial class PrototypeUploadTestPrototype : IPrototype
+{
+    [IdDataField]
+    public string ID { get; private set; } = default!;
+
+    [DataField]
+    public int Number { get; private set; }
+
+    [DataField]
+    public ResPath? Path { get; private set; }
+}
+
+internal sealed partial class UploadTestTargetComponent : Component
+{
+    [DataField]
+    public EntProtoId Target;
+}

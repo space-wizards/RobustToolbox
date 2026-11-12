@@ -64,9 +64,9 @@ public sealed class AfterAutoHandleStateAnalyzerTest
             using Robust.Shared.Analyzers;
             using Robust.Shared.GameObjects;
 
-            [AutoGenerateComponentState(true)]
+            [AutoGenerateComponentState(true, fieldDeltas: false)]
             public sealed class AutoGenTrue;
-            [AutoGenerateComponentState(true, true)]
+            [AutoGenerateComponentState(true, fieldDeltas: false)]
             public sealed class AutoGenTrueTrue;
 
             public sealed class NotAutoGen;

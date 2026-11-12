@@ -245,7 +245,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public B2DynamicTree(float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null) :
+        public B2DynamicTree(float aabbExtendSize = 1f / 32, int capacity = MinimumCapacity, Func<int, int>? growthFunc = null) :
             base(aabbExtendSize, growthFunc)
         {
             capacity = Math.Max(MinimumCapacity, capacity);
@@ -272,6 +272,35 @@ namespace Robust.Shared.Physics
         public Box2? GetFatAabb(Proxy proxy)
         {
             return _nodes[proxy].Aabb;
+        }
+
+        public delegate void ClearCallback<TState>(ref TState state, in T value);
+
+        /// <summary>
+        /// Clears all leaves in bulk.
+        /// The callback is invoked once per allocated leaf to release external references. It MUST NOT touch the tree.
+        /// </summary>
+        public void Clear<TState>(ref TState state, ClearCallback<TState> callback)
+        {
+            if (NodeCount == 0)
+                return;
+
+            for (var i = 0; i < _nodes.Length; i++)
+            {
+                ref var node = ref _nodes[i];
+                if (node.IsLeaf)
+                    callback(ref state, in node.UserData);
+
+                node = default;
+                node.Height = -1;
+                node.Next = (Proxy) (i + 1);
+            }
+
+            _nodes[^1].Next = Proxy.Free;
+            _freeList = (Proxy) 0;
+            _root = Proxy.Free;
+            NodeCount = 0;
+            ProxyCount = 0;
         }
 
         /// <summary>Allocate a node from the pool. Grow the pool if necessary.</summary>

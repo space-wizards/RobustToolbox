@@ -369,7 +369,7 @@ namespace Robust.Client.ViewVariables.Instances
 
         private void OnClientComponentsAddButtonPressed(BaseButton.ButtonEventArgs _)
         {
-            _addComponentWindow?.Dispose();
+            _addComponentWindow?.Close();
 
             _addComponentWindow = new ViewVariablesAddWindow(GetValidComponentsForAdding(), Loc.GetString("view-variable-instance-entity-add-window-client-components"));
             _addComponentWindow.AddButtonPressed += TryAdd;
@@ -380,7 +380,7 @@ namespace Robust.Client.ViewVariables.Instances
 
         private async void OnServerComponentsAddButtonPressed(BaseButton.ButtonEventArgs _)
         {
-            _addComponentWindow?.Dispose();
+            _addComponentWindow?.Close();
 
             if (_entitySession == null) return;
 

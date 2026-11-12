@@ -26,7 +26,7 @@ Don't change the format without looking at the script!
 
 ### Internal
 
-* Pool sprite post-shader render targets in Clyde. ([#6657](https://github.com/space-wizards/RobustToolbox/pull/6657))
+*None yet*
 
 
 END TEMPLATE-->
@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* InitialCapacity has been removed from ComponentTreeSystem.
 
 ### New features
 
@@ -47,11 +47,333 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Reduce the default DynamicTree capacities to 16 to potentially reduce unnecessary memory overhead for small grids / maps.
 
 ### Internal
 
 *None yet*
+
+
+## 295.0.3
+
+### Breaking changes
+
+* Fixed adding to lists with partial prototypes adding the elements in reverse order. Before this change, clearing a list and adding [4, 5, 6] to it would result in [6, 5, 4]. Now it correctly results in [4, 5, 6]. If you were accounting for this in your partial YML, you will need to fix your existing sequences to be in the expected order.
+* Fixed mixed sequence-value pairs in partial prototypes not being read correctly. If both are values, as in they have no dashes and no square brackets, the partial value will replace the original value. If both are sequences, they will be combined together, optionally clearing if the !Clear tag is present in the partial. If one is a sequence, and another is a value, both are treated as sequences, and a !Clear present on the partial's value will clear the original's sequence. This affects partial prototype parent changes. If your game gets stuck loading, check that your partial prototype YML is not adding the same parent twice, for example by not !Clear-ing the parent field first, with parent: !Clear Parent1 or parent: !Clear [ Parent1, Parent2 ]. For more detail, see https://docs.spacestation14.com/en/robust-toolbox/partial-prototypes.html
+
+### New features
+
+* Added a new !Partial:N tag for defining partials outside the explicitly marked partial files and partial directories.
+* !PartialOnly now also optionally accepts a number in the format !PartialOnly:N, which works the same way as the new !Partial:N tag. If N isn't defined, !PartialOnly works the same way as before.
+
+### Bugfixes
+
+* Fixed a race condition in parallel prototype loading that could corrupt the prototype variant collection and throw an `ArgumentNullException` when freezing prototype kinds.
+* Fixed a prototype losing its inherited data when a partial prototype changes its `parent:`.
+* Fixed partials not working with component registries defined inside components, or top-level on non-entity prototypes.
+
+
+## 295.0.0
+
+### Breaking changes
+
+* NetSerializer is now referenced through the `SpaceWizards.NetSerializer` NuGet package instead of the `NetSerializer` git submodule. The assembly is now named `SpaceWizards.NetSerializer` instead of `Robust.NetSerializer`, the `NetSerializer` namespace is unchanged. Anything that references the old project or loads the old assembly by name needs updating.
+* The `NetSerializer` submodule has been removed. Run `git submodule deinit -f NetSerializer` (or re-clone) after updating. Projects that referenced `RobustToolbox/NetSerializer/NetSerializer/NetSerializer.csproj` must remove that reference. In particular, `SpaceStation14.slnx` must have its `/RobustToolbox/NetSerializer/` folder and project entry removed, or the solution will point at a missing project.
+
+### Bugfixes
+
+* Fix Windows Robust.Packaging not using correct path separators for zip archives.
+
+### Internal
+
+* NetSerializer is now versioned and published independently (`SpaceWizards.NetSerializer` 1.0.0 on NuGet, from `space-wizards/SpaceWizards.NetSerializer`), and is restored through `Directory.Packages.props`.
+
+
+## 294.0.1
+
+### New features
+
+* build.* CVars now include source information.
+
+### Bugfixes
+
+* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
+* Fix model transforms not being reset fully in RenderInRenderTarget.
+* Fix the debug connection screen throwing if the connect button is hit twice.
+
+
+## 294.0.0
+
+### Breaking changes
+
+- `MarkupDrawingContext.Tags` are now a `List<IMarkupTagHandler>` instead of `List<IMarkupTag>`, as `IMarkupTag` is obsolete.
+
+### New features
+
+- `MarkupDrawingContext` now provides a `TryGetStyleProperty{T}` method and a `MarkupDrawingContext(Control? owner, int capacity = 0)` constructor, which exposes `Control.TryGetStyleProperty{T}` to rich text markup tags. This lets you write tags that can read style properties set on their parents via stylesheets, just like any Control could.
+
+### Bugfixes
+
+* The default AnchorEntity method now snaps to tile center again.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRayClosest` and `CastShape` returning a grid-local hit point when a hit on a grid replaced a farther hit already found on the map or another grid.
+
+### Other
+
+- `MarkupDrawingContext` constructors without an `owner` parameter are now obsolete (use the new variants that take a `Control owner` parameter).
+
+
+## 293.0.1
+
+### Breaking changes
+
+* ImageSharp's dynamic/automatic decoder detection code (used in Image.Load()) no longer includes TIFF (due to security vulnerabilities)
+
+
+## 293.0.0
+
+### Breaking changes
+* Transform lerping rework from the previous release (292.0.0) has been reverted due to unforseen bugs. As a short summary, this should have the following impact: The lerping-related fields in TransformComponent (`NextPosition`, `NextRotation `, `PrevPosition `, `PrevRotation` , `ActivelyLerping` , `LastLerp` ) are back; The lerping-related cvars (`NetInterpMaxDistance`, `NetInterpMinDistance`, `NetInterpCorrectionHalfLife`, `NetInterpCorrectionMinTranslation`, `NetInterpCorrectionMinRotation`) and the `RenderTransform` struct are gone; The related functions in TransformSystem (i.e `ActivateLerp` , `GetRender...`, etc) have been removed.
+
+### Other
+
+* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
+
+
+## 292.0.0
+
+### Breaking changes
+
+* `BoundUserInterfaceMessageAttempt` is now a by-ref struct. It can no longer be assigned to `CancellableEntityEventArgs`.
+* TransformComponent.Anchored setter is now removed. All anchoring is done via TransformSystem.TryAnchor / TransformSystem.AnchorEntity.
+* ReAnchorEvent has been removed for grid splitting and now normal unanchor / anchor events are raised.
+* Transform lerping has been reworked to handle dropped ticks and position corrections in cases of mispredicts.
+  It will also no longer raise MoveEvent on FrameUpdates as the TransformComponent fields will reflect the simulation data.
+  To get the render position on client use the equivalent Render methods e.g. GetRenderWorldPosition. This will have any relevant corrections or lerping applied.
+  Any teleports should call SnapRenderTransform to ensure lerping isn't run in scenarios where it is unwanted.
+
+### New features
+
+* Added SpriteComponent.LayerData for read-only list access to layers.
+* Persist the entity spawn menu placement mode in a CVar.
+* Added GetIntersectingTrees to ComponentTreeSystem for an allocation-free way to get the relevant trees.
+* Expose IClyde.MouseMove as an event for when the mouse is moved.
+
+### Bugfixes
+
+* Rollback the LastModifiedTick for components when re-running state handling on the client.
+* Fix `display.compat` and `display.angle` being set to true at the same time crashing the game.
+* Fix the client sometimes not re-applying container states correctly when using `EnsureEntity`.
+* Added some PendingAck locks to fix some race conditions around client connection state and PvsSystem Acks.
+
+### Internal
+
+* Removed internal parallel solving for islands to simplify physics code and significantly reduce allocations. Now all islands will be solved in parallel regardless of size.
+* Fix BroadphaseContactJob allocations.
+
+
+## 291.0.0
+
+### Breaking changes
+
+* Ignore ctrl + alt key bindings while AltGr is held.
+* Serialize PVS states asynchronously.
+
+### Bugfixes
+
+* Fix more instances of stale fixture proxies being erroneously cleared on the wrong tree.
+
+### Internal
+
+* Remove global container subscription to entity initialization.
+
+
+## 290.0.0
+
+### Breaking changes
+
+* Add missing proxies for predicted spawn methods.
+* Rename SetFallbackCluture to SetFallbackCulture
+
+### New features
+
+* `Control.Restyle` has been made public for manually restyling controls on edge cases.
+* `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)`, `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)`, `EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)`, and `EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)` now all have proxies for EntitySystems.
+
+### Bugfixes
+
+* Make OutputPanel orphan controls when modifying messages.
+* Don't invoke OnTextChanged when scrolling through commands.
+* Dirty BodyType on SetBodyType for physics.
+* Fix some PVS scenarios with physics dying.
+
+### Other
+
+* Rate-limited full game state requests.
+* Allow prototype uploads to pass unknown fields to server.
+
+
+## 289.0.2
+
+### Bugfixes
+
+* Fixed a partial prototype exception message mentioning the wrong tag to use to combine data at a specific index on a sequence. The correct one is !CombineIndex:0 for example.
+* Fixed components with delta states causing a serializer error if they contain an automatically networked field of an abstract type. This fixes usages of SoundSpecifier, for example.
+* Fixed an exception caused by inheriting an entity that has had a component removed by a partial prototype without removing the component data.
+
+## 289.0.1
+
+### Breaking changes
+
+* Using partial prototypes, use the tag !CombineIndex to combine a node in a sequence. This fixes a bug where modifying sequences (lists) in partial prototypes was buggy and inconsistent. If you are adding to a sequence or removing from it you don't need to change anything. If you were trying to modify existing sequence elements, you will need to replace - "a": 1 with - !CombineIndex:0 "a": 1 for example.
+
+### New features
+
+* Toolshed now supports parsing array and list arguments.
+* Toolshed commands can now use CommandDescriptionAttribute and CommandHelpAttribute to define default description and help strings. Localized strings will still take priority, and if neither is defined, the raw localization string is returned, same as before.
+
+### Bugfixes
+
+* Fixed partial component additions and removals being inconsistent and sometimes overwriting components.
+* Fixed partial prototypes not being able to modify existing sequence indexes. Use !CombineIndex:0 to modify the first element of a list, for example.
+* Fixed the game not loading if you partially load a non-partial prototype.
+* Fixed the YML linter not working with partial prototypes, and added a partialNoOriginalError parameter to ValidateDirectory that when set to true will error when a non !PartialOnly partial prototype is found without an original to reference. This is set to false by default. This can be useful if you are not mixing partials and non-partials in the same directory.
+* Fixed not copying the original YML that is kept in PartialOriginals, resulting in duplicated data after applying partials.
+* Fixed YML hot reload not working with prototype partials.
+* Fixed inconsistent partial ordering if the same prototype is modified more than once in the same directory. Now it is ordered by the file path's name.
+
+### Internal
+
+* TransformComponent now uses delta states, reducing bandwidth usage.
+* Debug asserts in EntityManager.Dirty calls now check Component.Networked instead of checking for NetworkedComponentAttribute, reducing heap allocations on Debug.
+* Added per-step verbose logging for prototype partials that logs every step of applying a partial prototype, if PrototypeManager's sawmill is set to show verbose logs.
+
+
+## 289.0.0
+
+### Breaking changes
+
+* PrototypeIdSerializers and prototype ID validation attributes have been removed in lieu of directly using `ProtoId<T>`.
+
+### New features
+
+* `TextEdit.GetLineCount` is now public. Also the `TextEdit` control now has a `MaxLines` property that limits the ammount of newlines you can place
+* `IRobustRandom` can now make random longs with `NextLong`.
+* `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
+* Add SCREEN_UV property to shaders for post-shader usage. It returns the texture's UV in relation to the SCREEN_TEXTURE.
+* Draw state is now reset after every overlay.
+* Allow CompletionHelper entries to be clicked.
+* Partial prototypes have been added that allow specifying prototype entry removals.
+* Automatically generate prototype variants at runtime.
+* PrototypeTypeParser now returns its results sorted.
+* Add API for getting the current and main IClydeMonitors.
+
+### Bugfixes
+
+* Update CompletionHelper entries on text changed rather than key events.
+* Potentially fix steam overlay leaking memory when secondary windows are open.
+* Fix StyleBoxTexture potentially using negative bounds.
+
+### Other
+
+* Render handle shaders and transforms are reset after every overlay call.
+
+### Internal
+
+* Move component interning to ComponentRegistrySerializer.
+* Manually read parent nodes rather than using SerializationManager.
+* Optimise EventBus dispatch with versions and directly using components.
+* Disable analysis of generated code.
+
+
+## 288.1.0
+
+### New features
+
+* `LayerSetShader` now supports setting shaders to `null` when using an `object` layer key.
+* Reject nullable parameters for entity event subscription generation.
+* Add physics queries EntityLookupSystem and obsolete the old sharedphysicssystem ones.
+
+### Bugfixes
+
+* Fix close button not working on DefaultWindow.
+* Revert sRGB framebuffer change due to causing more issues.
+* Fix potential deadlock on nvidia/wayland.
+* Fix inconsistent bug with state handling caused by chunk entity changes / ac13da4328c0305f3284f4770004c67bc03b9bbe
+
+
+## 288.0.1
+
+### Bugfixes
+
+* Fix server and client getstate not being aligned for ComponentNetworkGenerator.
+* Fix components removed on entity deserializer not flagging the entity as dirty.
+
+
+## 288.0.0
+
+### Breaking changes
+
+* `ReplayData` no longer exposes the `States`/`Messages` lists; use `Count`, `GetState(index)` and `GetMessages(index)` instead. Replay history is now provided lazily through the new `IReplayDataProvider` interface, and `IReplayLoadManager.GenerateCheckpointsAsync` is no longer part of the public API.
+* GridFixtureSystem now updates the grid origin for split grids to re-centre them.
+* Batch font outline drawing with new API methods.
+* SharedMapSystem enumerators can now use struct foreach loops instead of .MoveNext calls and obsoleted the other ones.
+
+### New features
+
+* Added IAudioManager.ConvertAudioDeviceNameForDisplay helper method for decoding OpenAL device names into a more human-readable format.
+* The replay client now streams replay history from disk instead of keeping the entire deserialized replay resident in RAM, both while loading (history is streamed block-by-block through checkpoint generation) and during playback (data blocks are lazily re-read through a small LRU window, configurable via the `replay.loaded_block_window` cvar). Measured on an 861 MB, 1h38m replay this halves load time and cuts peak memory from ~22 GB to ~12 GB.
+* Added WithCompOrNull helper methods to EntitySystems.
+* Fix deletion rectangle rotation
+* Added CVar to mute on unfocus.
+
+### Bugfixes
+
+* Failed runtime prototype uploads are now dropped.
+* Fix spawn tiles window UIBox2 errors.
+* Release all keybinds when window loses focus.
+* Fix chunt pausing not aligning with the attached root pausing.
+
+### Internal
+
+* ISimulation no longer has SpawnEntity methods, resolve IEntityManager and call the spawn methods directly instead.
+* Run GenerateClient and GenerateServer in parallel.
+
+
+## 287.0.0
+
+### Breaking changes
+
+* OccluderComponent now supports convex polygons and no longer uses a bounding box. These use the same limitations as convex hulls for physics (no more than 8 points).
+* Update Yamldotnet to 18.1.0
+* EntityPrototype components are now interned and shared. Any components that have the same datafield data are now shared when stored on PrototypeManager, saving significant amounts of memory.
+* RSIStates now store AtlasTexture and not Texture, speeding up RSI rendering by directly passing it through.
+* Reverted BUI state queueing.
+
+### New features
+
+* Added a field to `ComponentNetworkGenerator` to exclude components from replays.
+* Added support for before and after subscriptions for the new `[SubscribeLocalEvent]` and related attributes.
+
+### Bugfixes
+
+* Make DefaultWindow call base.FrameUpdate to support animations.
+* Fix Discord RPC playtime resetting on join.
+* Fix some WordWrap bugs.
+
+### Other
+
+* Change `OccluderComponent` access to `ReadExecute`.
+* Components that are being removed are no longer serialized.
+* Added test workflows for the template repos.
+
+### Internal
+
+* Rewrite ReflectionManager for performance reasons.
+* Made many optimizations to GameStates, componentregistryserializer, IoC dependencies, and collection serializers.
+* Remove redundant MsgEntity properties.
+* Cached texture UVs for rendering atlas textures.
+* Pool sprite post-shader render targets in Clyde.
 
 
 ## 286.0.0

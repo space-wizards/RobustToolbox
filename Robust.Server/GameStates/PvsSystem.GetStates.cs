@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Player;
@@ -52,13 +53,23 @@ internal sealed partial class PvsSystem
                 continue;
 
             var state = ComponentState(entityUid, component, netId, ref stateEv, out var excludeReplays);
+
+            if (state is IComponentDeltaState && fromTick <= component.CreationTick)
+            {
+                var fullStateEv = new ComponentGetState(player, GameTick.Zero);
+                state = ComponentState(entityUid, component, netId, ref fullStateEv, out excludeReplays);
+            }
+
             if (excludeReplays && player == null)
                 continue;
 
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (state != null)
-                DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState);
+            {
+                DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState,
+                    $"Expected full state for {ToPrettyString(entityUid)} / {EntityManager.ComponentFactory.CompName(component.GetType())}; got {state.GetType().Name}. From={fromTick}, event from={stateEv.FromTick}, creation={component.CreationTick}, modified={component.LastModifiedTick}.");
+            }
 
             if (sendCompList)
                 netComps!.Add(netId);
@@ -74,13 +85,15 @@ internal sealed partial class PvsSystem
     private IComponentState? ComponentState(EntityUid uid, IComponent comp, ushort netId, ref ComponentGetState stateEv, out bool excludeReplays)
     {
         DebugTools.Assert(comp.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {comp.GetType()}");
-// Reset the ComponentGetState data.
-stateEv.State = null;
-stateEv.ExcludeReplays = false;
-_getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
-var state = stateEv.State;
+        // Reset the ComponentGetState data.
+        stateEv.State = null;
+        stateEv.ExcludeReplays = false;
+
+        _getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
+
+        var state = stateEv.State;
         excludeReplays = stateEv.ExcludeReplays;
-return state;
+        return state;
     }
 
     /// <summary>
@@ -125,6 +138,7 @@ return state;
         var fromTick = pvsSession.FromTick;
 
         var toSend = _uidSetPool.Get();
+        var chunkStates = new ValueList<EntityState>();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
         DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
@@ -158,7 +172,10 @@ return state;
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
-                var state = GetEntityState(session, uid, fromTick, md);
+                // Full-state requests must include implicit prototype-backed component data, not just deltas.
+                var state = pvsSession.RequestedFull && session != null
+                    ? GetFullEntityState(session, uid, md)
+                    : GetEntityState(session, uid, fromTick, md);
 
                 if (state.Empty)
                 {
@@ -170,7 +187,7 @@ Metadata last modified: {md.LastModifiedTick}
 Transform last modified: {Transform(uid).LastModifiedTick}");
                 }
 
-                pvsSession.States.Add(state);
+                AddOrderedState(pvsSession, state, md, ref chunkStates);
             }
         }
         else
@@ -207,7 +224,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                         continue;
                     }
 
-                    pvsSession.States.Add(state);
+                    AddOrderedState(pvsSession, state, md, ref chunkStates);
                 }
 
                 foreach (var uid in dirty)
@@ -223,13 +240,32 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
                     var state = GetEntityState(session, uid, fromTick, md);
                     if (!state.Empty)
-                        pvsSession.States.Add(state);
+                        AddOrderedState(pvsSession, state, md, ref chunkStates);
                     else
                         ReturnEntityState(state);
                 }
             }
         }
 
+        pvsSession.States.AddRange(chunkStates);
         _uidSetPool.Return(toSend);
+    }
+
+    private static void AddOrderedState(
+        PvsSession pvsSession,
+        EntityState state,
+        MetaDataComponent meta,
+        ref ValueList<EntityState> chunkStates)
+    {
+        if ((meta.Flags & MetaDataFlags.ChunkEntity) != 0)
+        {
+            chunkStates.Add(state);
+            return;
+        }
+
+        // Chunk entities are nullspace entities, so their root relationship is not captured by the client's
+        // transform-parent state sort. Keep all-game-state emission consistent with PVS chunk emission: roots first,
+        // attached chunk entities second.
+        pvsSession.States.Add(state);
     }
 }

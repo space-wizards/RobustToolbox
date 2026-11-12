@@ -97,7 +97,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
             var xformSys = entMan.System<SharedTransformSystem>();
-            var uid = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            var uid = entMan.Spawn();
             var xform = entMan.GetComponent<TransformComponent>(uid);
             Assert.That(xform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
             xformSys.SetLocalPosition(uid, Vector2.One);

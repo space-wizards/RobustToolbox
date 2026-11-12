@@ -37,6 +37,11 @@ public sealed partial class ParserContext
     public CommandArgumentBundle Bundle;
 
     /// <summary>
+    /// The current argument trying to be parsed.
+    /// </summary>
+    public CommandArgument? CurrentArgument;
+
+    /// <summary>
     /// Whether or not to generate auto-completion options.
     /// </summary>
     public bool GenerateCompletions;

@@ -73,7 +73,7 @@ namespace Robust.Shared.Physics
         private Dictionary<T, DynamicTree.Proxy> _nodeLookup;
         public readonly B2DynamicTree<T> _b2Tree;
 
-        public DynamicTree(ExtractAabbDelegate extractAabbFunc, IEqualityComparer<T>? comparer = null, float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null)
+        public DynamicTree(ExtractAabbDelegate extractAabbFunc, IEqualityComparer<T>? comparer = null, float aabbExtendSize = 1f / 32, int capacity = DynamicTree.MinimumCapacity, Func<int, int>? growthFunc = null)
         {
             capacity = Math.Max(DynamicTree.MinimumCapacity, capacity);
 

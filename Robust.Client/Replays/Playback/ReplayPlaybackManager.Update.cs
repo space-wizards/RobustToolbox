@@ -26,7 +26,7 @@ internal sealed partial class ReplayPlaybackManager
         if (ScrubbingTarget != null)
             SetIndex(ScrubbingTarget.Value, false);
 
-        if (Replay.CurrentIndex + 1 >= Replay.States.Count)
+        if (Replay.CurrentIndex + 1 >= Replay.Count)
             Playing = false;
 
         // TODO REPLAYS do we actually need to do this?

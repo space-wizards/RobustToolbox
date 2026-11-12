@@ -55,7 +55,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(static ctx =>
         {
@@ -109,7 +109,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
 
         HashSet<ProxyMethod> proxySet = [];
         // Search for methods in each type this inherits from
-        foreach (var baseType in TypeSymbolHelper.GetBaseTypes(typeSymbol))
+        foreach (var baseType in typeSymbol.GetBaseTypes())
         {
             HashSet<ProxyMethod> classMethods = [];
             // Check each member
@@ -150,7 +150,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
                 return;
 
             // Make sure the member belongs to the proxy class
-            if (!TypeSymbolHelper.Inherits(context.ContainingSymbol.ContainingType, reference.Member.ContainingType))
+            if (!context.ContainingSymbol.ContainingType.InheritsFrom(reference.Member.ContainingType))
                 return;
 
             // Get the method being invoked

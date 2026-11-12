@@ -618,13 +618,8 @@ namespace Robust.Client.GameStates
             if (!PredictionNeedsResetting)
                 return;
 
-            PredictionNeedsResetting = false;
-            var countReset = 0;
-            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
-            var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
-            RemQueue<IComponent> toRemove = new();
-
-            // Handle predicted entity spawns.
+            // Handle predicted entity spawns before applying state-created entities. This
+            // keeps predicted chunk entities from colliding with authoritative chunk entities.
             var predicted = new ValueList<EntityUid>();
             var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
 
@@ -638,6 +633,12 @@ namespace Robust.Client.GameStates
             {
                 _entities.DeleteEntity(ent);
             }
+
+            PredictionNeedsResetting = false;
+            var countReset = 0;
+            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
+            var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
+            RemQueue<IComponent> toRemove = new();
 
             foreach (var entity in system.DirtyEntities)
             {
@@ -761,12 +762,13 @@ namespace Robust.Client.GameStates
         }
 
         /// <summary>
-        ///     Infer implicit state data for newly created entities.
+        ///     Infer implicit state data for newly created entities or entities in a full state.
         /// </summary>
         /// <remarks>
         ///     Whenever a new entity is created, the server doesn't send full state data, given that much of the data
-        ///     can simply be obtained from the entity prototype information. This function basically creates a fake
-        ///     initial server state for any newly created entity. It does this by simply using the standard <see
+        ///     can simply be obtained from the entity prototype information. Full states can also re-use this implicit
+        ///     data when an entity already exists client-side. This function basically creates a fake initial server
+        ///     state for any such entity. It does this by simply using the standard <see
         ///     cref="IEntityManager.GetComponentState"/>.
         /// </remarks>
         public void MergeImplicitData()
@@ -878,6 +880,11 @@ namespace Robust.Client.GameStates
                     {
                         DebugTools.Assert(_entities.EntityExists(uid));
                         _resolvedEntityStates.Add((es, uid.Value, meta));
+
+                        // Existing entities in a full state still need their implicit prototype state merged into the full-rep cache.
+                        if (curState.FromSequence == GameTick.Zero)
+                            _created.Add(es.NetEntity);
+
                         continue;
                     }
 
@@ -909,6 +916,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(!_toApply.ContainsKey(uid));
 
                     meta.Flags &= ~MetaDataFlags.Detached;
+                    _entities.ClearPredictedDeletion(uid);
                     if (isEnteringPvs)
                         enteringPvs++;
                 }
@@ -1189,8 +1197,13 @@ namespace Robust.Client.GameStates
             // store MetaData & Transform information separately.
             if (data.CurState != null && TryGetComponentChange(data.CurState, _xformCompNetId, out var found))
             {
-                var state = (TransformComponentState)found.State!;
-                return _entities.GetEntity(state.ParentID);
+                switch (found.State)
+                {
+                    case TransformComponentState state:
+                        return _entities.GetEntity(state.ParentID);
+                    case TransformComponentDeltaState delta when delta.IsChanged(SharedTransformSystem.TransformParentIndex):
+                        return _entities.GetEntity(delta.ParentID);
+                }
             }
 
             return _entities.TransformQuery.GetComponent(uid).ParentUid;
@@ -1445,7 +1458,7 @@ namespace Robust.Client.GameStates
                     metadata.PauseTime = TimeSpan.Zero;
 
                     if (container != null)
-                        containerSys.AddExpectedEntity(netEntity, container);
+                        containerSys.AddPvsDetachedEntity(netEntity, container);
                 }
 
                 _detached.Add(netEntity);
@@ -1579,6 +1592,8 @@ namespace Robust.Client.GameStates
                     else if (compChange.LastModifiedTick <= data.LastApplied && data.LastApplied != GameTick.Zero)
                         continue;
 
+                    // Reset it to server state in case something dirtied it in the meantime.
+                    comp.LastModifiedTick = compChange.LastModifiedTick;
                     _compStateWork[compChange.NetID] = (comp, compChange.State, null);
                 }
             }
@@ -1624,10 +1639,11 @@ namespace Robust.Client.GameStates
                     ref var compState =
                         ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, netId, out var exists);
 
-                    if (exists)
+                    // A next-only entry shouldn't stop the state handler from going out.
+                    if (exists && compState.curState != null)
                         continue;
 
-                    compState = (comp, lastCompState, null);
+                    compState = (comp, lastCompState, compState.nextState);
                 }
             }
 
@@ -1712,7 +1728,7 @@ namespace Robust.Client.GameStates
                 _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachEntity(uid, xform);
 
                 if (container != null)
-                    containerSys.AddExpectedEntity(_entities.GetNetEntity(uid), container);
+                    containerSys.AddPvsDetachedEntity(_entities.GetNetEntity(uid), container);
             }
         }
 
@@ -1745,7 +1761,7 @@ namespace Robust.Client.GameStates
             if (!_entities.IsClientSide(uid) && _entities.TryGetComponent(uid, out TransformComponent? xform))
                 _recursiveRemoveState(meta.NetEntity, xform, _entities.GetEntityQuery<MetaDataComponent>(), _entities.GetEntityQuery<TransformComponent>());
 
-            // Set ApplyingState to true to avoid logging errors about predicting the deletion of networked entities.
+            // DeleteEntity predicts the deletion of networked entities.
             using (_timing.StartStateApplicationArea())
             {
                 _entities.DeleteEntity(uid);

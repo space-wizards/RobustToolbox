@@ -819,6 +819,36 @@ namespace Robust.Shared
             CVarDef.Create("build.manifest_url", string.Empty);
 
         /// <summary>
+        /// URL of the game repository fork (e.g. "https://github.com/space-wizards/space-station-14")
+        /// or original game repository.
+        /// </summary>
+        public static readonly CVarDef<string> SourceUrl =
+            CVarDef.Create("build.source_url", string.Empty);
+
+        /// <summary> Commit ID on which current game was built. </summary>
+        public static readonly CVarDef<string> SourceCommitId =
+            CVarDef.Create("build.source_commit_id", string.Empty);
+
+        /// <summary> Branch on which current game was built. </summary>
+        public static readonly CVarDef<string> SourceBranchName =
+            CVarDef.Create("build.source_branch_name", string.Empty);
+
+        /// <summary>
+        /// URL for engine repository (or its fork), used for this version of the game,
+        /// or original game repository URL.
+        /// </summary>
+        public static readonly CVarDef<string> EngineSourceBranchName =
+            CVarDef.Create("build.engine_source_url", string.Empty);
+
+        /// <summary> Commit ID of engine, that was used to build this version of the game. </summary>
+        public static readonly CVarDef<string> EngineSourceUrl =
+            CVarDef.Create("build.engine_source_commit_id", string.Empty);
+
+        /// <summary> Name of branch for engine, on which this version of game was built. </summary>
+        public static readonly CVarDef<string> EngineSourceCommitId =
+            CVarDef.Create("build.engine_source_branch_name", string.Empty);
+
+        /// <summary>
         /// URL at which the launcher can download the manifest game files.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestDownloadUrl =
@@ -1414,6 +1444,12 @@ namespace Robust.Shared
             CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Whether to mute audio while the game window is unfocused.
+        /// </summary>
+        public static readonly CVarDef<bool> AudioMuteUnfocused =
+            CVarDef.Create("audio.mute_unfocused", false, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Maximum raycast distance for audio occlusion.
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
@@ -1468,7 +1504,7 @@ namespace Robust.Shared
         /// Can grids split if not connected by cardinals
         /// </summary>
         public static readonly CVarDef<bool> GridSplitting =
-            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE);
+            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// How much to enlarge grids when determining their fixture bounds.
@@ -1677,6 +1713,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> ResCheckBadFileExtensions =
             CVarDef.Create("res.check_bad_file_extensions", true);
+
+        /// <summary>
+        /// If true, prototypes will be validated upon uploading and throw an error if one fails, cancelling the upload.
+        /// </summary>
+        /// <remarks>
+        /// Setting to false is more permissive, but may result in uploading faulty prototypes.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResValidatePrototypeUpload =
+            CVarDef.Create("res.validate_prototype_upload", true, CVar.REPLICATED | CVar.SERVER);
 
         /*
          * DEBUG
@@ -1918,6 +1963,14 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
 
         /// <summary>
+        /// Number of replay data blocks (each ≈ one <c>data_N</c> file) the client keeps resident in memory
+        /// at once during playback. The full replay is no longer loaded entirely into RAM; blocks are read
+        /// lazily and evicted (LRU) once this window is exceeded. Higher values use more memory but reduce
+        /// re-reads when scrubbing back and forth. Minimum effective value is 2.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayLoadedBlockWindow = CVarDef.Create("replay.loaded_block_window", 8);
+
+        /// <summary>
         /// Whether or not server-side replay recording is enabled.
         /// </summary>
         public static readonly CVarDef<bool> ReplayServerRecordingEnabled = CVarDef.Create(
@@ -2111,6 +2164,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> UIObeyUpdateLimits =
             CVarDef.Create("ui.obey_update_limits", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The selected mode for the entity spawn window's placement mode dropdown.
+        /// </summary>
+        public static readonly CVarDef<int> EntitySpawnOverrideMode =
+            CVarDef.Create("ui.entity_spawn.override_mode", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
         /*
          * FONT
          */

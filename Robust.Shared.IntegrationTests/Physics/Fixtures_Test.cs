@@ -2,7 +2,6 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -23,13 +22,12 @@ internal sealed class Fixtures_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var sysManager = sim.Resolve<IEntitySystemManager>();
-        var fixturesSystem = sysManager.GetEntitySystem<FixtureSystem>();
-        var physicsSystem = sysManager.GetEntitySystem<SharedPhysicsSystem>();
-        var mapSystem = sysManager.GetEntitySystem<SharedMapSystem>();
-        var map = sim.CreateMap().MapId;
+        var fixturesSystem =entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        mapSystem.CreateMap(out var map);
 
-        var ent = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
+        var ent = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, map));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
         physicsSystem.SetBodyType(ent, BodyType.Dynamic, body: body);
         var fixture = new Fixture();
@@ -125,12 +123,10 @@ internal sealed class Fixtures_Test
     [Test]
     public void FixtureProxyCleanupIsIdempotent()
     {
-        var (sim, ent, fixture, proxy, _, _, _, lookup, broadphase) = SetupQueuedProxy();
-        var entManager = sim.Resolve<IEntityManager>();
-        var xform = entManager.GetComponent<TransformComponent>(ent);
+        var (sim, _, fixture, proxy, _, _, _, lookup, broadphase) = SetupQueuedProxy();
 
-        lookup.ReleaseProxies(ent, fixture, xform);
-        lookup.ReleaseProxies(ent, fixture, xform);
+        lookup.ReleaseProxies(fixture);
+        lookup.ReleaseProxies(fixture);
 
         AssertProxyReleased(sim, fixture, proxy);
         Assert.That(broadphase.StaticTree.GetProxy(proxy.ProxyId), Is.Null);
@@ -206,7 +202,7 @@ internal sealed class Fixtures_Test
         var entManager = sim.Resolve<IEntityManager>();
         var fixturesSystem = entManager.System<FixtureSystem>();
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
-        var ent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);

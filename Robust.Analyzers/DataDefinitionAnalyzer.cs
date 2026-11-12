@@ -104,7 +104,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.None);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
         context.RegisterSymbolStartAction(symbolContext =>
@@ -192,7 +192,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             if (context.SemanticModel.GetSymbolInfo(field.Declaration.Type).Symbol is not ITypeSymbol fieldTypeSymbol)
                 continue;
 
-            fieldTypeSymbol = TypeSymbolHelper.GetNullableUnderlyingTypeOrSelf(fieldTypeSymbol);
+            fieldTypeSymbol = fieldTypeSymbol.GetNullableUnderlyingTypeOrSelf();
 
             if (IsNotYamlSerializable(fieldSymbol, fieldTypeSymbol))
             {
@@ -258,7 +258,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (context.SemanticModel.GetSymbolInfo(property.Type).Symbol is not ITypeSymbol propertyTypeSymbol)
             return;
 
-        propertyTypeSymbol = TypeSymbolHelper.GetNullableUnderlyingTypeOrSelf(propertyTypeSymbol);
+        propertyTypeSymbol = propertyTypeSymbol.GetNullableUnderlyingTypeOrSelf();
 
         if (IsNotYamlSerializable(propertySymbol, propertyTypeSymbol))
         {
@@ -276,7 +276,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         foreach (var attribute in symbol.GetAttributes())
         {
             if (attribute.AttributeClass is { } attributeClass &&
-                TypeSymbolHelper.Inherits(attributeClass, DataFieldBaseNamespace))
+                attributeClass.InheritsFrom(DataFieldBaseNamespace))
                 return true;
         }
 

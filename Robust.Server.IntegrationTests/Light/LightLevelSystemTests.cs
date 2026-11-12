@@ -5,14 +5,13 @@ using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
+//using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Light;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Server;
 
@@ -160,12 +159,12 @@ public sealed class LightLevelSystemTests
         var sim = NewSimulation(false);
         var map = sim.CreateMap();
         var entMan = sim.Resolve<IEntityManager>();
-        var containers = Sys<SharedContainerSystem>(sim);
+        var containers = entMan.System<SharedContainerSystem>();
         var lightUid = AddLight(sim, map.MapId, Vector2.Zero, castShadows: false);
         var light = entMan.GetComponent<PointLightComponent>(lightUid);
-        var outerA = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map.MapId));
-        var outerB = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map.MapId));
-        var inner = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map.MapId));
+        var outerA = entMan.Spawn(null, new MapCoordinates(Vector2.Zero, map.MapId));
+        var outerB = entMan.Spawn(null, new MapCoordinates(Vector2.Zero, map.MapId));
+        var inner = entMan.Spawn(null, new MapCoordinates(Vector2.Zero, map.MapId));
 
         entMan.AddComponent<ContainerManagerComponent>(outerA);
         entMan.AddComponent<ContainerManagerComponent>(outerB);
@@ -192,21 +191,28 @@ public sealed class LightLevelSystemTests
 
     private static EntityUid AddLight(ISimulation sim, MapId mapId, Vector2 position, bool castShadows, float radius = 6f)
     {
-        var uid = sim.SpawnEntity(null, new MapCoordinates(position, mapId));
         var entMan = sim.Resolve<IEntityManager>();
+        var uid = entMan.Spawn(null, new MapCoordinates(position, mapId));
+        var pointLightSys = entMan.System<PointLightSystem>();
         var light = entMan.AddComponent<PointLightComponent>(uid);
-        Sys<PointLightSystem>(sim).SetRadius(uid, radius, light);
-        Sys<PointLightSystem>(sim).SetCastShadows(uid, castShadows, light);
-        Sys<PointLightSystem>(sim).SetColor(uid, Color.White, light);
-        Sys<PointLightSystem>(sim).SetEnergy(uid, 1f, light);
+        pointLightSys.SetRadius(uid, radius, light);
+        pointLightSys.SetCastShadows(uid, castShadows, light);
+        pointLightSys.SetColor(uid, Color.White, light);
+        pointLightSys.SetEnergy(uid, 1f, light);
         return uid;
     }
 
     private static void AddOccluder(ISimulation sim, MapId mapId, Vector2 position)
     {
-        var uid = sim.SpawnEntity(null, new MapCoordinates(position, mapId));
         var entMan = sim.Resolve<IEntityManager>();
+        var uid = entMan.Spawn(null, new MapCoordinates(position, mapId));
         var occluder = entMan.AddComponent<OccluderComponent>(uid);
-        Sys<ServerOccluderSystem>(sim).SetBoundingBox(uid, new Box2(-0.25f, -2f, 0.25f, 2f), occluder);
+        entMan.System<ServerOccluderSystem>().SetPolygon(uid,
+        [
+            new(-0.25f, -2f),
+            new(0.25f, -2f),
+            new(0.25f, 2f),
+            new(-0.25f, 2f),
+        ], occluder);
     }
 }

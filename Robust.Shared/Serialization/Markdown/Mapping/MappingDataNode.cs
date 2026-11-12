@@ -32,6 +32,16 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         private bool IsSmall => _storage is KeyValuePair<string, DataNode>[];
         private KeyValuePair<string, DataNode>[] SmallEntries => (KeyValuePair<string, DataNode>[]) _storage;
         private Dictionary<string, DataNode> Dictionary => (Dictionary<string, DataNode>) _storage;
+        
+        /// <summary>
+        /// Tags associated with each mapping key, if any.
+        /// </summary>
+        private Dictionary<string, string>? _keyTags;
+
+        public override bool IsEmpty => _children.Count == 0;
+        public int Count => _children.Count;
+        public bool IsReadOnly => false;
+        public IReadOnlyDictionary<string, DataNode> Children => _children;
 
         private int SmallCount
         {
@@ -278,12 +288,11 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             if (!IsSmall)
                 return Dictionary.Remove(key);
 
-            var entries = SmallEntries;
-            var count = SmallCount;
-            for (var index = 0; index < count; index++)
-            {
-                if (entries[index].Key != key)
-                    continue;
+            _keyTags?.Remove(key);
+
+            var index = IndexOf(key);
+            if (index == -1)
+                throw new Exception("Key exists in Children, but not list?");
 
                 Array.Copy(entries, index + 1, entries, index, count - index - 1);
                 entries[count - 1] = default;
@@ -416,6 +425,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             }
 
             newMapping._keyNodes = _keyNodes;
+            newMapping._keyTags = _keyTags;
             return newMapping;
         }
 
@@ -574,6 +584,9 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
         public void Clear()
         {
+            _children.Clear();
+            _list.Clear();
+            _keyTags = null;
             if (IsSmall)
                 Array.Clear(SmallEntries);
             else
@@ -659,6 +672,15 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return true;
         }
 
+        internal string? GetKeyTag(string key)
+        {
+            return _keyTags?.GetValueOrDefault(key);
+        }
+
+        internal void SetKeyTag(string key, string tag)
+        {
+            _keyTags ??= new Dictionary<string, string>();
+            _keyTags[key] = tag;
         private void PromoteToDictionary()
         {
             var entries = SmallEntries;

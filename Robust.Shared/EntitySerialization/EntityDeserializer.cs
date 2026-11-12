@@ -569,7 +569,6 @@ public sealed partial class EntityDeserializer :
 
     private void LoadEntities()
     {
-        using var prototypeMappings = _proto.BeginScope();
         _stopwatch.Restart();
         foreach (var (entity, data) in Entities)
         {

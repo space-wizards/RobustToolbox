@@ -2,7 +2,6 @@ using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -16,16 +15,6 @@ public abstract partial class PrototypeManager
     private Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
     private readonly object _mappingCacheLock = new();
     private Dictionary<Type, Dictionary<string, MappingDataNode>> _resolvedMappingCache = new();
-    private int _mappingCacheDepth;
-
-    public IDisposable BeginScope()
-    {
-        lock (_mappingCacheLock)
-        {
-            _mappingCacheDepth++;
-            return new MappingCacheScope(this);
-        }
-    }
 
     private void InvalidateMappingCaches()
     {
@@ -36,54 +25,26 @@ public abstract partial class PrototypeManager
         }
     }
 
-    private sealed class MappingCacheScope(PrototypeManager owner) : IDisposable
-    {
-        private PrototypeManager? _owner = owner;
-
-        public void Dispose()
-        {
-            var manager = Interlocked.Exchange(ref _owner, null);
-            if (manager == null)
-                return;
-
-            // We always drop the cache... but only if this is the outermost cache.
-            // If it's nested then just leave it for now just in case.
-            lock (manager._mappingCacheLock)
-            {
-                if (--manager._mappingCacheDepth == 0)
-                    manager.InvalidateMappingCaches();
-            }
-        }
-    }
-
     private IDisposable BeginPrototypeLoadScope()
     {
         InvalidateMappingCaches();
         _prototypeLoadContext?.ClearComponentCache();
-        return new PrototypeLoadScope(this, _prototypeLoadContext, BeginScope());
+        return new PrototypeLoadScope(this, _prototypeLoadContext);
     }
 
     private sealed class PrototypeLoadScope(
         PrototypeManager owner,
-        PrototypeLoadContext? context,
-        IDisposable mappings) : IDisposable
+        PrototypeLoadContext? context) : IDisposable
     {
         public void Dispose()
         {
-            try
-            {
-                context?.ClearComponentCache();
-                DiscardResolvedMappings(owner._kinds.Values);
-            }
-            finally
-            {
-                mappings.Dispose();
-            }
+            context?.ClearComponentCache();
+            DiscardResolvedMappings(owner._kinds.Values);
         }
     }
 
     /// <summary>
-    /// Returns an effective mapping, retaining it only within a prototype mapping scope.
+    /// Returns an effective mapping, caching composed parents until prototypes change.
     /// </summary>
     private bool TryGetResolvedMapping(Type kind, KindData kindData, string id,
         [NotNullWhen(true)] out MappingDataNode? mapping)
@@ -105,9 +66,7 @@ public abstract partial class PrototypeManager
                 return true;
             }
 
-            var resolved = _mappingCacheDepth > 0
-                ? _resolvedMappingCache.GetOrNew(kind)
-                : new Dictionary<string, MappingDataNode>();
+            var resolved = _resolvedMappingCache.GetOrNew(kind);
             return TryComposeMapping(kind, kindData, id, resolved, out mapping);
         }
     }
@@ -178,7 +137,7 @@ public abstract partial class PrototypeManager
     {
         lock (_mappingCacheLock)
         {
-            if (_mappingCacheDepth > 0 && _prototypeDataCache.TryGetValue(prototype.ID, out var cached))
+            if (_prototypeDataCache.TryGetValue(prototype.ID, out var cached))
                 return cached;
 
             var componentData = new Dictionary<string, MappingDataNode>();
@@ -196,8 +155,7 @@ public abstract partial class PrototypeManager
             }
 
             var data = componentData.ToFrozenDictionary();
-            if (_mappingCacheDepth > 0)
-                _prototypeDataCache[prototype.ID] = data;
+            _prototypeDataCache[prototype.ID] = data;
             return data;
         }
     }

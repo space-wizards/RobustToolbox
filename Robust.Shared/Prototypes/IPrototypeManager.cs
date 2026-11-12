@@ -548,14 +548,6 @@ public interface IPrototypeManager
     IReadOnlyDictionary<string, MappingDataNode> GetPrototypeData(EntityPrototype prototype);
 
     /// <summary>
-    /// Temporarily share resolved mappings and component YAML across a batch of lookups.
-    /// </summary>
-    /// <remarks>
-    /// This is here so we can store the mappings just for map-loading and not keep them around in memory.
-    /// </remarks>
-    IDisposable BeginScope();
-
-    /// <summary>
     ///     Forces all prototypes in the given file to be abstract.
     ///     This makes them be read as abstract prototypes (mappings) instead of regular prototype instances.
     ///     Calling this method will not retroactively abstract prototypes that have already been read.

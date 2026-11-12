@@ -210,7 +210,6 @@ public partial class PrototypeManager
 
     public Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx)
     {
-        using var mappings = BeginScope();
         var result = new Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>>();
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
 

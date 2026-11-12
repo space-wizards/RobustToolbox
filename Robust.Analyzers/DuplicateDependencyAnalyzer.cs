@@ -21,7 +21,7 @@ public sealed class DuplicateDependencyAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdDuplicateDependency,
         "Duplicate dependency field",
         "Another [Dependency] field of type '{0}' already exists in this type with field '{1}'",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         true);
 

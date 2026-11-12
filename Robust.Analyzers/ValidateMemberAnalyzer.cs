@@ -16,7 +16,7 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdValidateMember,
         "Invalid member name",
         "{0} is not a member of {1}",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Be sure the type and member name are correct.");

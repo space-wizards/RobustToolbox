@@ -21,7 +21,7 @@ public sealed class MustCallBaseAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdMustCallBase,
         "No base call in overriden function",
         "Overriders of this function must always call the base function",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 

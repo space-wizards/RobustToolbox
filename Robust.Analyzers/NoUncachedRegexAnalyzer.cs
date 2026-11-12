@@ -16,7 +16,7 @@ public sealed class NoUncachedRegexAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUncachedRegex,
         "Use of uncached static Regex function",
         "Usage of a static Regex function that takes in a pattern string. This can cause constant re-parsing of the pattern.",
-        "Usage",
+        DiagnosticCategories.Performance,
         DiagnosticSeverity.Warning,
         true);
 

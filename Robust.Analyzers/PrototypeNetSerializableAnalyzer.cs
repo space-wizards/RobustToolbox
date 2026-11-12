@@ -15,7 +15,7 @@ public sealed class PrototypeNetSerializableAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdPrototypeNetSerializable,
         "Prototypes should not be [NetSerializable]",
         "Type {0} is a prototype and marked as [NetSerializable]. Prototypes should not be directly sent over the network, send their IDs instead.",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         true);
 
@@ -24,7 +24,7 @@ public sealed class PrototypeNetSerializableAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdPrototypeSerializable,
         "Prototypes should not be [Serializable]",
         "Type {0} is a prototype and marked as [Serializable]. Prototypes should not be directly sent over the network, send their IDs instead.",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         true);
 

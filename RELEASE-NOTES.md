@@ -38,6 +38,7 @@ END TEMPLATE-->
 * Robust.Packaging console logging now has a minimum level of Debug and drops logs below the specified level.
 * Fixed adding to lists with partial prototypes adding the elements in reverse order. Before this change, clearing a list and adding [4, 5, 6] to it would result in [6, 5, 4]. Now it correctly results in [4, 5, 6]. If you were accounting for this in your partial YML, you will need to fix your existing sequences to be in the expected order.
 * Fixed mixed sequence-value pairs in partial prototypes not being read correctly. If both are values, as in they have no dashes and no square brackets, the partial value will replace the original value. If both are sequences, they will be combined together, optionally clearing if the !Clear tag is present in the partial. If one is a sequence, and another is a value, both are treated as sequences, and a !Clear present on the partial's value will clear the original's sequence. This affects partial prototype parent changes. If your game gets stuck loading, check that your partial prototype YML is not adding the same parent twice, for example by not !Clear-ing the parent field first, with parent: !Clear Parent1 or parent: !Clear [ Parent1, Parent2 ]. For more detail, see https://docs.spacestation14.com/en/robust-toolbox/partial-prototypes.html
+* InitialCapacity has been removed from ComponentTreeSystem.
 
 ### New features
 
@@ -45,16 +46,34 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed a race condition in parallel prototype loading that could corrupt the prototype variant collection and throw an `ArgumentNullException` when freezing prototype kinds.
-* Fixed a prototype losing its inherited data when a partial prototype changes its `parent:`.
+*None yet*
 
 ### Other
 
-*None yet*
+* Reduce the default DynamicTree capacities to 16 to potentially reduce unnecessary memory overhead for small grids / maps.
 
 ### Internal
 
 *None yet*
+
+
+## 295.0.3
+
+### Breaking changes
+
+* Fixed adding to lists with partial prototypes adding the elements in reverse order. Before this change, clearing a list and adding [4, 5, 6] to it would result in [6, 5, 4]. Now it correctly results in [4, 5, 6]. If you were accounting for this in your partial YML, you will need to fix your existing sequences to be in the expected order.
+* Fixed mixed sequence-value pairs in partial prototypes not being read correctly. If both are values, as in they have no dashes and no square brackets, the partial value will replace the original value. If both are sequences, they will be combined together, optionally clearing if the !Clear tag is present in the partial. If one is a sequence, and another is a value, both are treated as sequences, and a !Clear present on the partial's value will clear the original's sequence. This affects partial prototype parent changes. If your game gets stuck loading, check that your partial prototype YML is not adding the same parent twice, for example by not !Clear-ing the parent field first, with parent: !Clear Parent1 or parent: !Clear [ Parent1, Parent2 ]. For more detail, see https://docs.spacestation14.com/en/robust-toolbox/partial-prototypes.html
+
+### New features
+
+* Added a new !Partial:N tag for defining partials outside the explicitly marked partial files and partial directories.
+* !PartialOnly now also optionally accepts a number in the format !PartialOnly:N, which works the same way as the new !Partial:N tag. If N isn't defined, !PartialOnly works the same way as before.
+
+### Bugfixes
+
+* Fixed a race condition in parallel prototype loading that could corrupt the prototype variant collection and throw an `ArgumentNullException` when freezing prototype kinds.
+* Fixed a prototype losing its inherited data when a partial prototype changes its `parent:`.
+* Fixed partials not working with component registries defined inside components, or top-level on non-entity prototypes.
 
 
 ## 295.0.0

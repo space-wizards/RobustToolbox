@@ -190,7 +190,13 @@ public partial class PrototypeManager
                     var mapping = _serializationManager.WriteValue(type, instance, alwaysWrite: true, ctx);
                     errors.AddRange(_serializationManager.ValidateNode(type, mapping, ctx).GetErrors());
                     if (errors.Count > 0)
+                    {
                         dict.GetOrNew(data.File).UnionWith(errors);
+                        foreach (var error in errors)
+                        {
+                            error.ErrorReason = $"{type.Name} {id} {error.ErrorReason}";
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {

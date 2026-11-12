@@ -16,7 +16,6 @@ public sealed partial class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeCom
     protected override bool DoFrameUpdate => true;
     protected override bool DoTickUpdate => false;
     protected override bool Recursive => true;
-    protected override int InitialCapacity => 1024;
 
     protected override Box2 ExtractAabb(in ComponentTreeEntry<SpriteComponent> entry, Vector2 pos, Angle rot)
     {

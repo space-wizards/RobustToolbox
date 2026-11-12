@@ -76,6 +76,16 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
             }
         }
 
+        for (var i = 0; i < parents.Length; i++)
+        {
+            var parent = parents[i];
+            if (parents.LastIndexOf(parent) != i)
+            {
+                throw new InvalidOperationException(
+                    $"Duplicate inheritance detected for id \"{id}\" and parent \"{parent}\". Check any partial prototypes and see if they are adding an existing parent again.");
+            }
+        }
+
         _parents[id] = parents;
 
         foreach (var parent in parents)

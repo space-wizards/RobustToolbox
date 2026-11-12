@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.Markdown.Validation
 
         public DataNode Node { get; }
 
-        public string ErrorReason { get; }
+        public string ErrorReason { get; internal set; }
 
         public bool AlwaysRelevant { get; }
 

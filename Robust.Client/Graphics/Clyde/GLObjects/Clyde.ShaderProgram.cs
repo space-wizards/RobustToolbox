@@ -17,7 +17,7 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private sealed class GLShaderProgram
         {
-            private readonly sbyte?[] _uniformIntCache = new int?[UniCount];
+            private readonly int?[] _uniformIntCache = new int?[UniCount];
             private readonly Dictionary<string, int> _uniformCache = new();
             public uint Handle = 0;
             private GLShader? _fragmentShader;

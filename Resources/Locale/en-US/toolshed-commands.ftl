@@ -40,7 +40,7 @@ command-description-as =
     Casts the input to the given type.
     Effectively a type hint if you know the type but the interpreter does not.
 command-description-count =
-    Counts the amount of entries in it's input, returning an integer.
+    Counts the number of entries in its input, returning an integer.
 command-description-map =
     Maps the input over the given block.
 command-description-select =
@@ -95,7 +95,7 @@ command-description-physics-angular_velocity =
 command-description-vars =
     Provides a list of all variables set in this session.
 command-description-any =
-    Returns true if there's any values in the input, otherwise false.
+    Returns true if there're any values in the input, otherwise false.
 command-description-contains =
     Returns whether the input enumerable contains the specified value.
 command-description-ArrowCommand =
@@ -131,7 +131,7 @@ command-description-actor-session =
 command-description-physics-parent =
     Returns the parent(s) of the input entities.
 command-description-emplace =
-    Runs the given block over it's inputs, with the input value placed into the variable $value within the block.
+    Runs the given block over its inputs, with the input value placed into the variable $value within the block.
     Additionally breaks out $wx, $wy, $proto, $desc, $name, and $paused for entities.
     Can also have breakout values for other types, consult the documentation for that type for further info.
 command-description-AddCommand =
@@ -186,7 +186,7 @@ command-description-join =
     Joins two sequences together into one sequence.
 command-description-reduce =
     Given a block to use as a reducer, turns a sequence into a single value.
-    The left hand side of the block is implied, and the right hand is stored in $value.
+    The left hand side of the block is implied, and the right-hand is stored in $value.
 command-description-rep =
     Repeats the input value N times to form a sequence.
 command-description-take =
@@ -194,13 +194,13 @@ command-description-take =
 command-description-spawn-at =
     Spawns an entity at the given coordinates.
 command-description-spawn-on =
-    Spawns an entity on the given entity, at it's coordinates.
+    Spawns an entity on the given entity, at its coordinates.
 command-description-spawn-in =
-    Spawns an entity in the given container on the given entity, dropping it at its coordinates if it doesn't fit
+    Spawns an entity in the given container on the given entity, dropping it at its coordinates if it doesn't fit.
 command-description-spawn-attached =
     Spawns an entity attached to the given entity, at (0 0) relative to it.
 command-description-mappos =
-    Returns an entity's coordinates relative to it's current map.
+    Returns an entity's coordinates relative to its current map.
 command-description-pos =
     Returns an entity's coordinates.
 command-description-tp-coords =
@@ -216,7 +216,7 @@ command-description-comp-add =
 command-description-comp-ensure =
     Ensures the given entity has the given component.
 command-description-comp-has =
-    Check if the given entity has the given component.
+    Checks if the given entity has the given component.
 command-description-AddVecCommand =
     Adds a scalar (single value) to every element in the input.
 command-description-SubVecCommand =
@@ -228,9 +228,9 @@ command-description-DivVecCommand =
 command-description-rng-to =
     Returns a number between the input (inclusive) and the argument (exclusive).
 command-description-rng-from =
-    Returns a number between the argument (inclusive) and the input (exclusive))
+    Returns a number between the argument (inclusive) and the input (exclusive).
 command-description-rng-prob =
-    Returns a boolean based on the input probability/chance (from 0 to 1)
+    Returns a boolean based on the input probability/chance (from 0 to 1).
 command-description-sum =
     Computes the sum of the input.
 command-description-bin =
@@ -240,13 +240,13 @@ command-description-extremes =
 command-description-sortby =
     Sorts the input least to greatest by the computed key.
 command-description-sortmapby =
-    Sorts the input least to greatest by the computed key, replacing the value with it's computed key afterward.
+    Sorts the input least to greatest by the computed key, replacing the value with its computed key afterward.
 command-description-sort =
     Sorts the input least to greatest.
 command-description-sortdownby =
     Sorts the input greatest to least by the computed key.
 command-description-sortmapdownby =
-    Sorts the input greatest to least by the computed key, replacing the value with it's computed key afterward.
+    Sorts the input greatest to least by the computed key, replacing the value with its computed key afterward.
 command-description-sortdown =
     Sorts the input greatest to least.
 command-description-iota =
@@ -357,7 +357,7 @@ command-description-iscomplex =
     Returns whether the input is a complex number (by value, not by type)
 command-description-iseven =
     Returns whether the input is even.
-    Not a javascript package.
+    Not a JavaScript package.
 command-description-isodd =
     Returns whether the input is odd.
 command-description-isfinite =
@@ -382,7 +382,7 @@ command-description-issubnormal =
 command-description-iszero =
     Returns whether the input is zero.
 command-description-pow =
-    Computes the power of its lefthand to its righthand. x^y.
+    Computes x raised to the power of y.
 command-description-sqrt =
     Computes the square root of its input.
 command-description-cbrt =
@@ -404,9 +404,9 @@ command-description-cos =
 command-description-cospi =
     Computes the cosine of the input multiplied by pi.
 command-description-acos =
-    Computes the arcosine of the input.
+    Computes the arccosine of the input.
 command-description-acospi =
-    Computes the arcosine of the input multiplied by pi.
+    Computes the arccosine of the input multiplied by pi.
 command-description-tan =
     Computes the tangent of the input.
 command-description-tanpi =

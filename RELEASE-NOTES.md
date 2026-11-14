@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Transform lerping has been reworked to handle mispredicts and missed states. Use the new "GetRenderX" API as transform position and rotations are now in-simulation only.
+*None yet*
 
 ### New features
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 296.0.0-xform
+
+### Breaking changes
+
+* Transform lerping has been reworked to handle mispredicts and missed states. Use the new "GetRenderX" API as transform position and rotations are now in-simulation only.
 
 
 ## 296.0.0

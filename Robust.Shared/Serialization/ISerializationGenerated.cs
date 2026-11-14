@@ -40,6 +40,18 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         SerializationHookContext hookCtx,
         ISerializationContext? context = null);
 
+    /// <seealso cref="ISerializationManager.CopyTo"/>
+    [Obsolete("Use ISerializationManager.CopyTo instead")]
+    static virtual void CopyObj(
+        T source,
+        ref T target,
+        ISerializationManager serialization,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <seealso cref="ISerializationManager.Read"/>
     [Obsolete("Use ISerializationManager.Read instead")]
     static virtual void Read(
@@ -48,6 +60,19 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         ISerializationManager serialization,
         SerializationHookContext hookCtx,
         ISerializationContext? context)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <seealso cref="ISerializationManager.Read"/>
+    [Obsolete("Use ISerializationManager.Read instead")]
+    static virtual void ReadObj(
+        ref object target,
+        MappingDataNode mappingDataNode,
+        ISerializationManager serialization,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context
+    )
     {
         throw new NotImplementedException();
     }
@@ -72,7 +97,7 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         ISerializationManager serialization,
         ISerializationContext? context,
         bool alwaysWrite,
-        ImmutableDictionary<string, object?> defaultValues)
+        ImmutableArray<DataFieldDefinition> defaultValues)
     {
         throw new NotImplementedException();
     }
@@ -99,7 +124,19 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
     }
 
     [Obsolete("Used only in serialization source generation internally")]
-    static virtual void GetFieldDefinitions(T? instance, List<DataFieldDefinition> fields, string[]? fieldsParsed = null)
+    static virtual ImmutableArray<DataFieldDefinition> GetFieldDefinitions(T? instance)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Used only in serialization source generation internally")]
+    static virtual DataFieldDefinition GetFieldDefinition(T? instance, int field)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Used only in serialization source generation internally")]
+    static virtual string[] GetDuplicates()
     {
         throw new NotImplementedException();
     }

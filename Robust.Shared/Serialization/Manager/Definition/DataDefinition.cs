@@ -32,10 +32,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
         internal readonly SerializeDelegateSignature<T> Serialize;
         internal readonly CopyDelegateSignature<T> CopyTo;
         internal readonly EqualDelegateSignature<T> AreEqual;
-
         internal override PopulateDelegateSignature<object> PopulateObj { get; init; }
-#pragma warning restore CS0618
         internal override ISerializationManager.InstantiationDelegate<object> InstantiateObj { get; init; }
+        private ValidateAllFieldsDelegate FieldValidators { get; }
+#pragma warning restore CS0618
+
+        private string[] Duplicates { get; }
 
         [UsedImplicitly]
         internal DataDefinition(SerializationManager manager, bool isRecord)
@@ -43,72 +45,17 @@ namespace Robust.Shared.Serialization.Manager.Definition
             IsRecord = isRecord;
 
 #pragma warning disable CS0618
-            var fieldDefs = new List<DataFieldDefinition>();
-            T.GetFieldDefinitions(default, fieldDefs);
-#pragma warning restore CS0618
-            for (var i = 0; i < fieldDefs.Count; i++)
-            {
-                var field = fieldDefs[i];
-                if (field is { IsDataField: true, Tag: null })
-                    field.Tag = DataDefinitionUtility.AutoGenerateTag(field.FieldInfoName);
-            }
-
-            fieldDefs.Sort((a, b) =>
-            {
-                var priority = b.Priority.CompareTo(a.Priority);
-                if (priority != 0)
-                    return priority;
-
-                return b.FieldInfoName.CompareTo(a.FieldInfoName, StringComparison.OrdinalIgnoreCase);
-            });
-
-            var dataFields = fieldDefs
-                .Where(f => f.IsDataField)
-                .Select(f => f.Tag ?? f.CamelCasedName)
-                .ToArray();
-
-            Duplicates = dataFields
-                .Where(f =>
-                    dataFields.Count(df => df == f) > 1)
-                .Distinct()
-                .ToArray();
-
-            BaseFieldDefinitions = fieldDefs.ToImmutableArray();
-
-            DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToImmutableArray();
-            DefaultValuesDict = fieldDefs.ToImmutableDictionary(
-                f => f.IsDataField
-                    ? f.Tag ?? f.CamelCasedName
-                    : f.CamelCasedName,
-                f => f.DefaultValue
-            );
-
-            //has to be done after fieldinterfaceinfos are done
-#pragma warning disable CS0618
-            // TODO source gen this one too!
-            PopulateObj = (ref target, node, serialization, ctx, context) =>
-            {
-                var obj = (T) target;
-                T.Read(ref obj, node, serialization, ctx, context);
-                target = obj;
-            };
-
+            BaseFieldDefinitions = T.GetFieldDefinitions(default);
+            Duplicates = T.GetDuplicates();
+            PopulateObj = T.ReadObj;
             Populate = T.Read;
             Serialize = T.Write;
-            CopyTo = (source, ref target, ctx, context) => source.Copy(ref target, manager, ctx, context); // TODO source gen this one too!
+            CopyTo = T.CopyObj;
             AreEqual = T.AreEqual;
             FieldValidators = T.Validate;
             InstantiateObj = T.StaticInstantiateObject;
 #pragma warning restore CS0618
         }
-
-        private string[] Duplicates { get; }
-        internal ImmutableArray<object?> DefaultValues { get; }
-        internal ImmutableDictionary<string, object?> DefaultValuesDict { get; }
-
-#pragma warning disable CS0618
-        private ValidateAllFieldsDelegate FieldValidators { get; }
-#pragma warning restore CS0618
 
         private bool TryGetIndex(string tag, out int index)
         {

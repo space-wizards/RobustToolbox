@@ -80,7 +80,7 @@ public sealed class SubscribeNetworkEventAttribute(Type[]? before = null, Type[]
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-public sealed class EventSubscriptionAttribute(Type[]? before = null, Type[]? after = null) : Attribute
+public abstract class SubscribeAllEventAttributeAbstract(Type[]? before = null, Type[]? after = null) : Attribute
 {
     /// <summary>
     /// Systems that this event subscription should run before.
@@ -92,3 +92,18 @@ public sealed class EventSubscriptionAttribute(Type[]? before = null, Type[]? af
     /// </summary>
     public readonly Type[]? After = after;
 }
+
+// TODO(After 2027-04):
+// Delete EventSubscriptionAttribute and SubscribeAllEventAttribute
+// Change SubscribeAllEventAttributeAbstract to SubscribeAllEventAttribute
+// Delete AllSubscriptionMemberAttributeFallbackName in Robust.Shared.EntitySystemSubscriptionsGenerator/KnownTypes.cs
+// Delete AllSubscriptionMemberAttributeFallbackName code in EntitySystemSubscriptionGeneratorErrorAnalyzer
+// Delete AllSubscriptionMemberAttributeFallbackName code in EntitySystemSubscriptionGenerator
+[AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
+public sealed class SubscribeAllEventAttribute(Type[]? before = null, Type[]? after = null) : SubscribeAllEventAttributeAbstract(before, after);
+
+[AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
+[Obsolete("Use [SubscribeAllEvent] instead")]
+public sealed class EventSubscriptionAttribute(Type[]? before = null, Type[]? after = null) : SubscribeAllEventAttributeAbstract(before, after);

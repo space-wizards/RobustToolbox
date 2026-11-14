@@ -1,5 +1,3 @@
-using System;
-using System.Buffers;
 using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
@@ -21,50 +19,18 @@ namespace Robust.Shared.Network.Messages
         // TODO PVS make this a cvar
         // TODO PVS figure out optimal value
         public const int CompressionThreshold = 256;
-        private const int CompressedSizeEstimateDivisor = 4;
 
         public override MsgGroups MsgGroup => MsgGroups.Entity;
 
         public GameState State;
-        public MemoryStream StateStream;
 
-        public ZStdCompressionContext CompressionContext;
+        internal ZStdPayload Payload;
 
         internal bool HasWritten;
 
         internal bool ForceSendReliably;
 
-        public override int EstimateBufferSize()
-        {
-            var uncompressedLength = (int) StateStream.Length;
-            // We have no idea what the compressed size will be but we'll try and guess slightly over
-            // mostly want to avoid a small initial size and then immediately copying.
-            var payloadLength = uncompressedLength > CompressionThreshold
-                ? Math.Max(CompressionThreshold, uncompressedLength / CompressedSizeEstimateDivisor)
-                : uncompressedLength;
-            var compressedLength = uncompressedLength > CompressionThreshold ? payloadLength : 0;
-
-            // Message ID + two variable-length size prefixes + payload.
-            return 1
-                + VariableInt32Size(uncompressedLength)
-                + VariableInt32Size(compressedLength)
-                + payloadLength;
-        }
-
-        private static int VariableInt32Size(int value)
-        {
-            // Look at NetSerializer if you want to understand the zigzag.
-            var zigzag = (uint) ((value << 1) ^ (value >> 31));
-            var size = 1;
-
-            while (zigzag >= 0x80)
-            {
-                zigzag >>= 7;
-                size++;
-            }
-
-            return size;
-        }
+        public override int EstimateBufferSize() => 1 + Payload.EncodedSize;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -108,29 +74,7 @@ namespace Robust.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            buffer.WriteVariableInt32((int)StateStream.Length);
-
-            // We compress the state.
-            if (StateStream.Length > CompressionThreshold)
-            {
-                // var sw = Stopwatch.StartNew();
-                StateStream.Position = 0;
-                var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)StateStream.Length));
-                var length = CompressionContext.Compress2(buf, StateStream.AsSpan());
-
-                buffer.WriteVariableInt32(length);
-                buffer.Write(buf.AsSpan(0, length));
-
-                ArrayPool<byte>.Shared.Return(buf);
-            }
-            // The state is sent as is.
-            else
-            {
-                // 0 means that the state isn't compressed.
-                buffer.WriteVariableInt32(0);
-                buffer.Write(StateStream.AsSpan());
-            }
-
+            Payload.WriteTo(buffer);
             HasWritten = true;
             MsgSize = buffer.LengthBytes;
         }

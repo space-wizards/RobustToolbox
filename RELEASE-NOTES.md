@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Transform lerping has been reworked to handle mispredicts and missed states. Use the new "GetRenderX" API as transform position and rotations are now in-simulation only.
 
 ### New features
 

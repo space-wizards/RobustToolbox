@@ -10,7 +10,7 @@ namespace Robust.Client.UserInterface;
 /// <summary>
 /// Helper utility struct for word-wrapping calculations.
 /// </summary>
-internal struct WordWrap
+public struct WordWrap
 {
     private readonly float _maxSizeX;
 

@@ -42,4 +42,16 @@ public sealed partial class RngCommand : ToolshedCommand
         [PipedArgument] float prob
     )
         => _random.Prob(prob);
+
+    [CommandImplementation("seed")]
+    public void Seed(int seed)
+    {
+        _random.SetSeed(seed);
+    }
+
+    [CommandImplementation("randomize")]
+    public void Randomize()
+    {
+        _random.SetSeed(new System.Random().Next());
+    }
 }

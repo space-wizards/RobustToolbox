@@ -1,0 +1,12 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+               Title="{Loc 'uri-confirmation-title'}"
+               MinSize="500 150">
+    <BoxContainer Orientation="Vertical" Margin="10" SeparationOverride="8">
+        <Label Text="{Loc 'uri-confirmation-prompt'}" />
+        <Label Name="UriText" HorizontalExpand="True" />
+        <Button Name="OnceButton" Access="Public" Text="{Loc 'uri-confirmation-once'}" />
+        <Button Name="AlwaysButton" Access="Public" Text="{Loc 'uri-confirmation-always'}" />
+        <Button Name="NoButton" Access="Public" Text="{Loc 'uri-confirmation-no'}" />
+    </BoxContainer>
+</DefaultWindow>
+

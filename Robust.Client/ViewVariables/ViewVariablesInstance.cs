@@ -102,9 +102,12 @@ namespace Robust.Client.ViewVariables
                         Value = value
                     };
 
+                    string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
+                    string fullName = $"{typeName}.{memberInfo.Name}";
+                    
                     var propertyEdit = new ViewVariablesPropertyControl(vvm, robustSerializer);
                     propertyEdit.SetStyle(styleOther = !styleOther);
-                    var editor = propertyEdit.SetProperty(data);
+                    var editor = propertyEdit.SetProperty(data, fullName);
                     editor.OnValueChanged += onValueChanged;
                     return propertyEdit;
                 })
@@ -113,10 +116,12 @@ namespace Robust.Client.ViewVariables
             return groupedSorted;
         }
 
-        protected static Control MakeTopBar(string top, string bottom)
+        /// <param name="middleLabel">The label holding <paramref name="middle"/>, so it can be updated later. Null if not shown.</param>
+        protected static Control MakeTopBar(string top, string middle, string bottom, out Label? middleLabel)
         {
             if (top == bottom)
             {
+                middleLabel = null;
                 return new Label {Text = top, ClipText = true};
             }
 
@@ -124,20 +129,29 @@ namespace Robust.Client.ViewVariables
             //    new VectorFont(IoCManager.Resolve<IResourceCache>().GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"),
             //        10);
 
-            // Custom ToString() implementation.
-            var headBox = new BoxContainer
-            {
+            var headBox = new BoxContainer {
                 Orientation = LayoutOrientation.Vertical,
                 SeparationOverride = 0
             };
-            headBox.AddChild(new Label {Text = top, ClipText = true});
-            headBox.AddChild(new Label
-            {
+
+            headBox.AddChild(new Label {
+                Text = top,
+                ClipText = true
+            });
+
+            middleLabel = new Label {
+                Text = middle,
+                FontColorOverride = Color.DarkGray,
+                ClipText = true
+            };
+            headBox.AddChild(middleLabel);
+
+            headBox.AddChild(new Label {
                 Text = bottom,
-            //    FontOverride = smallFont,
                 FontColorOverride = Color.DarkGray,
                 ClipText = true
             });
+
             return headBox;
         }
     }

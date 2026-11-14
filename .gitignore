@@ -81,3 +81,7 @@ Robust.Docfx/api
 
 # C# Dev Kit cache file
 *.lscache
+
+# ignore compiler-generated xml docs
+Resources/ViewVariables/
+Resources/Server/ViewVariables/

@@ -58,6 +58,8 @@ DEFAULT_RIDS = [RID_WIN_X64, RID_WIN_ARM64, RID_LINUX_X64, RID_LINUX_ARM64, RID_
 ALL_RIDS = [RID_WIN_X64, RID_WIN_ARM64, RID_LINUX_X64, RID_LINUX_ARM64, RID_OSX_X64, RID_OSX_ARM64, RID_FREEBSD_X64, RID_FREEBSD_ARM64]
 
 IGNORED_RESOURCES = {
+    # Server-only resources, see RobustClientPackaging.ClientIgnoredResources
+    "Server",
     ".gitignore",
     ".directory",
     ".DS_Store"

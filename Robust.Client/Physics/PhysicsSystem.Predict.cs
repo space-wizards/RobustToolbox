@@ -18,6 +18,7 @@ namespace Robust.Client.Physics;
 public sealed partial class PhysicsSystem
 {
     private HashSet<EntityUid> _toUpdate = new();
+    private readonly HashSet<EntityUid> _pendingPredictionEnds = new();
 
     public override void Initialize()
     {
@@ -26,31 +27,98 @@ public sealed partial class PhysicsSystem
         SubscribeLocalEvent<LocalPlayerDetachedEvent>(OnDetach);
         SubscribeLocalEvent<PhysicsComponent, JointAddedEvent>(OnJointAdded);
         SubscribeLocalEvent<PhysicsComponent, JointRemovedEvent>(OnJointRemoved);
+        SubscribeLocalEvent<EntParentChangedMessage>(OnPredictionParentChanged);
     }
 
-    private void UpdateIsPredicted()
+    private void UpdatePredictionStatus()
     {
-        foreach (var uid in _toUpdate)
+        // A predicted body depends on its moving parents. Revisit ancestors whenever
+        // a body's prediction status changes, regardless of queue order.
+        while (_toUpdate.Count > 0)
         {
+            // Poor man's queue
+            using var enumerator = _toUpdate.GetEnumerator();
+            enumerator.MoveNext();
+            var uid = enumerator.Current;
+            _toUpdate.Remove(uid);
             if (!PhysicsQuery.TryGetComponent(uid, out var physics))
                 continue;
 
-            var ev = new UpdateIsPredictedEvent(uid);
+            var ev = new UpdateIsPredictedEvent(uid)
+            {
+                IsPredicted = HasPredictedChildren(uid)
+            };
 
             RaiseLocalEvent(uid, ref ev, true);
             ev.IsPredicted &= !ev.BlockPrediction;
 
+            if (ev.IsPredicted)
+                _pendingPredictionEnds.Remove(uid);
+
             if (physics.Predict == ev.IsPredicted)
                 continue;
+
+            if (!ev.IsPredicted)
+                _pendingPredictionEnds.Add(uid);
 
             physics.Predict = ev.IsPredicted;
             if (ev.IsPredicted)
                 EnsureComp<PredictedPhysicsComponent>(uid);
             else
                 RemComp<PredictedPhysicsComponent>(uid);
+
+            QueuePredictionParents(uid);
         }
 
-        _toUpdate.Clear();
+        // Rollback may disable prediction temporarily; only first-time simulation starts a render
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
+        foreach (var uid in _pendingPredictionEnds)
+        {
+            if (PhysicsQuery.TryGetComponent(uid, out var physics) && !physics.Predict)
+                _transform.EndPrediction(uid);
+        }
+
+        _pendingPredictionEnds.Clear();
+    }
+
+    private bool HasPredictedChildren(EntityUid uid)
+    {
+        if (!XformQuery.TryGetComponent(uid, out var xform))
+            return false;
+
+        var children = xform.ChildEnumerator;
+        while (children.MoveNext(out var child))
+        {
+            if (PhysicsQuery.TryGetComponent(child, out var body) && body.Predict
+                || HasPredictedChildren(child))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void QueuePredictionParents(EntityUid uid)
+    {
+        while (XformQuery.TryGetComponent(uid, out var xform) && xform.ParentUid.IsValid())
+        {
+            uid = xform.ParentUid;
+            _toUpdate.Add(uid);
+        }
+    }
+
+    private void OnPredictionParentChanged(ref EntParentChangedMessage args)
+    {
+        if (!HasComp<PredictedPhysicsComponent>(args.Entity) && !HasPredictedChildren(args.Entity))
+            return;
+
+        QueuePredictionParents(args.Entity);
+        if (args.OldParent is { } oldParent)
+        {
+            _toUpdate.Add(oldParent);
+            QueuePredictionParents(oldParent);
+        }
     }
 
     private void OnJointAdded(EntityUid uid, PhysicsComponent component, JointAddedEvent args)

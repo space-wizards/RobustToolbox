@@ -211,7 +211,7 @@ public sealed partial class SpriteSystem
         if (!Resolve(entity, ref entity.Comp2))
             return Vector2.Zero;
 
-        var (worldPos, worldRot) = _xforms.GetWorldPositionRotation(entity.Owner);
+        var (worldPos, worldRot) = _xforms.GetRenderWorldPositionRotation((entity.Owner, entity.Comp2));
 
         if (!Resolve(entity, ref entity.Comp1, false))
         {

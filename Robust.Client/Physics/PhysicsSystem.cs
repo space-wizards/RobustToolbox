@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Client.GameObjects;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -15,13 +16,21 @@ namespace Robust.Client.Physics
     public sealed partial class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private IGameTiming _gameTiming = default!;
-        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private TransformSystem _transform = default!;
         [Dependency] private SharedBroadphaseSystem _broadphase = default!;
 
         public override void Update(float frameTime)
         {
-            UpdateIsPredicted();
+            UpdatePredictionStatus();
             SimulateWorld(frameTime, _gameTiming.InPrediction);
+        }
+
+        public override void FrameUpdate(float frameTime)
+        {
+            base.FrameUpdate(frameTime);
+
+            // Predictive events can change pulling or joints after the simulation tick.
+            UpdatePredictionStatus();
         }
 
         protected override void Cleanup(float frameTime)

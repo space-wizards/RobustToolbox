@@ -33,7 +33,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private IPrototypeManager _prototypes = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
-        [Dependency] private SharedTransformSystem _xforms = default!;
+        [Dependency] private TransformSystem _xforms = default!;
         [Dependency] private SpriteTreeSystem _tree = default!;
         [Dependency] private AppearanceSystem _appearance = default!;
 

@@ -40,8 +40,24 @@ namespace Robust.Shared.Physics
 
         #region Intersect Tests
 
+        /// <summary>
+        ///     Checks whether this ray intersects a box.
+        /// </summary>
+        /// <param name="box">Box to check.</param>
+        /// <param name="distance">Distance which the ray enters.</param>
+        /// <param name="hitPos">Position at which the ray enters.</param>
         public bool Intersects(Box2 box, out float distance, out Vector2 hitPos)
             => _ray.Intersects(box, out distance, out hitPos);
+
+        /// <summary>
+        ///     Checks whether this ray intersects a box.
+        /// </summary>
+        /// <param name="box">Box to check.</param>
+        /// <param name="distance">Distance at which the ray enters.</param>
+        /// <param name="hitPos">Position at which the ray enters.</param>
+        /// <param name="exit">Distance along the ray where it leaves.</param>
+        public bool Intersects(Box2 box, out float distance, out Vector2 hitPos, out float exit)
+            => _ray.Intersects(box, out distance, out hitPos, out exit);
 
         #endregion
 

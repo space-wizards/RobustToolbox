@@ -399,28 +399,16 @@ Types:
     ImageExtensions:
       Methods:
       - "string ToBase64String(SixLabors.ImageSharp.Image, SixLabors.ImageSharp.Formats.IImageFormat)"
-      - "System.Threading.Tasks.Task SaveAsBmpAsync(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Bmp.BmpEncoder, System.Threading.CancellationToken)"
-      - "System.Threading.Tasks.Task SaveAsBmpAsync(SixLabors.ImageSharp.Image, System.IO.Stream, System.Threading.CancellationToken)"
-      - "System.Threading.Tasks.Task SaveAsGifAsync(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Gif.GifEncoder, System.Threading.CancellationToken)"
-      - "System.Threading.Tasks.Task SaveAsGifAsync(SixLabors.ImageSharp.Image, System.IO.Stream, System.Threading.CancellationToken)"
       - "System.Threading.Tasks.Task SaveAsJpegAsync(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder, System.Threading.CancellationToken)"
       - "System.Threading.Tasks.Task SaveAsJpegAsync(SixLabors.ImageSharp.Image, System.IO.Stream, System.Threading.CancellationToken)"
       - "System.Threading.Tasks.Task SaveAsPngAsync(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Png.PngEncoder, System.Threading.CancellationToken)"
       - "System.Threading.Tasks.Task SaveAsPngAsync(SixLabors.ImageSharp.Image, System.IO.Stream, System.Threading.CancellationToken)"
-      - "System.Threading.Tasks.Task SaveAsTgaAsync(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Tga.TgaEncoder, System.Threading.CancellationToken)"
-      - "System.Threading.Tasks.Task SaveAsTgaAsync(SixLabors.ImageSharp.Image, System.IO.Stream, System.Threading.CancellationToken)"
       - "System.Threading.Tasks.Task SaveAsync(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.IImageFormat, System.Threading.CancellationToken)"
       - "void Save(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.IImageFormat)"
-      - "void SaveAsBmp(SixLabors.ImageSharp.Image, System.IO.Stream)"
-      - "void SaveAsBmp(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Bmp.BmpEncoder)"
-      - "void SaveAsGif(SixLabors.ImageSharp.Image, System.IO.Stream)"
-      - "void SaveAsGif(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Gif.GifEncoder)"
       - "void SaveAsJpeg(SixLabors.ImageSharp.Image, System.IO.Stream)"
       - "void SaveAsJpeg(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder)"
       - "void SaveAsPng(SixLabors.ImageSharp.Image, System.IO.Stream)"
       - "void SaveAsPng(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Png.PngEncoder)"
-      - "void SaveAsTga(SixLabors.ImageSharp.Image, System.IO.Stream)"
-      - "void SaveAsTga(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Tga.TgaEncoder)"
     Rectangle: {All: True}
     Size: { All: True }
     SizeF: { All: True }

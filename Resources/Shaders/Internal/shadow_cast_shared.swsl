@@ -6,7 +6,7 @@ const highp float PI = 3.1415926535897932384626433; // That enough digits?
 highp vec2 occludeDepth(highp vec2 rel, sampler2D shadowMap, highp float mapOffsetY)
 {
     // It's a circle now, because it's faster to compute.
-    highp float deflect = (atan(rel.y, -rel.x) / PI);
+    highp float deflect = (dot(rel, rel) < 0.0000001) ? 0.0 : (atan(rel.y, -rel.x) / PI);
     highp float mapOffsetX = (deflect + 1.0) / 2.0;
     return zClydeShadowDepthUnpack(texture2D(shadowMap, vec2(mapOffsetX, mapOffsetY)));
 }
@@ -14,6 +14,7 @@ highp vec2 occludeDepth(highp vec2 rel, sampler2D shadowMap, highp float mapOffs
 bool doesOcclude(highp vec2 diff, sampler2D shadowMap, highp float mapOffsetY, highp float bias)
 {
     highp float ourDist = length(diff);
+    if (ourDist < 0.0001) return false;
 
     return occludeDepth(diff, shadowMap, mapOffsetY).x + bias < ourDist;
 }
@@ -22,12 +23,12 @@ bool doesOcclude(highp vec2 diff, sampler2D shadowMap, highp float mapOffsetY, h
 highp float ChebyshevUpperBound(highp vec2 moments, highp float t)
 {
     // One-tailed inequality valid if t > Moments.x
-    highp float p = float(t <= moments.x);
+    highp float p = (t <= moments.x) ? 1.0 : 0.0;
     // Compute variance.
     highp float variance = moments.y - (moments.x * moments.x);
-    variance = max(variance, g_MinVariance);
+    variance = max(variance, max(g_MinVariance, 0.0001));
     // Compute probabilistic upper bound.
     highp float d = t - moments.x;
-    highp float p_max = variance / (variance + d*d);
-    return max(p, p_max);
+    highp float p_max = clamp(variance / max(variance + d*d, 0.00001), 0.0, 1.0);
+    return clamp(max(p, p_max), 0.0, 1.0);
 }

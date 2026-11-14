@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
-    <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CA1416</NoWarn>
@@ -47,6 +46,28 @@
     <EmbeddedResource Include="ContentPack\Sandbox.yml">
       <LogicalName>Robust.Shared.ContentPack.Sandbox.yml</LogicalName>
     </EmbeddedResource>
+    <None Include="..\MSBuild\Robust.Serialization.Generator.targets" Pack="true" PackagePath="build\" />
+    <None Include="..\MSBuild\Robust.CompNetworkGenerator.targets" Pack="true" PackagePath="build\" />
+    <None Include="..\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" Pack="true" PackagePath="build\" />
+    <None Include="..\MSBuild\Robust.Analyzers.targets" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+  <Target Name="PackAnalyzers" AfterTargets="Build">
+    <Copy SourceFiles="..\Robust.Serialization.Generator\bin\Debug\netstandard2.0\Robust.Serialization.Generator.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Serialization.Generator\bin\Debug\netstandard2.0\Robust.Serialization.Generator.dll')" />
+    <Copy SourceFiles="..\Robust.Serialization.Generator\bin\Release\netstandard2.0\Robust.Serialization.Generator.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Serialization.Generator\bin\Release\netstandard2.0\Robust.Serialization.Generator.dll')" />
+    <Copy SourceFiles="..\Robust.Shared.CompNetworkGenerator\bin\Debug\netstandard2.0\Robust.Shared.CompNetworkGenerator.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Shared.CompNetworkGenerator\bin\Debug\netstandard2.0\Robust.Shared.CompNetworkGenerator.dll')" />
+    <Copy SourceFiles="..\Robust.Shared.CompNetworkGenerator\bin\Release\netstandard2.0\Robust.Shared.CompNetworkGenerator.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Shared.CompNetworkGenerator\bin\Release\netstandard2.0\Robust.Shared.CompNetworkGenerator.dll')" />
+    <Copy SourceFiles="..\Robust.Shared.EntitySystemSubscriptionsGenerator\bin\Debug\netstandard2.0\Robust.Shared.EntitySystemSubscriptionsGenerator.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Shared.EntitySystemSubscriptionsGenerator\bin\Debug\netstandard2.0\Robust.Shared.EntitySystemSubscriptionsGenerator.dll')" />
+    <Copy SourceFiles="..\Robust.Shared.EntitySystemSubscriptionsGenerator\bin\Release\netstandard2.0\Robust.Shared.EntitySystemSubscriptionsGenerator.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Shared.EntitySystemSubscriptionsGenerator\bin\Release\netstandard2.0\Robust.Shared.EntitySystemSubscriptionsGenerator.dll')" />
+    <Copy SourceFiles="..\Robust.Analyzers\bin\Debug\netstandard2.0\Robust.Analyzers.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Analyzers\bin\Debug\netstandard2.0\Robust.Analyzers.dll')" />
+    <Copy SourceFiles="..\Robust.Analyzers\bin\Release\netstandard2.0\Robust.Analyzers.dll" DestinationFolder="analyzers\dotnet\cs\" Condition="Exists('..\Robust.Analyzers\bin\Release\netstandard2.0\Robust.Analyzers.dll')" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="analyzers\dotnet\cs\Robust.Serialization.Generator.dll" Pack="true" PackagePath="analyzers\dotnet\cs\" Visible="false" />
+    <None Include="analyzers\dotnet\cs\Robust.Shared.CompNetworkGenerator.dll" Pack="true" PackagePath="analyzers\dotnet\cs\" Visible="false" />
+    <None Include="analyzers\dotnet\cs\Robust.Shared.EntitySystemSubscriptionsGenerator.dll" Pack="true" PackagePath="analyzers\dotnet\cs\" Visible="false" />
+    <None Include="analyzers\dotnet\cs\Robust.Analyzers.dll" Pack="true" PackagePath="analyzers\dotnet\cs\" Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Input\CommandBindMapping.cs" />

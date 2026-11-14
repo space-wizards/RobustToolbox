@@ -145,5 +145,7 @@ public sealed partial class SpriteSystem
         {
             layer.BoundsDirty = true;
         }
+
+        _tree.QueueTreeUpdate(sprite);
     }
 }

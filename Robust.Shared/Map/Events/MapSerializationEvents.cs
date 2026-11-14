@@ -9,8 +9,14 @@ namespace Robust.Shared.Map.Events;
 /// This event is broadcast just before the map loader reads the entity section. It can be used to somewhat modify
 /// how the map data is read, as a super basic kind of map migration tool.
 /// </summary>
-public sealed class BeforeEntityReadEvent
+public sealed class BeforeEntityReadEvent(FileCategory Category = FileCategory.Unknown)
 {
+    /// <summary>
+    /// Expected file category that is being read.
+    /// Can be used this to apply migrations only to specific file categories.
+    /// </summary>
+    public readonly FileCategory ExpectedCategory = Category;
+
     /// <summary>
     /// Set of deleted entity prototypes.
     /// </summary>

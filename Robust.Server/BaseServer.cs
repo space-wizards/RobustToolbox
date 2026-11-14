@@ -20,6 +20,7 @@ using Robust.Server.Utility;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.ColorNaming;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Enums;
@@ -28,7 +29,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Transfer;
 using Robust.Shared.Player;
@@ -36,11 +36,11 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
-using Robust.Shared.Toolshed;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
@@ -98,6 +98,7 @@ namespace Robust.Server
         [Dependency] private IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private ProfManager _prof = default!;
         [Dependency] private IPrototypeManagerInternal _prototype = default!;
+        [Dependency] private IPaletteManager _palette = default!;
         [Dependency] private IPlacementManager _placement = default!;
         [Dependency] private IServerViewVariablesInternal _viewVariables = default!;
         [Dependency] private ISerializationManager _serialization = default!;
@@ -405,6 +406,7 @@ namespace Robust.Server
 
             _stateManager.TransformNetId = reg.NetID.Value;
 
+            _palette.Initialize();
             _scriptHost.Initialize();
             _protoLoadMan.Initialize();
             _netResMan.Initialize();

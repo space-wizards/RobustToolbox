@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -29,6 +30,7 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
     {
         IoCManager.Resolve<ISerializationManager>().Initialize();
         IoCManager.Resolve<ILocalizationManager>().Initialize();
+        IoCManager.Resolve<IResourceManagerInternal>().MountStreamAt(new MemoryStream(), new ResPath("/Textures/upload-test-file.png"));
         _prototype = IoCManager.Resolve<IPrototypeManager>();
         _prototype.RegisterKind(typeof(PrototypeUploadTestPrototype));
 
@@ -101,6 +103,17 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
         Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(2));
         Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.True);
         Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.True);
+    }
+
+    [Test]
+    public void TestUploadPathInStrippedDirectoryIsAccepted()
+    {
+        const string strippedPathPrototype = @"- type: prototypeUploadTest
+  id: stripped
+  path: /NotShippedOnThisSide/upload-test-file.ogg";
+
+        Assert.That(_prototypeLoad.TryLoad(strippedPathPrototype), Is.True);
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>("stripped"), Is.True);
     }
 
     [Test]

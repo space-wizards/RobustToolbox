@@ -27,6 +27,11 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
 
     private ISawmill _sawmill = default!;
 
+    /// <summary>
+    ///     Whether uploads get validated on this side, dropping the upload if validation fails.
+    /// </summary>
+    protected virtual bool ValidateUploads => _cfg.GetCVar(CVars.ResValidatePrototypeUpload);
+
     public virtual void Initialize()
     {
         _replay.RecordingStarted += OnStartReplayRecording;
@@ -66,7 +71,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     {
         var changed = new Dictionary<Type, HashSet<string>>();
         _prototypeManager.LoadString(data, true, changed);
-        if (_cfg.GetCVar(CVars.ResValidatePrototypeUpload))
+        if (ValidateUploads)
             _prototypeManager.ReloadPrototypesOrThrow(changed);
         else
             _prototypeManager.ReloadPrototypes(changed);

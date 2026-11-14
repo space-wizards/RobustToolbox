@@ -26,6 +26,7 @@ namespace Robust.Client.UserInterface.CustomControls
             LayoutContainer.SetAnchorPreset(BelowConsole, LayoutContainer.LayoutPreset.TopWide);
 
             MainControl.CommandBar.OnKeyBindDown += CommandBarPubOnOnKeyBindDown;
+            MainControl.HideButton.OnPressed += _ => Hide();
         }
 
         private void UpdateAnchorOffset()
@@ -91,6 +92,23 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 bar.ReleaseKeyboardFocus();
             }
+        }
+
+        /// <summary>
+        /// Show the console without grabbing keyboard focus, used if it was opened automatically to not disrupt the player too much.
+        /// </summary>
+        public void ShowWithoutGrab()
+        {
+            MainControl.Visible = _targetVisible = true;
+        }
+
+        /// <summary>
+        /// Start hiding the console by sliding it up.
+        /// </summary>
+        public void Hide()
+        {
+            _targetVisible = false;
+            MainControl.CommandBar.ReleaseKeyboardFocus();
         }
     }
 }

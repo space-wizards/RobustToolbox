@@ -42,7 +42,7 @@ internal sealed partial class ComponentMapInitTest
     }
 
     [Reflect(false)]
-    private sealed class MapInitTestSystem : EntitySystem
+    private sealed partial class MapInitTestSystem : EntitySystem
     {
         public override void Initialize()
         {

@@ -93,6 +93,27 @@ public readonly struct ResPath : IEquatable<ResPath>
            && filename != "..";
 
     /// <summary>
+    ///     Converts arbitrary text into a single safe filename segment for use in resource paths.
+    ///     Does NOT validate against traversal, only consider filesystem naming paths.
+    /// </summary>
+    public static string SanitizeFilename(string filename)
+    {
+        var builder = new StringBuilder(filename.Length);
+
+        foreach (var c in filename)
+        {
+            builder.Append(c is '/' or '\\' || Array.IndexOf(Path.GetInvalidFileNameChars(), c) != -1
+                ? '_'
+                : c);
+        }
+
+        var sanitized = builder.ToString();
+        return IsValidFilename(sanitized)
+            ? sanitized
+            : "_";
+    }
+
+    /// <summary>
     ///     Returns true if the path is equal to "."
     /// </summary>
     public bool IsSelf => CanonPath == Self.CanonPath;
@@ -672,5 +693,32 @@ public static class ResPathUtil
         return path.IsRooted
             ? path.CanonPath[1..].Split(ResPath.Separator)
             : path.CanonPath.Split(ResPath.Separator);
+    }
+
+    /// <summary>
+    /// Checks whether this path points to a file and does not contain relative traversal.
+    /// </summary>
+    /// <param name="path">Path to validate.</param>
+    /// <param name="rooted">If true, the path must be rooted. If false, the path must be relative.</param>
+    public static bool IsValidFilePath(this ResPath path, bool rooted)
+    {
+        if (rooted != path.IsRooted)
+            return false;
+
+        if (path == ResPath.Root || path == ResPath.Self || path == ResPath.Empty)
+            return false;
+
+        if (path.Clean() != path)
+            return false;
+
+        // Clean() intentionally preserves base-level relative traversal like "../foo".
+        // Those paths are normalized, but still not safe file paths.
+        foreach (var segment in path.EnumerateSegments())
+        {
+            if (segment == "..")
+                return false;
+        }
+
+        return path.Filename is not ("." or "..");
     }
 }

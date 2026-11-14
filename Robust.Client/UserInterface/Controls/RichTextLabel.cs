@@ -28,6 +28,12 @@ namespace Robust.Client.UserInterface.Controls
         private TextOutline? _actualFontOutline;
         private bool _fontOutlineCacheValid;
 
+        /// <summary>
+        /// Horizontal alignment of the text
+        /// </summary>
+        [ViewVariables]
+        public AlignMode Align { get; set; } = AlignMode.Left;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public float LineHeightScale
         {
@@ -205,7 +211,7 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, _drawingContext, UIScale, LineHeightScale, ActualFontOutline);
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, _drawingContext, UIScale, LineHeightScale, ActualFontOutline, Align);
         }
 
         protected override void StylePropertiesChanged()
@@ -232,6 +238,14 @@ namespace Robust.Client.UserInterface.Controls
             _actualFont = UserInterfaceManager.ThemeDefaults.DefaultFont;
             _fontCacheValid = true;
             return _actualFont;
+        }
+
+        public enum AlignMode : byte
+        {
+            Left = 0,
+            Center = 1,
+            Right = 2,
+            Fill = 3
         }
     }
 }

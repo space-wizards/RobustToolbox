@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* EntityQueries now contain methods to ensure and remove components, using the faster TryComps of the queries.
 
 ### Bugfixes
 

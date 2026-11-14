@@ -1,7 +1,9 @@
+using System;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Upload;
 
@@ -15,16 +17,7 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
     [Dependency] private IServerNetManager _netManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IConGroupController _controller = default!;
-    [Dependency] private ILogManager _logManager = default!;
-
-    private ISawmill _sawmill = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        _sawmill = _logManager.GetSawmill("adminbus");
-    }
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public override void SendGamePrototype(string prototype)
     {
@@ -40,8 +33,9 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         {
             if (TryLoadPrototypeData(message.PrototypeData))
             {
-                _netManager.ServerSendToAll(message); // everyone load it up!
-                _sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
+                var broadcast = new GamePrototypeLoadMessage { PrototypeData = message.PrototypeData };
+                _netManager.ServerSendToAll(broadcast); // everyone load it up!
+                Sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
             }
         }
         else
@@ -50,16 +44,27 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         }
     }
 
-    internal void SendToNewUser(INetChannel channel)
+    /// <returns>Whether any data was sent, and thus an ack is expected.</returns>
+    internal bool SendToNewUser(INetChannel channel)
     {
         if (LoadedPrototypes.Count == 0)
-            return;
+            return false;
 
-        // Just dump all the prototypes on connect, before them missing could be an issue.
-        var msg = new GamePrototypeLoadMessage
+        var maxPartBytes = Math.Clamp(_cfg.GetCVar(CVars.NetPrototypeDumpPartBytes), 1024, MaxPrototypePartBytes);
+
+        var parts = SplitPrototypeDump(LoadedPrototypes, Sawmill, maxPartBytes);
+
+        for (var i = 0; i < parts.Count; i++)
         {
-            PrototypeData = string.Join("\n\n", LoadedPrototypes)
-        };
-        channel.SendMessage(msg);
+            channel.SendMessage(new GamePrototypeLoadMessage
+            {
+                PrototypeData = parts[i],
+                IsDump = true,
+                PartCount = parts.Count,
+                PartIndex = i,
+            });
+        }
+
+        return parts.Count > 0;
     }
 }

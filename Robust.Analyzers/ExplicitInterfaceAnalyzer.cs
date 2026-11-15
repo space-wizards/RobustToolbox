@@ -29,7 +29,7 @@ namespace Robust.Analyzers
             Diagnostics.IdExplicitInterface,
             "No explicit interface specified",
             "No explicit interface specified",
-            "Usage",
+            DiagnosticCategories.Design,
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
             description: "Make sure to specify the interface in your method-declaration.");

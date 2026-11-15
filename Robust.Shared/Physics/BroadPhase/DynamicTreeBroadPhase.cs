@@ -16,7 +16,10 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
         _tree = new B2DynamicTree<FixtureProxy>(capacity: capacity);
     }
 
-    public DynamicTreeBroadPhase() : this(256) {}
+    public DynamicTreeBroadPhase()
+    {
+        _tree = new B2DynamicTree<FixtureProxy>();
+    }
 
     private static Box2 ExtractAabbFunc(in FixtureProxy proxy)
     {

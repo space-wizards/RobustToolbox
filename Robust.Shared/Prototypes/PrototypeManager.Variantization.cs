@@ -85,21 +85,24 @@ public partial class PrototypeManager
     /// <param name="collectionVariants">A list of prototype variants derived from the same source prototype.</param>
     private void RegisterVariantCollection(KindData kindData, List<string> collectionVariants)
     {
-        if (kindData.UnfrozenVariants == null)
+        lock (_variantRegistrationLock)
         {
-            kindData.UnfrozenVariants = kindData.Variants.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
-        }
+            if (kindData.UnfrozenVariants == null)
+            {
+                kindData.UnfrozenVariants = kindData.Variants.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
+            }
 
-        kindData.UnfrozenVariants.EnsureCapacity(kindData.UnfrozenVariants.Count + collectionVariants.Count);
+            kindData.UnfrozenVariants.EnsureCapacity(kindData.UnfrozenVariants.Count + collectionVariants.Count);
 
-        foreach (var collectionMember in collectionVariants)
-        {
-            kindData.UnfrozenVariants[collectionMember] = collectionVariants;
+            foreach (var collectionMember in collectionVariants)
+            {
+                kindData.UnfrozenVariants[collectionMember] = collectionVariants;
+            }
         }
     }
 
     /// <summary>
-    /// Tries to get the list of all variants associated with a given prototype. 
+    /// Tries to get the list of all variants associated with a given prototype.
     /// </summary>
     /// <param name="collectionMember">The prototype being indexed.</param>
     /// <param name="collectionVariants">The collection of variants this prototype belongs to.</param>

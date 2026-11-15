@@ -171,7 +171,7 @@ public sealed partial class RayCastSystem : EntitySystem
     }
 
     /// <summary>
-    /// Returns all entities hit in order.
+    /// Returns the closest entity hit, if any.
     /// </summary>
     public RayResult CastRayClosest(MapId mapId, Vector2 origin, Vector2 translation, QueryFilter filter)
     {
@@ -199,9 +199,12 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
 
-                var oldIndex = tuple.result.Results.Count;
+                // A closer hit replaces the earlier one instead of being appended, so only adjust it if it changed.
+                var oldFraction = tuple.result.Hit ? tuple.result.Results[0].Fraction : float.MaxValue;
                 tuple.system.CastRayClosest((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter);
-                tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
+
+                if (tuple.result.Hit && tuple.result.Results[0].Fraction < oldFraction)
+                    tuple.system.AdjustResults(ref tuple.result, 0, transform);
             });
 
         result = state.result;
@@ -216,6 +219,9 @@ public sealed partial class RayCastSystem : EntitySystem
     /// <summary>
     /// Convenience method for shape casts; only supports shapes with area.
     /// </summary>
+    /// <remarks>
+    /// The callback receives hit points in map coordinates, unlike the per-broadphase overload where they are broadphase-local.
+    /// </remarks>
     public RayResult CastShape(
         MapId mapId,
         IPhysShape shape,
@@ -246,9 +252,11 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.MulT(transform, tuple.origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation) - localOrigin.Position;
 
-                var oldIndex = tuple.result.Results.Count;
-                tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter, callback: tuple.callback);
-                tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
+                // The callback may replace earlier results, so convert the point before it sees it.
+                var callback = tuple.callback;
+                tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter,
+                    callback: (FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result) =>
+                        callback(proxy, Physics.Transform.Mul(transform, point), normal, fraction, ref result));
             });
 
         result = state.result;

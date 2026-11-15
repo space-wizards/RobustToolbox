@@ -36,7 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
+    <PackageReference Include="SpaceWizards.NetSerializer" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
   </ItemGroup>
   <ItemGroup>

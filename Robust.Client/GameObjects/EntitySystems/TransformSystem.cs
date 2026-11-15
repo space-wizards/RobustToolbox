@@ -504,6 +504,41 @@ public sealed partial class TransformSystem : SharedTransformSystem
     }
 
     /// <summary>
+    /// Gets an entity's rendered world position, rotation, and matrix from a single render pose.
+    /// </summary>
+    [Pure]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetRenderWorldPositionRotationMatrix(
+        Entity<TransformComponent?> ent)
+    {
+        var pose = GetRenderWorldTransform(ent);
+        return (pose.Position, pose.Rotation, Matrix3Helpers.CreateTransform(pose.Position, pose.Rotation));
+    }
+
+    /// <summary>
+    /// Gets an entity's rendered world position, rotation, and inverse matrix from a single render pose.
+    /// </summary>
+    [Pure]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetRenderWorldPositionRotationInvMatrix(
+        Entity<TransformComponent?> ent)
+    {
+        var pose = GetRenderWorldTransform(ent);
+        return (pose.Position, pose.Rotation, Matrix3Helpers.CreateInverseTransform(pose.Position, pose.Rotation));
+    }
+
+    /// <summary>
+    /// Gets an entity's rendered world position, rotation, matrix, and inverse matrix from a single render pose.
+    /// </summary>
+    [Pure]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix)
+        GetRenderWorldPositionRotationMatrixWithInv(Entity<TransformComponent?> ent)
+    {
+        var pose = GetRenderWorldTransform(ent);
+        return (pose.Position, pose.Rotation,
+            Matrix3Helpers.CreateTransform(pose.Position, pose.Rotation),
+            Matrix3Helpers.CreateInverseTransform(pose.Position, pose.Rotation));
+    }
+
+    /// <summary>
     /// Gets an entity's rendered world position.
     /// </summary>
     [Pure]

@@ -110,6 +110,9 @@ namespace Robust.Client.Graphics.Clyde
             // Primary render target.
             public RenderTexture RenderTarget = default!;
 
+            // Shared by world overlays during this viewport render.
+            public Box2 WorldCullingAABB;
+
             // Various render targets used in the light rendering process.
 
             // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.

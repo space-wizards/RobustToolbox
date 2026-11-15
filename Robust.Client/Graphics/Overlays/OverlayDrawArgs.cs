@@ -53,6 +53,11 @@ namespace Robust.Client.Graphics
         public readonly Box2 WorldAABB;
 
         /// <summary>
+        /// Bounds for querying grids and entity trees for objects visible in this viewport inclusive of their render transform.
+        /// </summary>
+        public Box2 WorldCullingAABB { get; internal init; }
+
+        /// <summary>
         ///     <see cref="Box2Rotated"/> of the area visible in the viewport.
         /// </summary>
         public readonly Box2Rotated WorldBounds;
@@ -85,6 +90,7 @@ namespace Robust.Client.Graphics
             MapUid = mapUid;
             MapId = mapId;
             WorldAABB = worldAabb;
+            WorldCullingAABB = worldAabb;
             WorldBounds = worldBounds;
         }
     }

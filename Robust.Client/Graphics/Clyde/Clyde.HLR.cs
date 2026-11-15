@@ -143,7 +143,10 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
 
             var mapId = vp.Eye?.Position.MapId ?? MapId.Nullspace;
-            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapSystem.GetMapOrInvalid(mapId), mapId, worldBox, worldBounds);
+            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapSystem.GetMapOrInvalid(mapId), mapId, worldBox, worldBounds)
+            {
+                WorldCullingAABB = vp.WorldCullingAABB,
+            };
 
             ResetOverlayDrawState();
 
@@ -226,7 +229,12 @@ namespace Robust.Client.Graphics.Clyde
 
             DebugTools.Assert(_mapSystem != null || !_entityManager.Started);
 
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, mapUid, mapId, worldAABB, worldBounds);
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, mapUid, mapId, worldAABB, worldBounds)
+            {
+                WorldCullingAABB = _entityManager.Started
+                    ? _transformSystem.GetRenderCullingBounds(mapId, worldAABB)
+                    : worldAABB,
+            };
 
             foreach (var overlay in list)
             {
@@ -705,6 +713,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Calculate world-space AABB for camera, to cull off-screen things.
                 var worldBounds = CalcWorldBounds(viewport);
                 var worldAABB = worldBounds.CalcBoundingBox();
+                viewport.WorldCullingAABB = _transformSystem.GetRenderCullingBounds(eye.Position.MapId, worldAABB);
 
                 if (eye.Position.MapId != MapId.Nullspace)
                 {

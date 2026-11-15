@@ -85,7 +85,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         RefreshRelay(uid, component);
     }
 
-    private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
+    private void OnJointShutdown(EntityUid uid, JointComponent component, ref ComponentShutdown args)
     {
         foreach (var joint in component.Joints.Values)
         {

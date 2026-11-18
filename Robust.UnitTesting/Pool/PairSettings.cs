@@ -22,6 +22,11 @@ public class PairSettings
     public virtual bool Fresh { get; init; }
 
     /// <summary>
+    /// Opt into client image preloading.
+    /// </summary>
+    public bool PreloadClientResources { get; init; }
+
+    /// <summary>
     /// Set to true if the given server/client pair should be connected from each other.
     /// Defaults to disconnected as it makes dirty recycling slightly faster.
     /// </summary>
@@ -65,12 +70,12 @@ public class PairSettings
     /// <summary>
     /// If the returned pair must not be reused
     /// </summary>
-    public virtual bool MustNotBeReused => Destructive || NoLoadTestPrototypes;
+    public virtual bool MustNotBeReused => Destructive || NoLoadTestPrototypes || PreloadClientResources;
 
     /// <summary>
     /// If the given pair must be brand new
     /// </summary>
-    public virtual bool MustBeNew => Fresh || NoLoadTestPrototypes;
+    public virtual bool MustBeNew => Fresh || NoLoadTestPrototypes || PreloadClientResources;
 
     #endregion
 

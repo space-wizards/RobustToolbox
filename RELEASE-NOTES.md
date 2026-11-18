@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Client integration tests no longer preload RSIs / sprites and have to be opted into with PreloadClientResources / PreloadResources. Textures are already not preloaded.
 
 ### New features
 

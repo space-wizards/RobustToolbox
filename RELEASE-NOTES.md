@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Refactor PoolManager to avoid polluting future tests on test failure.
 
 
 ## 296.0.0

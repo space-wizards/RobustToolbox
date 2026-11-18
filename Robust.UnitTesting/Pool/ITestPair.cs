@@ -15,6 +15,8 @@ public interface ITestPair
     public PairState State { get; }
     public bool Initialized { get; }
     void Kill();
+    Task KillAsync();
+    bool CanFastRecycle(PairSettings next);
 
     [Obsolete("Constructed on the spot when needed, use ExtendedTestHistory instead.")]
     List<string> TestHistory => ExtendedTestHistory.Select(x => x.TestName).ToList();

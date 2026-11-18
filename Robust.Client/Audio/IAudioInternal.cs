@@ -22,6 +22,11 @@ internal interface IAudioInternal : IAudioManager
     void FlushALDisposeQueues();
 
     /// <summary>
+    /// Updates audio-manager frame state.
+    /// </summary>
+    void FrameUpdate(float frameTime);
+
+    /// <summary>
     /// Returns a buffered audio source.
     /// </summary>
     /// <returns>null if unable to create the source.</returns>

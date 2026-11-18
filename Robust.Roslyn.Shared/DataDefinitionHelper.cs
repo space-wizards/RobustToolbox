@@ -75,7 +75,7 @@ public sealed class DataDefinitionHelper
             }
         }
 
-        foreach (var baseType in TypeSymbolHelper.GetBaseTypes(type))
+        foreach (var baseType in type.GetBaseTypes())
         {
             if (AttributeHelper.HasAttribute(baseType, ImplicitDataRecordNamespace))
                 return (true, true);
@@ -227,7 +227,7 @@ public sealed class DataDefinitionHelper
             if (attr.AttributeClass is not { } attributeClass)
                 continue;
 
-            if (TypeSymbolHelper.Inherits(attributeClass, DataFieldBaseNamespace))
+            if (attributeClass.InheritsFrom(DataFieldBaseNamespace))
                 attribute = GetDataFieldAttribute(attr, name);
 
             if (attributeClass.ToDisplayString() == AlwaysPushInheritanceAttributeName)

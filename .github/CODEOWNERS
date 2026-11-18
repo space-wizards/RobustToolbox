@@ -1,10 +1,4 @@
 # Last match in file takes precedence.
 
 # Ping for all PRs
-* @PJB3005 @DrSmugleaf
-
-# commands commands commands commands
-**/Toolshed/** @moonheart08
-*Command.cs @moonheart08
-*Commands.cs @moonheart08
-
+* @DrSmugleaf

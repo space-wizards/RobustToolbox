@@ -20,6 +20,8 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
 {
     private const string AttributeType = "Robust.Shared.Analyzers.PreferGenericVariantAttribute";
 
+    public const string TypeSymbolName = "System.Type";
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         UseGenericVariantDescriptor, UseGenericVariantInvalidUsageDescriptor,
         UseGenericVariantAttributeValueErrorDescriptor);
@@ -28,7 +30,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUseGenericVariant,
         "Consider using the generic variant of this method",
         "Consider using the generic variant of this method to avoid potential allocations",
-        "Usage",
+        DiagnosticCategories.Performance,
         DiagnosticSeverity.Warning,
         true,
         "Consider using the generic variant of this method to avoid potential allocations.");
@@ -37,7 +39,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUseGenericVariantInvalidUsage,
         "Invalid generic variant provided",
         "Generic variant provided mismatches the amount of type parameters of non-generic variant",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "The non-generic variant should have at least as many type parameter at the beginning of the method as there are generic type parameters on the generic variant.");
@@ -46,23 +48,40 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUseGenericVariantAttributeValueError,
         "Failed resolving generic variant value",
         "Failed resolving generic variant value: {0}",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Consider using nameof to avoid any typos.");
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(CheckForGenericVariant, OperationKind.Invocation);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var preferGenericAttribute = compilationContext.Compilation.GetTypeByMetadataName(AttributeType);
+            if (preferGenericAttribute is null)
+                return;
+
+            var typeTypeSymbol = compilationContext.Compilation.GetTypeByMetadataName(TypeSymbolName);
+            if (typeTypeSymbol is null)
+                return;
+
+            var objType = compilationContext.Compilation.GetSpecialType(SpecialType.System_Object);
+
+            compilationContext.RegisterOperationAction(
+                operationContext => CheckForGenericVariant(operationContext, preferGenericAttribute, typeTypeSymbol, objType),
+                OperationKind.Invocation);
+        });
     }
 
-    private void CheckForGenericVariant(OperationAnalysisContext obj)
+    private void CheckForGenericVariant(
+        OperationAnalysisContext obj,
+        INamedTypeSymbol preferGenericAttribute,
+        INamedTypeSymbol typeTypeSymbol,
+        INamedTypeSymbol objType)
     {
         if(obj.Operation is not IInvocationOperation invocationOperation) return;
-
-        var preferGenericAttribute = obj.Compilation.GetTypeByMetadataName(AttributeType);
 
         string genericVariant = null;
         AttributeData foundAttribute = null;
@@ -79,7 +98,6 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         if(genericVariant == null) return;
 
         var maxTypeParams = 0;
-        var typeTypeSymbol = obj.Compilation.GetTypeByMetadataName("System.Type");
         foreach (var parameter in invocationOperation.TargetMethod.Parameters)
         {
             if(!SymbolEqualityComparer.Default.Equals(parameter.Type, typeTypeSymbol)) break;
@@ -107,7 +125,6 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
 
             var typeParamCount = methodSymbol.TypeParameters.Length;
             var failedParamComparison = false;
-            var objType = obj.Compilation.GetSpecialType(SpecialType.System_Object);
             for (int i = 0; i < methodSymbol.Parameters.Length; i++)
             {
                 if (methodSymbol.Parameters[i].Type is ITypeParameterSymbol && SymbolEqualityComparer.Default.Equals(invocationOperation.TargetMethod.Parameters[i + typeParamCount].Type, objType))
@@ -152,10 +169,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         obj.ReportDiagnostic(Diagnostic.Create(
             UseGenericVariantDescriptor,
             invocationOperation.Syntax.GetLocation(),
-            ImmutableDictionary.CreateRange(new Dictionary<string, string>()
-            {
-                {"typeOperands", string.Join(",", typeOperands)}
-            })));
+            ImmutableDictionary.Create<string, string>().Add("typeOperands", string.Join(",", typeOperands))));
     }
 }
 

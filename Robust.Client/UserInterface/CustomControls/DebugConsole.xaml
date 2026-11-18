@@ -8,6 +8,9 @@
                                   ContentMarginBottomOverride="3" ContentMarginTopOverride="3" />
             </OutputPanel.StyleBoxOverride>
         </OutputPanel>
-        <HistoryLineEdit Name="CommandBar" Access="Public" PlaceHolder="{Loc 'console-line-edit-placeholder'}" />
+        <BoxContainer Orientation="Horizontal">
+            <HistoryLineEdit Name="CommandBar" Access="Public" PlaceHolder="{Loc 'console-line-edit-placeholder'}" HorizontalExpand="True"/>
+            <Button Name="HideButton" Access="Public" Text="{Loc 'console-hide'}" MinWidth="60" Margin="4 0 4 0"/>
+        </BoxContainer>
     </BoxContainer>
 </Control>

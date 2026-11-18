@@ -45,6 +45,11 @@ namespace Robust.Shared.GameStates
         /// </summary>
         public readonly ICommonSession? Player;
 
+        /// <summary>
+        ///     Whether or not this state should be saved to replays, even if null.
+        /// </summary>
+        public bool ExcludeReplays;
+
         public ComponentGetState(ICommonSession? player, GameTick fromTick)
         {
             Player = player;

@@ -4,6 +4,7 @@ namespace Robust.Roslyn.Shared;
 
 #nullable enable
 
+[Obsolete("Use the extension methods instead.")]
 public static class TypeSymbolHelper
 {
     public static bool ShittyTypeMatch(ITypeSymbol type, string attributeMetadataName)

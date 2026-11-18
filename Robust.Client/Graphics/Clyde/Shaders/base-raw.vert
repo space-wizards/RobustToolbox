@@ -8,6 +8,7 @@
 
 varying vec2 UV;
 varying vec2 UV2;
+varying vec2 SCREEN_UV;
 
 // Maybe we should merge these CPU side.
 // idk yet.
@@ -16,6 +17,7 @@ uniform mat3 modelMatrix;
 // Allows us to do texture atlassing with texture coordinates 0->1
 // Input texture coordinates get mapped to this range.
 uniform vec4 modifyUV;
+uniform vec4 SCREEN_UV_RECT;
 
 vec2 pixel_snap(vec2 vertex)
 {
@@ -43,6 +45,7 @@ void main()
 
     UV = tCoord;
     UV2 = tCoord2;
+    SCREEN_UV = mix(SCREEN_UV_RECT.xy, SCREEN_UV_RECT.zw, tCoord2);
 
     // [SHADER_CODE]
 

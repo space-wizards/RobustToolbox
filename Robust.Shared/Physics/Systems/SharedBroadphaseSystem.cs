@@ -43,7 +43,7 @@ namespace Robust.Shared.Physics.Systems
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        private BroadphaseContactJob _contactJob;
+        private BroadphaseContactJob _contactJob = default!;
 
         public override void Initialize()
         {
@@ -585,8 +585,9 @@ namespace Robust.Shared.Physics.Systems
             if (!_map.TryGetMap(mapId, out var map))
                 return;
 
+            // Use the same copy as the grids, as that is what gets written back to the caller's state.
             if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
-                callback((map.Value, mapBroadphase), ref state);
+                callback((map.Value, mapBroadphase), ref internalState.state);
 
             _map.FindGridsIntersecting(map.Value,
                 aabb,
@@ -611,7 +612,7 @@ namespace Robust.Shared.Physics.Systems
 
         internal delegate void BroadphaseCallback<TState>(Entity<BroadphaseComponent> entity, ref TState state);
 
-        private record struct BroadphaseContactJob() : IParallelRobustJob
+        private sealed class BroadphaseContactJob : IParallelRobustJob
         {
             public SharedBroadphaseSystem System = default!;
             public SharedTransformSystem TransformSys = default!;

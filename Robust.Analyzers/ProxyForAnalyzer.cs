@@ -20,7 +20,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdPreferProxy,
         "Use the proxy method",
         "Use the proxy method {0} instead of calling {1} directly",
-        "Usage",
+        DiagnosticCategories.Style,
         DiagnosticSeverity.Warning,
         true,
         "Use the proxy method."
@@ -30,7 +30,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdProxyForRedundantMethodName,
         "Method name is redundant",
         "Set method name matches the proxy method name and can be omitted",
-        "Usage",
+        DiagnosticCategories.Style,
         DiagnosticSeverity.Warning,
         true,
         "Remove the method name from the attribute."
@@ -40,7 +40,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdProxyForTargetMethodNotFound,
         "Target method not found",
         "Unable to find target method {0}",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Make sure a method exists with the target name and matching signature."
@@ -55,7 +55,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(static ctx =>
         {
@@ -109,7 +109,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
 
         HashSet<ProxyMethod> proxySet = [];
         // Search for methods in each type this inherits from
-        foreach (var baseType in TypeSymbolHelper.GetBaseTypes(typeSymbol))
+        foreach (var baseType in typeSymbol.GetBaseTypes())
         {
             HashSet<ProxyMethod> classMethods = [];
             // Check each member
@@ -150,7 +150,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
                 return;
 
             // Make sure the member belongs to the proxy class
-            if (!TypeSymbolHelper.Inherits(context.ContainingSymbol.ContainingType, reference.Member.ContainingType))
+            if (!context.ContainingSymbol.ContainingType.InheritsFrom(reference.Member.ContainingType))
                 return;
 
             // Get the method being invoked

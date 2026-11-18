@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
@@ -35,7 +35,7 @@ namespace Robust.Server
         ///     Shuts down the server, and ends the process.
         /// </summary>
         /// <param name="reason">Reason why the server was shut down.</param>
-        void Shutdown(string? reason);
+        void Shutdown(string? reason = null);
 
         /// <summary>
         ///     Enters the main loop of the server. This functions blocks until the server is shut down.

@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider)
         {
-            var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
+            var set = instanceProvider != null ? instanceProvider() : new HashSet<T>(node.Sequence.Count);
 
             foreach (var dataNode in node.Sequence)
             {
@@ -124,20 +124,30 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, value.Count, alwaysWrite, context);
         }
 
         public DataNode Write(ISerializationManager serializationManager, FrozenSet<T> value, IDependencyCollection dependencies,
             bool alwaysWrite = false, ISerializationContext? context = null)
         {
-            return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, value.Count, alwaysWrite, context);
         }
 
         public DataNode Write(ISerializationManager serializationManager, HashSet<T> value,
             IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            var sequence = new SequenceDataNode();
+            return WriteInternal(serializationManager, value, value.Count, alwaysWrite, context);
+        }
+
+        private static DataNode WriteInternal(
+            ISerializationManager serializationManager,
+            IEnumerable<T> value,
+            int count,
+            bool alwaysWrite = false,
+            ISerializationContext? context = null)
+        {
+            var sequence = new SequenceDataNode(count);
 
             foreach (var elem in value)
             {

@@ -173,13 +173,32 @@ namespace Robust.Client.Input
             F24,
             Pause,
             World1,
+            World2,
+            World3,
+            World4,
+            World5,
+            World6,
+            World7,
+            World8,
+            World9,
             CapsLock,
-            ScrollLock
+            ScrollLock,
+            Help,
+            Stop,
+            Again,
+            Props,
+            Undo,
+            Front,
+            Copy,
+            Open,
+            Paste,
+            Find,
+            Cut,
         }
 
         public static bool IsMouseKey(this Key key)
         {
-            return key >= Key.MouseLeft && key <= Key.MouseButton9;
+            return key is >= Key.MouseLeft and <= Key.MouseButton9;
         }
 
         /// <summary>
@@ -189,7 +208,7 @@ namespace Robust.Client.Input
         internal static string? GetSpecialKeyName(Key key, ILocalizationManager loc)
         {
             var locId = $"input-key-{key}";
-            if (key == Key.LSystem || key == Key.RSystem)
+            if (key is Key.LSystem or Key.RSystem)
             {
                 if (OperatingSystem.IsWindows())
                     locId += "-win";
@@ -199,17 +218,11 @@ namespace Robust.Client.Input
                     locId += "-linux";
             }
 
-#if MACOS
-            if (key == Key.Alt)
-            {
+            if (OperatingSystem.IsMacOS() && key == Key.Alt) {
                 locId += "-mac";
             }
-#endif
 
-            if (loc.TryGetString(locId, out var name))
-                return name;
-
-            return null;
+            return loc.TryGetString(locId, out var name) ? name : null;
         }
     }
 }

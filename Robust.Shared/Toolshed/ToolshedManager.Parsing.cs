@@ -17,6 +17,7 @@ namespace Robust.Shared.Toolshed;
 public sealed partial class ToolshedManager
 {
     private readonly Dictionary<Type, ITypeParser?> _consoleTypeParsers = new();
+    private readonly Dictionary<Type, ITypeParser?> _arrayParsers = new();
     private readonly Dictionary<ITypeParser, ITypeParser?> _argParsers = new();
     private readonly Dictionary<Type, ITypeParser> _customParsers = new();
     private readonly Dictionary<Type, Type> _genericTypeParsers = new();
@@ -79,6 +80,9 @@ public sealed partial class ToolshedManager
 
     internal ITypeParser? GetParserForType(Type t)
     {
+        if (t.IsArray)
+            return GetArrayParser(t);
+
         if (_consoleTypeParsers.TryGetValue(t, out var parser))
             return parser;
 
@@ -86,6 +90,31 @@ public sealed partial class ToolshedManager
         DebugTools.Assert(parser == null || parser.Parses == t);
         _consoleTypeParsers.TryAdd(t, parser);
         return parser;
+    }
+
+    private ITypeParser? GetArrayParser(Type t)
+    {
+        if (t.GetArrayRank() != 1)
+        {
+            // Multidimensional arrays are not supported yet.
+            return null;
+        }
+
+        var elementType = t.GetElementType();
+        if (elementType == null || elementType.ContainsGenericParameters)
+            return null;
+
+        if (_arrayParsers.TryGetValue(elementType, out var parser))
+            return parser;
+
+        var concreteParser = typeof(ArrayTypeParser<>).MakeGenericType(elementType);
+        var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
+
+        if (builtParser is IPostInjectInit inj)
+            inj.PostInject();
+
+        _arrayParsers[elementType] = builtParser;
+        return builtParser;
     }
 
     /// <summary>

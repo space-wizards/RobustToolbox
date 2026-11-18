@@ -310,7 +310,7 @@ public abstract partial class SharedMapSystem
             QueueDel(uid);
     }
 
-    public IEnumerable<MapId> GetAllMapIds()
+    public Dictionary<MapId, EntityUid>.KeyCollection GetAllMapIds()
     {
         return Maps.Keys;
     }

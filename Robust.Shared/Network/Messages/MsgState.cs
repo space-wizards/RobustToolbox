@@ -76,6 +76,7 @@ namespace Robust.Shared.Network.Messages
             // State is compressed.
             if (compressedLength > 0)
             {
+                buffer.AssertAtLeastSize(compressedLength);
                 var stream = RobustMemoryManager.GetMemoryStream(compressedLength);
                 buffer.ReadAlignedMemory(stream, compressedLength);
 
@@ -88,6 +89,7 @@ namespace Robust.Shared.Network.Messages
             // State is uncompressed.
             else
             {
+                buffer.AssertAtLeastSize(uncompressedLength);
                 finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
                 buffer.ReadAlignedMemory(finalStream, uncompressedLength);
             }

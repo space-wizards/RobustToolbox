@@ -54,6 +54,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Robust.Analyzers\Robust.Analyzers.csproj"/>
+    <ProjectReference Include="..\Robust.Shared.EntitySystemSubscriptionsGenerator\Robust.Shared.EntitySystemSubscriptionsGenerator.csproj" Aliases="EntitySystemSubscriptionsGenerator" />
     <ProjectReference Include="..\Robust.Serialization.Generator\Robust.Serialization.Generator.csproj" Aliases="SerializationGenerator" />
   </ItemGroup>
 </Project>

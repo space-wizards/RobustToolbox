@@ -471,10 +471,10 @@ namespace Robust.Client.UserInterface.Controls
                 var anchorMargins = CalcAnchorMargins(availableSize, child);
                 var size = availableSize;
                 if (growH == GrowDirection.Constrain)
-                    size.X = anchorMargins.Width;
+                    size.X = anchorMargins.Right - anchorMargins.Left;
 
                 if (growV == GrowDirection.Constrain)
-                    size.Y = anchorMargins.Height;
+                    size.Y = anchorMargins.Bottom - anchorMargins.Top;
 
                 child.Measure(size);
                 min = Vector2.Max(min, child.DesiredSize);
@@ -541,7 +541,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private static UIBox2 CalcAnchorMargins(Vector2 ourSize, Control child)
+        private static (float Left, float Top, float Right, float Bottom) CalcAnchorMargins(Vector2 ourSize, Control child)
         {
             var anchorLeft = child.GetValue<float>(AnchorLeftProperty);
             var anchorTop = child.GetValue<float>(AnchorTopProperty);
@@ -558,13 +558,16 @@ namespace Robust.Client.UserInterface.Controls
             var right = anchorRight * ourSize.X + marginRight;
             var bottom = anchorBottom * ourSize.Y + marginBottom;
 
-            // Yes, this can return boxes with left > right (and top > bottom).
-            // This is "intentional", see comment in CalcChildRect.
+            // The bounds may be inverted. This is intentional: CalcChildRect uses that negative
+            // size to choose the correct overflow direction before it creates a UIBox2.
 
-            return new UIBox2(left, top, right, bottom);
+            return (left, top, right, bottom);
         }
 
-        private static UIBox2 CalcChildRect(Vector2 ourSize, Control child, out UIBox2 anchorSize)
+        private static UIBox2 CalcChildRect(
+            Vector2 ourSize,
+            Control child,
+            out (float Left, float Top, float Right, float Bottom) anchorSize)
         {
             // Calculate where the control "wants" to be by its anchors/margins.
             var growHorizontal = child.GetValue<GrowDirection>(GrowHorizontalProperty);

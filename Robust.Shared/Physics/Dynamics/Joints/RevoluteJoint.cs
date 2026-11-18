@@ -138,7 +138,18 @@ public sealed partial class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
 
     public override JointState GetState(IEntityManager entManager)
     {
-        var revoluteState = new RevoluteJointState();
+        var revoluteState = new RevoluteJointState
+        {
+            LocalAnchorA = LocalAnchorA,
+            LocalAnchorB = LocalAnchorB,
+            EnableLimit = EnableLimit,
+            EnableMotor = EnableMotor,
+            ReferenceAngle = ReferenceAngle,
+            LowerAngle = LowerAngle,
+            UpperAngle = UpperAngle,
+            MotorSpeed = MotorSpeed,
+            MaxMotorTorque = MaxMotorTorque,
+        };
 
         base.GetState(revoluteState, entManager);
         return revoluteState;

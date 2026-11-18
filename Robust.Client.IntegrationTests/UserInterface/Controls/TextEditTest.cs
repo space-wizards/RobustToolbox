@@ -49,4 +49,45 @@ public sealed class TextEditTest : RobustUnitTest
         textEdit.KeyBindDown(click);
         textEdit.KeyBindUp(click);
     }
+
+    [Test]
+    [Description("Check that the TextEdit MaxLines property works correctly")]
+    public void TestMaxLines()
+    {
+        // When the max lines value is 0 we are not limited, so we place an arbitrary ammount newlines
+        var textEdit = new TextEdit { MaxLines = 0 };
+        for (var i = 0; i < 100; i++)
+        {
+            var newline = new GUIBoundKeyEventArgs(
+                EngineKeyFunctions.TextNewline,
+                BoundKeyState.Down,
+                default, false, default, default);
+
+            textEdit.KeyBindDown(newline);
+        }
+
+        var ropeLength = Rope.CalcTotalLength(textEdit.TextRope) - 1;
+        using (Assert.EnterMultipleScope())
+        {
+            // check that the last value in the list is a newline
+            Assert.That(Rope.TryGetRuneAt(textEdit.TextRope, ropeLength, out var rune), Is.True);
+            Assert.That(rune.ToString(), Is.EqualTo("\n"));
+        }
+
+        // When the max lines value is 10 we are limited, so we try to place an arbitrary ammount newlines and fail
+        textEdit = new TextEdit { MaxLines = 10 };
+        for (var i = 0; i < 100; i++)
+        {
+            var newline = new GUIBoundKeyEventArgs(
+                EngineKeyFunctions.TextNewline,
+                BoundKeyState.Down,
+                default, false, default, default);
+
+            textEdit.KeyBindDown(newline);
+        }
+
+        // 0-indexed, if this asserts the TextRope ended up with more than 10 "items"
+        ropeLength = Rope.CalcTotalLength(textEdit.TextRope);
+        Assert.That(ropeLength > 9, Is.False);
+    }
 }

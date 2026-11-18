@@ -308,6 +308,10 @@ namespace Robust.Shared.Network
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var count = buffer.ReadUInt32();
+
+            // count * (sizeof(VariableInt32) + sizeof(string))
+            buffer.AssertAtLeastSize((long)count * (NetMessageExt.MinSizeOfVariableInt + NetMessageExt.MinSizeOfString));
+
             Entries = new Entry[count];
             for (var i = 0; i < count; i++)
             {

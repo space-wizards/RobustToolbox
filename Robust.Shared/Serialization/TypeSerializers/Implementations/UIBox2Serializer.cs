@@ -47,12 +47,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 return new ErrorNode(node, "Invalid amount of arguments for UIBox2.");
             }
 
-            return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
-                   float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
-                   float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
-                   float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
-                ? new ValidatedValueNode(node)
-                : new ErrorNode(node, "Failed parsing values for UIBox2.");
+            if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var top) ||
+                !float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var left) ||
+                !float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out var bottom) ||
+                !float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out var right))
+            {
+                return new ErrorNode(node, "Failed parsing values for UIBox2.");
+            }
+
+            if (left > right)
+                return new ErrorNode(node, "Left cannot be greater than Right.");
+
+            if (top > bottom)
+                return new ErrorNode(node, "Top cannot be greater than Bottom.");
+
+            return new ValidatedValueNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, UIBox2 value,

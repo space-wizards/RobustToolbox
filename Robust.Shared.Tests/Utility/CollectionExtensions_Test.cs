@@ -72,5 +72,18 @@ namespace Robust.Shared.Tests.Utility
                 Assert.That(dict.DictionaryEquals(differentValue), Is.False);
             });
         }
+
+        [Test]
+        public void ContainsDuplicatesTest()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(CollectionHelpers.ContainsDuplicates(Array.Empty<int>()), Is.False);
+                Assert.That(CollectionHelpers.ContainsDuplicates(new[] {1}), Is.False);
+                Assert.That(CollectionHelpers.ContainsDuplicates(new[] {1, 2, 3}), Is.False);
+                Assert.That(CollectionHelpers.ContainsDuplicates(new[] {1, 2, 1}), Is.True);
+                Assert.That(CollectionHelpers.ContainsDuplicates(new string?[] {"a", null, "b", null}), Is.True);
+            });
+        }
     }
 }

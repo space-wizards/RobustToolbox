@@ -336,7 +336,7 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public sealed class ComponentRegistryEntry
+        public readonly struct ComponentRegistryEntry
         {
             public IComponent Component { get; }
 
@@ -408,7 +408,7 @@ namespace Robust.Shared.Prototypes
         public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
         {
             var success = TryGetValue(componentName, out var comp);
-            component = comp?.Component;
+            component = success ? comp.Component : null;
 
             return success;
         }

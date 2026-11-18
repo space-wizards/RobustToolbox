@@ -43,14 +43,14 @@ internal sealed class GridDeletion_Test : RobustIntegrationTest
             physics = entManager.GetComponent<PhysicsComponent>(grid);
             physSystem.SetBodyType(grid, BodyType.Dynamic, body: physics);
             physSystem.SetLinearVelocity(grid, new Vector2(50f, 0f), body: physics);
-            Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
+            Assert.That(physics.LinearVelocity.Length(), NUnit.Framework.Is.GreaterThan(0f));
         });
 
         await server.WaitRunTicks(1);
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
+            Assert.That(physics.LinearVelocity.Length(), NUnit.Framework.Is.GreaterThan(0f));
             entManager.DeleteEntity(grid);
 
             List<Entity<MapGridComponent>> grids = [];

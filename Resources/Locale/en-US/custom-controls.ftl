@@ -13,6 +13,7 @@ tile-spawn-window-mirror-button-text = Mirror Tiles
 ## Console
 
 console-line-edit-placeholder = Command Here
+console-hide = Hide
 
 ## OutputPanel
 

@@ -293,6 +293,7 @@ namespace Robust.Client.UserInterface
         ///     Called when the control is removed from the root control tree.
         /// </summary>
         /// <seealso cref="EnteredTree"/>
+        [MustCallBase]
         protected virtual void ExitedTree()
         {
         }
@@ -318,6 +319,7 @@ namespace Robust.Client.UserInterface
         ///     Called when the control enters the root control tree.
         /// </summary>
         /// <seealso cref="ExitedTree"/>
+        [MustCallBase]
         protected virtual void EnteredTree()
         {
         }
@@ -634,6 +636,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Dispose all children, but leave this one intact.
         /// </summary>
+        [Obsolete("Use RemoveAllChildren")]
         public void DisposeAllChildren()
         {
             // Cache because the children modify the dictionary.

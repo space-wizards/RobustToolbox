@@ -16,7 +16,7 @@ public sealed class HasDependenciesAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdHasDependenciesNotPartial,
         "Type has dependencies but is not partial",
         "Type '{0}' has [Dependency] fields but is not partial. This will be required in the future.",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Warning,
         true);
 
@@ -24,7 +24,7 @@ public sealed class HasDependenciesAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdHasDependenciesNotPartialParent,
         "Type has dependencies but is not in a partial type",
         "Type '{0}' has [Dependency] fields but is nested in a non-partial type. The parent being partial will be required in the future.",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Warning,
         true);
 
@@ -32,7 +32,7 @@ public sealed class HasDependenciesAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdHasDependenciesReadOnly,
         "Dependency field is readonly",
         "Field '{0}' is a [Dependency] but is readonly. This will be an error in the future.",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Warning,
         true);
 
@@ -40,7 +40,7 @@ public sealed class HasDependenciesAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdHasDependenciesPropertyField,
         "Property backing fields cannot be a dependency",
         "Property '{0}' has a backing field marked with [Dependency]. This will be an error in the future.",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Warning,
         true);
 

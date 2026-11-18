@@ -399,10 +399,13 @@ namespace Robust.Shared.GameObjects
                 var curTick = _gameTiming.CurTick;
                 delta.LastUnclassifiedDirty = curTick;
                 delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
+                DebugTools.Assert(
+                    delta.LastModifiedFields.Length == reg.NetworkedFields.Length,
+                    $"Component {reg.Name} has {delta.LastModifiedFields.Length} modified field slots, expected {reg.NetworkedFields.Length}.");
                 Array.Fill(delta.LastModifiedFields, curTick);
             }
 
-            component.Networked = reg.NetID != null;
+            component.Networked = reg.Networked;
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
@@ -516,6 +519,14 @@ namespace Robust.Shared.GameObjects
         public void RemoveComponentDeferred(EntityUid owner, Component component)
         {
             RemoveComponentDeferred(component, owner, false);
+        }
+
+        /// <summary>
+        /// Returns whether a component is being removed or is queued for deferred removal.
+        /// </summary>
+        internal bool IsComponentPendingRemoval(IComponent component)
+        {
+            return component.LifeStage >= ComponentLifeStage.Stopping || _deleteSet.Contains(component);
         }
 
         private static IEnumerable<IComponent> InSafeOrder(IEnumerable<IComponent> comps, bool forCreation = false)
@@ -734,7 +745,7 @@ namespace Robust.Shared.GameObjects
             if (!terminating)
             {
                 var reg = _componentFactory.GetRegistration(component);
-                DebugTools.Assert(component.Networked == (reg.NetID != null));
+                DebugTools.Assert(component.Networked == reg.Networked);
                 if (reg.NetID != null)
                 {
                     if (!metadata.NetComponents.Remove(reg.NetID.Value))

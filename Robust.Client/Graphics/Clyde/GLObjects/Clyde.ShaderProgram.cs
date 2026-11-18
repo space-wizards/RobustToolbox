@@ -17,7 +17,7 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private sealed class GLShaderProgram
         {
-            private readonly sbyte?[] _uniformIntCache = new sbyte?[UniCount];
+            private readonly int?[] _uniformIntCache = new int?[UniCount];
             private readonly Dictionary<string, int> _uniformCache = new();
             public uint Handle = 0;
             private GLShader? _fragmentShader;
@@ -191,13 +191,16 @@ namespace Robust.Client.Graphics.Clyde
                     case UniITexturePixelSize:
                         name = UniTexturePixelSize;
                         break;
+                    case UniIScreenUvRect:
+                        name = UniScreenUvRect;
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
 
                 index = GL.GetUniformLocation(Handle, name);
                 _clyde.CheckGlError();
-                _uniformIntCache[id] = (sbyte)index;
+                _uniformIntCache[id] = index;
                 return index != -1;
             }
 

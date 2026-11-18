@@ -50,6 +50,11 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private readonly List<(BoundUserInterface bui, QueuedUpdate updateType, BoundUserInterfaceState? state)> _queuedBuis = new();
 
+    /// <summary>
+    /// Index of last queued close for each BUI
+    /// </summary>
+    private readonly Dictionary<BoundUserInterface, int> _lastQueuedClose = new();
+
     public override void Initialize()
     {
         base.Initialize();
@@ -1119,10 +1124,23 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         if (_timing.IsFirstTimePredicted)
         {
-            foreach (var (bui, updateType, state) in _queuedBuis)
+            // Skip BUIs that are queued to be closed later in the same batch so we dont rebuild them
+            for (var i = 0; i < _queuedBuis.Count; i++)
             {
+                var (queuedBui, queuedType, _) = _queuedBuis[i];
+                if (queuedType == QueuedUpdate.Close)
+                    _lastQueuedClose[queuedBui] = i;
+            }
+
+            for (var i = 0; i < _queuedBuis.Count; i++)
+            {
+                var (bui, updateType, state) = _queuedBuis[i];
+
                 if (updateType == QueuedUpdate.Open || updateType == QueuedUpdate.ApplyState)
                 {
+                    if (_lastQueuedClose.TryGetValue(bui, out var closeIndex) && closeIndex > i)
+                        continue;
+
 #if EXCEPTION_TOLERANCE
                     try
                     {
@@ -1177,6 +1195,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             }
 
             _queuedBuis.Clear();
+            _lastQueuedClose.Clear();
         }
 
         var query = AllEntityQuery<ActiveUserInterfaceComponent, UserInterfaceComponent>();

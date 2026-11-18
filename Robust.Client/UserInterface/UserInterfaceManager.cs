@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
@@ -34,6 +35,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public static readonly Type XamlHotReloadWarmupType = typeof(DropDownDebugConsole);
 
+        [Dependency] private IClientGameStateManager _gameState = default!;
         [Dependency] private IDependencyCollection _rootDependencies = default!;
         [Dependency] private IInputManager _inputManager = default!;
         [Dependency] private IFontManager _fontManager = default!;
@@ -108,6 +110,9 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
+            if (_gameState is ClientGameStateManager gameState)
+                gameState.OnStateError += OnStateError;
+
             _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
 #if DEBUG
@@ -144,6 +149,11 @@ namespace Robust.Client.UserInterface
             _initThemes();
 
             _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
+        }
+
+        private void OnStateError()
+        {
+            DebugConsole.ShowWithoutGrab();
         }
 
         private void _uiObeyUpdateLimitsChanged(bool newValue, in CVarChangeInfo info)

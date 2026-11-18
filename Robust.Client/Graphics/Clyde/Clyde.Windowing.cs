@@ -622,6 +622,11 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde._windowing!.TextInputStop(Reg);
             }
 
+            public void Maximize()
+            {
+                _clyde._windowing!.WindowMaximize(Reg);
+            }
+
             public void SetWindowProgress(WindowProgressState state, float value)
             {
                 _clyde._windowing!.WindowSetProgress(Reg, state, value);

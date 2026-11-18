@@ -226,7 +226,7 @@ internal sealed class GridMapTransition_Test
         var otherGrid = state.Maps.CreateGridEntity(state.MapBId);
         state.Maps.SetTile(otherGrid, Vector2i.Zero, new Tile(1));
 
-        var otherParent = state.EntManager.SpawnEntity(null, new EntityCoordinates(otherGrid, Vector2.Zero));
+        var otherParent = state.EntManager.SpawnAttachedTo(null, new EntityCoordinates(otherGrid, Vector2.Zero));
         var otherXform = state.EntManager.GetComponent<TransformComponent>(otherGrid);
         state.Xforms.DetachEntity(state.Grid, state.GridXform);
         state.Xforms.DetachEntity(otherGrid, otherXform);
@@ -364,11 +364,11 @@ internal sealed class GridMapTransition_Test
         var fixtureParent = grid.Owner;
         if (nested)
         {
-            parent = entManager.SpawnEntity(null, new EntityCoordinates(grid, Vector2.Zero));
+            parent = entManager.SpawnAttachedTo(null, new EntityCoordinates(grid, Vector2.Zero));
             fixtureParent = parent.Value;
         }
 
-        var child = entManager.SpawnEntity(null, new EntityCoordinates(fixtureParent, new Vector2(0.5f, 0.5f)));
+        var child = entManager.SpawnAttachedTo(null, new EntityCoordinates(fixtureParent, new Vector2(0.5f, 0.5f)));
         var body = entManager.AddComponent<PhysicsComponent>(child);
         physics.SetBodyType(child, bodyType, body: body);
         var shape = new PolygonShape();
@@ -412,7 +412,7 @@ internal sealed class GridMapTransition_Test
         var entManager = sim.Resolve<IEntityManager>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var fixtures = entManager.System<FixtureSystem>();
-        var uid = entManager.SpawnEntity(null, new MapCoordinates(position, mapId));
+        var uid = entManager.Spawn(null, new MapCoordinates(position, mapId));
         var body = entManager.AddComponent<PhysicsComponent>(uid);
         physics.SetBodyType(uid, bodyType, body: body);
         var shape = new PolygonShape();

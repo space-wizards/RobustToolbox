@@ -256,13 +256,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (worldRot == null)
                 {
-                    xformSystem ??= _entities.System<TransformSystem>();
+                    xformSystem ??= _entities.System<SharedTransformSystem>();
                     var query = _entities.GetEntityQuery<TransformComponent>();
                     xform ??= query.GetComponent(entity);
-                    // TODO: Hate this remove it from the api aaaaa.
-                    worldRot = xformSystem is TransformSystem clientTransforms
-                        ? clientTransforms.GetRenderWorldRotation((entity, xform))
-                        : xformSystem.GetWorldRotation(xform, query);
+                    worldRot = xformSystem.GetWorldRotation(xform, query);
                 }
 
                 if (postShaders is { Count: > 0 })
@@ -629,6 +626,7 @@ namespace Robust.Client.Graphics.Clyde
                 /// <param name="xform">The entity's transform component.
                 /// Only required if <see cref="overrideDirection"/> is null.</param>
                 /// <param name="xformSystem">The transform system</param>
+                /// <param name="postShaders">The post-shader passes to apply to this draw.</param>
                 public override void DrawEntity(EntityUid entity,
                     Vector2 position,
                     Vector2 scale,
@@ -637,9 +635,10 @@ namespace Robust.Client.Graphics.Clyde
                     Direction? overrideDirection = null,
                     SpriteComponent? sprite = null,
                     TransformComponent? xform = null,
-                    SharedTransformSystem? xformSystem = null)
+                    SharedTransformSystem? xformSystem = null,
+                    IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null)
                 {
-                    _renderHandle.DrawEntity(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite, xform, xformSystem);
+                    _renderHandle.DrawEntity(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite, xform, xformSystem, postShaders);
                 }
             }
 

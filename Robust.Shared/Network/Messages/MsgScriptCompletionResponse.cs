@@ -16,6 +16,7 @@ namespace Robust.Shared.Network.Messages
             ScriptSession = buffer.ReadInt32()!;
 
             var n = buffer.ReadInt32()!;
+            // Bounds checking done in the individual LiteResults, and this is lazily initialized
             var cli = ImmutableArray.CreateBuilder<LiteResult>();
             for (var i = 0; i < n; i++)
             {
@@ -71,6 +72,8 @@ namespace Robust.Shared.Network.Messages
 
                 var n = buffer.ReadInt32()!;
                 var iab = ImmutableArray.CreateBuilder<string>();
+                // n * sizeof(string)
+                buffer.AssertAtLeastSize(n * NetMessageExt.MinSizeOfString);
                 for (var i = 0; i < n; i++)
                     iab.Add(buffer.ReadString()!);
 
@@ -78,6 +81,8 @@ namespace Robust.Shared.Network.Messages
 
                 n = buffer.ReadInt32()!;
                 var idb = ImmutableDictionary.CreateBuilder<string, string>();
+                // n * sizeof(string) * 2
+                buffer.AssertAtLeastSize(n * NetMessageExt.MinSizeOfString * 2L);
                 for (var i = 0; i < n; i++)
                     idb.Add(buffer.ReadString()!, buffer.ReadString()!);
 

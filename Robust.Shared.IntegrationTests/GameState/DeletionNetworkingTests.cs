@@ -78,7 +78,7 @@ internal sealed class DeletionNetworkingTests : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
-            player = sEntMan.SpawnEntity(null, coords);
+            player = sEntMan.SpawnAttachedTo(null, coords);
             var session = sPlayerMan.Sessions.First();
             server.PlayerMan.SetAttachedEntity(session, player);
             sPlayerMan.JoinGame(session);
@@ -107,10 +107,10 @@ internal sealed class DeletionNetworkingTests : RobustIntegrationTest
         var coords = new EntityCoordinates(grid2, new Vector2(0.5f, 0.5f));
         await server.WaitPost(() =>
         {
-            entA = sEntMan.SpawnEntity(null, coords);
-            entB = sEntMan.SpawnEntity(null, coords);
-            childA = sEntMan.SpawnEntity(null, new EntityCoordinates(entA, default));
-            childB = sEntMan.SpawnEntity(null, new EntityCoordinates(entB, default));
+            entA = sEntMan.SpawnAttachedTo(null, coords);
+            entB = sEntMan.SpawnAttachedTo(null, coords);
+            childA = sEntMan.SpawnAttachedTo(null, new EntityCoordinates(entA, default));
+            childB = sEntMan.SpawnAttachedTo(null, new EntityCoordinates(entB, default));
 
             entANet = sEntMan.GetNetEntity(entA);
             entBNet = sEntMan.GetNetEntity(entB);
@@ -137,11 +137,11 @@ internal sealed class DeletionNetworkingTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            cEntC = cEntMan.SpawnEntity(null, cEntMan.GetCoordinates(sEntMan.GetNetCoordinates(coords)));
+            cEntC = cEntMan.SpawnAttachedTo(null, cEntMan.GetCoordinates(sEntMan.GetNetCoordinates(coords)));
             entCNet = cEntMan.GetNetEntity(cEntC);
-            cChildC = cEntMan.SpawnEntity(null, new EntityCoordinates(cEntC, default));
-            clientChildA = cEntMan.SpawnEntity(null, new EntityCoordinates(cEntA, default));
-            clientChildB = cEntMan.SpawnEntity(null, new EntityCoordinates(cEntB, default));
+            cChildC = cEntMan.SpawnAttachedTo(null, new EntityCoordinates(cEntC, default));
+            clientChildA = cEntMan.SpawnAttachedTo(null, new EntityCoordinates(cEntA, default));
+            clientChildB = cEntMan.SpawnAttachedTo(null, new EntityCoordinates(cEntB, default));
         });
 
         await RunTicks();

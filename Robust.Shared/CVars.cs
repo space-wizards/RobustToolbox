@@ -191,36 +191,6 @@ namespace Robust.Shared
             CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
-        /// Maximum transform distance that will be interpolated instead of snapped.
-        /// </summary>
-        public static readonly CVarDef<float> NetInterpMaxDistance =
-            CVarDef.Create("net.interp_max_distance", 2f, CVar.ARCHIVE | CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Minimum transform distance that will be interpolated.
-        /// </summary>
-        public static readonly CVarDef<float> NetInterpMinDistance =
-            CVarDef.Create("net.interp_min_distance", 0.001f, CVar.ARCHIVE | CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Half-life in seconds for predicted transform correction errors.
-        /// </summary>
-        public static readonly CVarDef<float> NetInterpCorrectionHalfLife =
-            CVarDef.Create("net.interp_correction_half_life", 0.1f, CVar.ARCHIVE | CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Minimum translation error retained by predicted transform correction.
-        /// </summary>
-        public static readonly CVarDef<float> NetInterpCorrectionMinTranslation =
-            CVarDef.Create("net.interp_correction_min_translation", 0.0001f, CVar.ARCHIVE | CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Minimum rotation error retained by predicted transform correction, in radians.
-        /// </summary>
-        public static readonly CVarDef<float> NetInterpCorrectionMinRotation =
-            CVarDef.Create("net.interp_correction_min_rotation", 0.0001f, CVar.ARCHIVE | CVar.CLIENTONLY);
-
-        /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
@@ -847,6 +817,36 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> BuildManifestUrl =
             CVarDef.Create("build.manifest_url", string.Empty);
+
+        /// <summary>
+        /// URL of the game repository fork (e.g. "https://github.com/space-wizards/space-station-14")
+        /// or original game repository.
+        /// </summary>
+        public static readonly CVarDef<string> SourceUrl =
+            CVarDef.Create("build.source_url", string.Empty);
+
+        /// <summary> Commit ID on which current game was built. </summary>
+        public static readonly CVarDef<string> SourceCommitId =
+            CVarDef.Create("build.source_commit_id", string.Empty);
+
+        /// <summary> Branch on which current game was built. </summary>
+        public static readonly CVarDef<string> SourceBranchName =
+            CVarDef.Create("build.source_branch_name", string.Empty);
+
+        /// <summary>
+        /// URL for engine repository (or its fork), used for this version of the game,
+        /// or original game repository URL.
+        /// </summary>
+        public static readonly CVarDef<string> EngineSourceBranchName =
+            CVarDef.Create("build.engine_source_url", string.Empty);
+
+        /// <summary> Commit ID of engine, that was used to build this version of the game. </summary>
+        public static readonly CVarDef<string> EngineSourceUrl =
+            CVarDef.Create("build.engine_source_commit_id", string.Empty);
+
+        /// <summary> Name of branch for engine, on which this version of game was built. </summary>
+        public static readonly CVarDef<string> EngineSourceCommitId =
+            CVarDef.Create("build.engine_source_branch_name", string.Empty);
 
         /// <summary>
         /// URL at which the launcher can download the manifest game files.

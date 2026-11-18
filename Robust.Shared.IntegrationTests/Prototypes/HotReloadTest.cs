@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         public void TestHotReload()
         {
             IoCManager.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var id);
-            var entity = _entities.SpawnEntity(DummyId, new MapCoordinates(default, id));
+            var entity = _entities.Spawn(DummyId, new MapCoordinates(default, id));
             var entityComponent = IoCManager.Resolve<IEntityManager>().GetComponent<HotReloadTestOneComponent>(entity);
 
             Assert.That(entityComponent.Value, Is.EqualTo(5));

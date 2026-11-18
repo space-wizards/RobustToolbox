@@ -40,8 +40,8 @@ internal sealed class JointDeletion_Test : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             mapEnt = entManager.System<SharedMapSystem>().CreateMap(out mapId);
-            ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            ent1 = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
+            ent2 = entManager.Spawn(null, new MapCoordinates(Vector2.One, mapId));
 
             body1 = entManager.AddComponent<PhysicsComponent>(ent1);
             body2 = entManager.AddComponent<PhysicsComponent>(ent2);

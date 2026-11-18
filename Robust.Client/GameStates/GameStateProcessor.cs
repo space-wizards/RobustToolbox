@@ -460,27 +460,6 @@ Had full state: {LastFullState != null}"
             return curState != null || (futureStateLowestFromSeq != null && futureStateLowestFromSeq <= _timing.LastRealTick);
         }
 
-        internal bool TryGetInterpolationLookahead(GameTick missingTick, [NotNullWhen(true)] out GameState? lookahead)
-        {
-            lookahead = null;
-
-            if (!Interpolation)
-                return false;
-
-            // Select the nearest usable future state without changing current/next state selection.
-            for (var i = 0; i < _stateBuffer.Count; i++)
-            {
-                var state = _stateBuffer[i];
-                if (state.ToSequence <= missingTick || state.FromSequence > _timing.LastRealTick)
-                    continue;
-
-                if (lookahead == null || state.ToSequence < lookahead.ToSequence)
-                    lookahead = state;
-            }
-
-            return lookahead != null;
-        }
-
         /// <inheritdoc />
         public void Reset()
         {
@@ -511,27 +490,34 @@ Had full state: {LastFullState != null}"
 
                 foreach (var (netId, implicitCompState) in implicitEntState)
                 {
-                    DebugTools.Assert(implicitCompState is not IComponentDeltaState);
-                    ref var serverState = ref CollectionsMarshal.GetValueRefOrAddDefault(fullRep, netId, out var exists);
-
-                    if (!exists)
-                    {
-                        serverState = implicitCompState;
-                        continue;
-                    }
-
-                    if (serverState is not IComponentDeltaState serverDelta)
-                        continue;
-
-                    DebugTools.AssertNotNull(implicitCompState);
-
-                    // Server sent an initial delta state. This is fine as long as the client can infer an initial full
-                    // state from the entity prototype.
-                    serverDelta.ApplyToFullState(implicitCompState!);
-                    serverState = implicitCompState;
-                    DebugTools.Assert(serverState is not IComponentDeltaState);
+                    MergeImplicitComponentState(netEntity, netId, implicitCompState);
                 }
             }
+        }
+
+        public void MergeImplicitComponentState(NetEntity netEntity, ushort netId, IComponentState? implicitCompState)
+        {
+            DebugTools.Assert(implicitCompState is not IComponentDeltaState);
+
+            var fullRep = _lastStateFullRep[netEntity];
+            ref var serverState = ref CollectionsMarshal.GetValueRefOrAddDefault(fullRep, netId, out var exists);
+
+            if (!exists)
+            {
+                serverState = implicitCompState;
+                return;
+            }
+
+            if (serverState is not IComponentDeltaState serverDelta)
+                return;
+
+            DebugTools.AssertNotNull(implicitCompState);
+
+            // Server sent an initial delta state. This is fine as long as the client can infer an initial full
+            // state from the entity prototype.
+            serverDelta.ApplyToFullState(implicitCompState!);
+            serverState = implicitCompState;
+            DebugTools.Assert(serverState is not IComponentDeltaState);
         }
 
         public Dictionary<ushort, IComponentState?> GetLastServerStates(NetEntity netEntity)

@@ -151,7 +151,7 @@ namespace Robust.Client.UserInterface.Controls
             // First, draw panel.
             var headerSize = _enclosingTabHeight;
             var panel = _getPanel();
-            var panelBox = new UIBox2(0, headerSize, PixelWidth, PixelHeight);
+            var panelBox = new UIBox2(0, headerSize, PixelWidth, Math.Max(PixelHeight, headerSize));
 
             panel?.Draw(handle, panelBox, UIScale);
 
@@ -297,7 +297,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var headerSize = (int)_enclosingTabHeight;
             var panel = _getPanel();
-            var contentBox = new UIBox2i(0, headerSize, (int) (finalSize.X * UIScale), (int) (finalSize.Y * UIScale));
+            var contentBox = new UIBox2i(0, headerSize, (int) (finalSize.X * UIScale), Math.Max((int) (finalSize.Y * UIScale), headerSize));
             if (panel != null)
             {
                 contentBox = (UIBox2i) panel.GetContentBox(contentBox, UIScale);

@@ -41,9 +41,7 @@ namespace Robust.Client.Input
 
         [ViewVariables] public bool Enabled { get; set; } = true;
 
-        private ScreenCoordinates _mouseScreenPosition = default;
-
-        [ViewVariables] public virtual ScreenCoordinates MouseScreenPosition => _mouseScreenPosition;
+        [ViewVariables] public virtual ScreenCoordinates MouseScreenPosition => default;
 
         [Dependency] private IResourceManager _resourceMan = default!;
         [Dependency] private IReflectionManager _reflectionManager = default!;

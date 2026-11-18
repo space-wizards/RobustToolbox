@@ -25,10 +25,10 @@ public sealed class LightLevelOverlay : TileFloatDebugOverlay
     }
 
     // TODO LIGHT LEVEL remove and just use toolshed command
-    private sealed class Toggle : IConsoleCommand
+    private sealed partial class Toggle : IConsoleCommand
     {
-        [Dependency] private readonly IDependencyCollection _deps = default!;
-        [Dependency] private readonly IOverlayManager _overlay = default!;
+        [Dependency] private IDependencyCollection _deps = default!;
+        [Dependency] private IOverlayManager _overlay = default!;
 
         public string Command => "lightlevel";
         public string Description => "";

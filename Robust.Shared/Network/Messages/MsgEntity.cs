@@ -32,6 +32,7 @@ namespace Robust.Shared.Network.Messages
                 case EntityMessageType.SystemMessage:
                 {
                     var length = buffer.ReadVariableInt32();
+                    buffer.AssertAtLeastSize(length);
                     using var stream = RobustMemoryManager.GetMemoryStream(length);
                     buffer.ReadAlignedMemory(stream, length);
                     SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);

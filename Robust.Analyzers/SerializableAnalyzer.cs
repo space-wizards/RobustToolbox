@@ -29,7 +29,7 @@ namespace Robust.Analyzers
             Diagnostics.IdSerializable,
             "Class not marked as (Net)Serializable",
             "Class not marked as (Net)Serializable",
-            "Usage",
+            DiagnosticCategories.Design,
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
             description: "The class should be marked as (Net)Serializable.");

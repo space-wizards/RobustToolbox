@@ -15,7 +15,7 @@ public sealed class DependencyNullableAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdDependencyNullable,
         "Dependencies should not be nullable types",
         "[Dependency] field '{0}' is a nullable type. This has no effect and will be disallowed in the future.",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Warning,
         true);
 

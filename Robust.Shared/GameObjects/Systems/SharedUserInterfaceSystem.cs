@@ -40,9 +40,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     private readonly List<(BoundUserInterface Bui, bool value)> _queuedBuis = new();
 
     /// <summary>
-    /// Index of last queued close for each BUI
+    /// BUIs with close queued in current batch, so we can skip opening them
     /// </summary>
-    private readonly Dictionary<BoundUserInterface, int> _lastQueuedClose = new();
+    private readonly HashSet<BoundUserInterface> _closingBuis = new();
 
     public override void Initialize()
     {
@@ -1109,12 +1109,11 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         if (_timing.IsFirstTimePredicted)
         {
-            // Skip BUIs that are queued to be closed later in the same batch so we dont rebuild them
-            for (var i = 0; i < _queuedBuis.Count; i++)
+            // BUI is only opnened once, so if its being closed this batch dont build it
+            foreach (var (queuedBui, queuedOpen) in _queuedBuis)
             {
-                var (queuedBui, queuedOpen) = _queuedBuis[i];
                 if (!queuedOpen)
-                    _lastQueuedClose[queuedBui] = i;
+                    _closingBuis.Add(queuedBui);
             }
 
             for (var i = 0; i < _queuedBuis.Count; i++)
@@ -1123,7 +1122,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
                 if (open)
                 {
-                    if (_lastQueuedClose.TryGetValue(bui, out var closeIndex) && closeIndex > i)
+                    if (_closingBuis.Contains(bui))
                         continue;
 
 #if EXCEPTION_TOLERANCE
@@ -1180,7 +1179,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             }
 
             _queuedBuis.Clear();
-            _lastQueuedClose.Clear();
+            _closingBuis.Clear();
         }
 
         var query = AllEntityQuery<ActiveUserInterfaceComponent, UserInterfaceComponent>();

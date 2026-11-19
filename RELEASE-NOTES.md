@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Append the filter extension to saved filenames if no extension is present.
 
 ### Bugfixes
 

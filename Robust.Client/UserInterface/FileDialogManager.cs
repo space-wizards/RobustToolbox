@@ -73,8 +73,23 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
     {
         Validate(access, share);
         var name = await Prompt(true, filters);
-
         if (name == null) return null;
+
+        // If it has no extension, typically for a new file, and we only have 1 filter group then just append it.
+        if (!Path.HasExtension(name) && filters is { Groups: [{ Extensions: [var extension] }] })
+        {
+            name += "." + extension;
+            try
+            {
+                return (File.Open(name, FileMode.CreateNew, access, share), false);
+            }
+            // If somehow we have a no-extension name but the file exists then ignore it because it's not exactly
+            // what the player put in.
+            catch (IOException) when (File.Exists(name))
+            {
+                return null;
+            }
+        }
 
         try
         {

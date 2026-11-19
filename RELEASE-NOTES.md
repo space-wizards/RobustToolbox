@@ -35,12 +35,32 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Client integration tests no longer preload RSIs / sprites and have to be opted into with PreloadClientResources / PreloadResources. Textures are already not preloaded.
-* ComponentShutdown event is now raised by-ref and includes the entity's lifestage.
+*None yet*
 
 ### New features
 
 *None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 297.0.0
+
+### Breaking changes
+
+* Client integration tests no longer preload RSIs / sprites and have to be opted into with PreloadClientResources / PreloadResources. Textures are already not preloaded.
+* ComponentShutdown event is now raised by-ref and includes the entity's lifestage.
+* Removed the redundant MathHelpers that double MathF / Math constants (Pi and E).
 
 ### Bugfixes
 
@@ -53,6 +73,7 @@ END TEMPLATE-->
 ### Internal
 
 * Refactor PoolManager to avoid polluting future tests on test failure.
+* Slightly tweak enum matching for tryloosegettype to be more consistent.
 
 
 ## 296.0.0

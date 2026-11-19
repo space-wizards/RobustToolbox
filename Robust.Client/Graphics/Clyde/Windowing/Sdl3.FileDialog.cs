@@ -13,17 +13,17 @@ internal partial class Clyde
 {
     private sealed partial class Sdl3WindowingImpl : IFileDialogManagerImplementation
     {
-        public async Task<string?> OpenFile(FileDialogFilters? filters)
+        public async Task<(string?, int)> OpenFile(FileDialogFilters? filters)
         {
             return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_OPENFILE, filters);
         }
 
-        public async Task<string?> SaveFile(FileDialogFilters? filters)
+        public async Task<(string?, int)> SaveFile(FileDialogFilters? filters)
         {
             return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_SAVEFILE, filters);
         }
 
-        private unsafe Task<string?> ShowFileDialogOfType(int type, FileDialogFilters? filters)
+        private unsafe Task<(string?, int)> ShowFileDialogOfType(int type, FileDialogFilters? filters)
         {
             var props = SDL.SDL_CreateProperties();
 
@@ -87,9 +87,9 @@ internal partial class Clyde
             return (name, pattern);
         }
 
-        private unsafe Task<string?> ShowFileDialogWithProperties(int type, uint properties)
+        private unsafe Task<(string?, int)> ShowFileDialogWithProperties(int type, uint properties)
         {
-            var tcs = new TaskCompletionSource<string?>();
+            var tcs = new TaskCompletionSource<(string?, int)>();
 
             var gcHandle = GCHandle.Alloc(new FileDialogState
             {
@@ -117,19 +117,19 @@ internal partial class Clyde
             {
                 // Error
                 state.Parent._sawmill.Error("File dialog failed: {error}", SDL.SDL_GetError());
-                state.Tcs.SetResult(null);
+                state.Tcs.SetResult((null, 0));
                 return;
             }
 
             // Handles null (cancelled/none selected) transparently.
             var str = Marshal.PtrToStringUTF8((nint) filelist[0]);
-            state.Tcs.SetResult(str);
+            state.Tcs.SetResult((str, filter));
         }
 
         private sealed class FileDialogState
         {
             public required Sdl3WindowingImpl Parent;
-            public required TaskCompletionSource<string?> Tcs;
+            public required TaskCompletionSource<(string?, int)> Tcs;
         }
     }
 }

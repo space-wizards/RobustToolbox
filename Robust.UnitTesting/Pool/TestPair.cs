@@ -142,6 +142,15 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
         Gravestone?.Flush();
     }
 
+    public async Task KillAsync()
+    {
+        if (State != PairState.Dead)
+            Kill();
+        await Task.WhenAll(Server.WaitIdleAsync(), Client.WaitIdleAsync());
+    }
+
+    public virtual bool CanFastRecycle(PairSettings next) => Settings.CanFastRecycle(next);
+
     private void ClearContext()
     {
         TestOut = default!;

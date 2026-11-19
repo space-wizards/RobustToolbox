@@ -167,54 +167,67 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
         await testOut.WriteLineAsync($"{nameof(GetPair)}: Called by test {currentTestName}");
         TPair? pair = null;
         watch.Start();
-        if (settings.MustBeNew)
+        try
         {
-            await testOut.WriteLineAsync(
-                $"{nameof(GetPair)}: Creating pair, because settings of pool settings");
-            pair = await CreateServerClientPair(settings, testContext, testOut);
-        }
-        else
-        {
-            await testOut.WriteLineAsync($"{nameof(GetPair)}: Looking in pool for a suitable pair");
-            pair = GrabOptimalPair(settings);
-            if (pair != null)
+            if (settings.MustBeNew)
             {
-                pair.ActivateContext(testOut);
-                await testOut.WriteLineAsync($"{nameof(GetPair)}: Suitable pair found (Pair {pair.Id})");
-
-                if (pair.Settings.CanFastRecycle(settings))
-                {
-                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleanup not needed, Skipping cleanup of pair");
-                    await pair.ApplySettings(settings);
-                }
-                else
-                {
-                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleaning existing pair");
-                    await pair.RecycleInternal(settings, testOut);
-                }
-
-                await pair.RunTicksSync(5);
-                await pair.SyncTicks(targetDelta: 1);
+                await testOut.WriteLineAsync(
+                    $"{nameof(GetPair)}: Creating pair, because settings of pool settings");
+                pair = await CreateServerClientPair(settings, testContext, testOut);
             }
             else
             {
-                await testOut.WriteLineAsync($"{nameof(GetPair)}: Creating a new pair, no suitable pair found in pool");
-                pair = await CreateServerClientPair(settings, testContext, testOut);
+                await testOut.WriteLineAsync($"{nameof(GetPair)}: Looking in pool for a suitable pair");
+                pair = GrabOptimalPair(settings);
+                if (pair != null)
+                {
+                    pair.ActivateContext(testOut);
+                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Suitable pair found (Pair {pair.Id})");
+
+                    if (pair.CanFastRecycle(settings))
+                    {
+                        await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleanup not needed, Skipping cleanup of pair");
+                        await pair.ApplySettings(settings);
+                    }
+                    else
+                    {
+                        await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleaning existing pair");
+                        await pair.RecycleInternal(settings, testOut);
+                    }
+
+                    await pair.RunTicksSync(5);
+                    await pair.SyncTicks(targetDelta: 1);
+                }
+                else
+                {
+                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Creating a new pair, no suitable pair found in pool");
+                    pair = await CreateServerClientPair(settings, testContext, testOut);
+                }
             }
+
+            await testOut.WriteLineAsync($"{nameof(GetPair)}: Retrieving pair {pair.Id} from pool took {watch.Elapsed.TotalMilliseconds} ms");
+
+            await pair.AddToHistory(currentTestName);
+            pair.ValidateSettings(settings);
+            pair.ClearModifiedCvars();
+            pair.Settings = settings;
+            pair.SetupSeed();
+
+            await testOut.WriteLineAsync($"{nameof(GetPair)}: Returning pair {pair.Id} with client/server seeds: {pair.ClientSeed}/{pair.ServerSeed}");
+
+            pair.Watch.Restart();
+            return pair;
         }
-
-        await testOut.WriteLineAsync($"{nameof(GetPair)}: Retrieving pair {pair.Id} from pool took {watch.Elapsed.TotalMilliseconds} ms");
-
-        await pair.AddToHistory(currentTestName);
-        pair.ValidateSettings(settings);
-        pair.ClearModifiedCvars();
-        pair.Settings = settings;
-        pair.SetupSeed();
-
-        await testOut.WriteLineAsync($"{nameof(GetPair)}: Returning pair {pair.Id} with client/server seeds: {pair.ClientSeed}/{pair.ServerSeed}");
-
-        pair.Watch.Restart();
-        return pair;
+        catch
+        {
+            if (pair != null)
+            {
+                try { await pair.KillAsync(); }
+                catch (Exception cleanup) { TestContext.Out.WriteLine($"Acquisition shutdown: {cleanup}"); }
+                finally { Return(pair); }
+            }
+            throw;
+        }
     }
 
     private TPair? GrabOptimalPair(PairSettings poolSettings)
@@ -227,7 +240,7 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
                 if (Pairs[pair])
                     continue;
 
-                if (!pair.Settings.CanFastRecycle(poolSettings))
+                if (!pair.CanFastRecycle(poolSettings))
                 {
                     fallback = pair;
                     continue;

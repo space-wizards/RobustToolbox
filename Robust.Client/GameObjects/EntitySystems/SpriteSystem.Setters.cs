@@ -75,7 +75,7 @@ public sealed partial class SpriteSystem
         _tree.QueueTreeUpdate(sprite!);
     }
 
-    public void SetDrawDepth(Entity<SpriteComponent?> sprite, int value)
+    public void SetDrawDepth(Entity<SpriteComponent?> sprite, byte value)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;

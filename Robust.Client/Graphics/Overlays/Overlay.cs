@@ -4,6 +4,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Enums;
 using System;
 using Robust.Shared.Graphics;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Graphics
 {
@@ -31,9 +32,9 @@ namespace Robust.Client.Graphics
 
         /// <summary>
         ///    Overlays on the same OverlaySpace will be drawn from lowest ZIndex to highest ZIndex. As an example, ZIndex -1 will be drawn before ZIndex 2.
-        ///    This value is 0 by default. Overlays with same ZIndex will be drawn in an random order.
+        ///    This value defaults to <see cref="DrawDepth.Default"/>. Overlays with same ZIndex will be drawn in an random order.
         /// </summary>
-        public int? ZIndex { get; set; }
+        public int? ZIndex { get; set; } = DrawDepth.Default;
 
         protected IOverlayManager OverlayManager { get; }
 

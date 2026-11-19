@@ -111,7 +111,6 @@ public sealed partial class SpriteSystem
         target.Comp.Loop = source.Comp.Loop;
 
         DirtyBounds(target!);
-        _tree.QueueTreeUpdate(target!);
     }
 
     /// <summary>

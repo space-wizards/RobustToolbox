@@ -7,7 +7,6 @@ public partial class EntityManager
     private static readonly ComponentAdd CompAddInstance = new();
     private static readonly ComponentInit CompInitInstance = new();
     private static readonly ComponentStartup CompStartupInstance = new();
-    private static readonly ComponentShutdown CompShutdownInstance = new();
     private static readonly ComponentRemove CompRemoveInstance = new();
 
     /// <summary>
@@ -64,7 +63,7 @@ public partial class EntityManager
     /// <remarks>
     /// Components are allowed to remove themselves in their own Startup function.
     /// </remarks>
-    internal void LifeShutdown<T>(EntityUid uid, T component, CompIdx idx) where T : IComponent
+    internal void LifeShutdown<T>(EntityUid uid, T component, MetaDataComponent metadata, CompIdx idx) where T : IComponent
     {
         DebugTools.Assert(component.LifeStage is >= ComponentLifeStage.Initializing and < ComponentLifeStage.Stopping);
 
@@ -76,7 +75,8 @@ public partial class EntityManager
         }
 
         component.LifeStage = ComponentLifeStage.Stopping;
-        EventBusInternal.RaiseComponentEvent(uid, component, idx, CompShutdownInstance);
+        var shutdown = new ComponentShutdown(metadata.EntityLifeStage);
+        EventBusInternal.RaiseComponentEvent(uid, component, idx, ref shutdown);
         component.LifeStage = ComponentLifeStage.Stopped;
     }
 

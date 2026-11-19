@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* ComponentShutdown event is now raised by-ref and includes the entity's lifestage.
 
 ### New features
 

@@ -46,7 +46,7 @@ public sealed class ViewSubscriberSystem : SharedViewSubscriberSystem
         RaiseLocalEvent(uid, new ViewSubscriberRemovedEvent(uid, session), true);
     }
 
-    private void OnViewSubscriberShutdown(EntityUid uid, ViewSubscriberComponent component, ComponentShutdown _)
+    private void OnViewSubscriberShutdown(EntityUid uid, ViewSubscriberComponent component, ref ComponentShutdown _)
     {
         foreach (var session in component.SubscribedSessions)
         {

@@ -119,7 +119,7 @@ namespace Robust.Shared.Physics.Systems
             Subs.CVar(_cfg, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
-        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
+        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ref ComponentShutdown args)
         {
             SetCanCollide(uid, false, false, body: component);
             DebugTools.Assert(!component.Awake);

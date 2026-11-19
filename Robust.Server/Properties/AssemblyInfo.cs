@@ -7,6 +7,8 @@
 [assembly: InternalsVisibleTo("Robust.Server.IntegrationTests")]
 [assembly: InternalsVisibleTo("Robust.Server.Testing")]
 
+[assembly: AssemblySide(AssemblySide.Server)]
+
 #if NET5_0_OR_GREATER
 [module: SkipLocalsInit]
 #endif

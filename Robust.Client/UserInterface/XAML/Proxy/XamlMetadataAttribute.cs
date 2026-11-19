@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.XAML.Proxy;
 /// client, but this is untested.
 /// </remarks>
 [AttributeUsage(validOn: AttributeTargets.Class, Inherited = false)]
-public sealed class XamlMetadataAttribute: System.Attribute
+public sealed partial class XamlMetadataAttribute: System.Attribute
 {
     public readonly string Uri;
     public readonly string FileName;

@@ -21,7 +21,7 @@ namespace Robust.Shared.Analyzers;
 ///         public int Counter;
 ///     }
 ///     <br/>
-///     public sealed class MySystem : EntitySystem
+///     public sealed partial class MySystem : EntitySystem
 ///     {
 ///         public void AddToCounter(Entity&lt;MyComponent&gt; entity)
 ///         {

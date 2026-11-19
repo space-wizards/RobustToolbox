@@ -43,7 +43,7 @@ internal sealed partial class EntityEventBusTests
     }
 
     [Reflect(false)]
-    private sealed class DifferentComponentsSameKeySubSystem : EntitySystem
+    private sealed partial class DifferentComponentsSameKeySubSystem : EntitySystem
     {
         public override void Initialize()
         {
@@ -53,7 +53,7 @@ internal sealed partial class EntityEventBusTests
     }
 
     [Reflect(false)]
-    private sealed class DifferentComponentsSameKeySubSystem2 : EntitySystem
+    private sealed partial class DifferentComponentsSameKeySubSystem2 : EntitySystem
     {
         public override void Initialize()
         {

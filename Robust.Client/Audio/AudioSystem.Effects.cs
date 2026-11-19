@@ -22,7 +22,7 @@ public sealed partial class AudioSystem
         component.Effect = effect;
     }
 
-    private void OnEffectShutdown(EntityUid uid, AudioEffectComponent component, ComponentShutdown args)
+    private void OnEffectShutdown(EntityUid uid, AudioEffectComponent component, ref ComponentShutdown args)
     {
         if (component.Effect is AudioEffect effect)
         {

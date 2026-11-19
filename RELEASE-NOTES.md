@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Client integration tests no longer preload RSIs / sprites and have to be opted into with PreloadClientResources / PreloadResources. Textures are already not preloaded.
+* ComponentShutdown event is now raised by-ref and includes the entity's lifestage.
 
 ### New features
 
@@ -51,7 +52,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Refactor PoolManager to avoid polluting future tests on test failure.
 
 
 ## 296.0.0

@@ -604,7 +604,7 @@ public abstract partial class SharedMapSystem
         RaiseLocalEvent(uid, msg, true);
     }
 
-    private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
+    private void OnGridRemove(EntityUid uid, MapGridComponent component, ref ComponentShutdown args)
     {
         Log.Info($"Removing grid {ToPrettyString(uid)}");
         if (TryComp(uid, out TransformComponent? xform) && xform.MapUid != null)

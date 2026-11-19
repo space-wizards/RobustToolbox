@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Avoid cloning appearance data on client appearance state if it's unchanged.
 
 
 ## 297.0.0

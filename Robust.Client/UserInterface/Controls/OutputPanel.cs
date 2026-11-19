@@ -80,6 +80,14 @@ namespace Robust.Client.UserInterface.Controls
             };
         }
 
+        protected override void ChildAdded(Control newChild)
+        {
+            base.ChildAdded(newChild);
+
+            _scrollBar?.SetPositionLast();
+            _scrollDownButton?.SetPositionLast();
+        }
+
         public int EntryCount => _entries.Count;
 
         public StyleBox? StyleBoxOverride

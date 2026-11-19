@@ -10,7 +10,9 @@ void main()
     // p: Distance to closest point of line
     // theta: Angle being queried
     // phi: Angle of closest point of line - inherently on 90-degree angle to line angle
-    highp float dist = abs(fragControl.z / cos(fragControl.x - fragControl.y));
+    highp float cosVal = cos(fragControl.x - fragControl.y);
+    if (abs(cosVal) < 1e-4) cosVal = (cosVal >= 0.0 ? 1e-4 : -1e-4);
+    highp float dist = clamp(abs(fragControl.z / cosVal), 0.0, 1000.0);
 
     // Main body.
 #ifdef HAS_DFDX

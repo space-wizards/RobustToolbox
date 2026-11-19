@@ -56,6 +56,9 @@ public partial class TestPair<TServer, TClient>
         }
     }
 
+    /// <summary>
+    /// Override if you wish to specify custom conditions to validate the pair can be recycled safely.
+    /// </summary>
     protected virtual Task ValidateCleanup() => Task.CompletedTask;
 
     private async Task OnCleanDispose()

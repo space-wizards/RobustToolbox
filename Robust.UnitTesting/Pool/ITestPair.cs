@@ -15,7 +15,15 @@ public interface ITestPair
     public PairState State { get; }
     public bool Initialized { get; }
     void Kill();
+
+    /// <summary>
+    /// Runs <see cref="Kill"/> and waits for the pair to be ready.
+    /// </summary>
     Task KillAsync();
+
+    /// <summary>
+    /// True if the pair can quickly be recycled for the next test.
+    /// </summary>
     bool CanFastRecycle(PairSettings next);
 
     [Obsolete("Constructed on the spot when needed, use ExtendedTestHistory instead.")]

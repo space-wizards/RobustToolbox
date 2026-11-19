@@ -62,7 +62,7 @@ namespace Robust.Client.GameObjects
                 // Even if the appearance hasn't changed, we may need to update if we are re-entering PVS
                 if (component.AppearanceDirty)
                     QueueUpdate(uid, component);
-                
+
                 return;
             }
 

@@ -55,6 +55,7 @@ internal partial class Clyde
 
             SDL.SDL_SetHint(SDL.SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
             SDL.SDL_SetHint(SDL.SDL_HINT_IME_IMPLEMENTED_UI, "composition");
+            SDL.SDL_SetHint(SDL.SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
             // SDL3's GameInput support is currently broken and leaving it on
             // causes a "that operation is not supported" error to be logged on startup.

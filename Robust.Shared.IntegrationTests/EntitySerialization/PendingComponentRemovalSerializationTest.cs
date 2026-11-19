@@ -31,7 +31,7 @@ internal sealed class PendingComponentRemovalSerializationTest : RobustIntegrati
             // component even though it had already been queued for removal.
             entMan.RemoveComponentDeferred(uid, component);
             Assert.That(entMan.Count<PendingRemovalTestComponent>(), Is.EqualTo(1));
-            Assert.That(loader.TrySaveMap(mapId, path), Is.True);
+            Assert.That(loader.TrySaveMap(mapId, path, immediate: true), Is.True);
         });
 
         // Let the deferred removal finish, then remove the original map before loading the saved one.

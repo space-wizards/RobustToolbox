@@ -84,8 +84,8 @@ internal sealed partial class MapMergeTest : RobustIntegrationTest
         AssertPreInit(grid);
 
         // Save then delete everything
-        await server.WaitAssertion(() => Assert.That(loader.TrySaveMap(map, mapPath)));
-        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(grid, gridPath)));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveMap(map, mapPath, immediate: true)));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(grid, gridPath, immediate: true)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));

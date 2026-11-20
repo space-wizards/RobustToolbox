@@ -13,6 +13,7 @@ public sealed partial class EntityRelationsSystem : EntitySystem
 
     /// <summary>
     /// Sets whether the component should be removed when it's empty or not.
+    /// Ensures the component if the <paramref name="value"/> is false and it's missing.
     /// </summary>
     /// <param name="ent">The target entity with relations.</param>
     /// <param name="value">
@@ -22,10 +23,15 @@ public sealed partial class EntityRelationsSystem : EntitySystem
     [PublicAPI]
     public void SetRemoveOnEmpty(Entity<EntityRelationsComponent?> ent, bool value)
     {
-        if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp))
-            return;
+        if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp, false))
+        {
+            if (!value)
+                EnsureComp(ref ent);
+            else
+                return;
+        }
 
-        ent.Comp.RemoveOnEmpty = value;
+        ent.Comp!.RemoveOnEmpty = value;
         DirtyField(ent, nameof(ent.Comp.RemoveOnEmpty));
 
         if (value && ent.Comp.Relations.Count == 0 && ent.Comp.LifeStage < ComponentLifeStage.Stopping)

@@ -11,7 +11,7 @@ public abstract class ContainerAttemptEventBase(BaseContainer container, EntityU
     public readonly BaseContainer Container = container;
 
     /// <summary>
-    /// The entity that was removed or inserted from/into the container.
+    /// The entity that will be removed or inserted from/into the container.
     /// </summary>
     public readonly EntityUid EntityUid = entityUid;
 

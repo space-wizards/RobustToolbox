@@ -22,6 +22,7 @@ public abstract partial class SharedContainerSystem
     /// <param name="container">The container to insert into.</param>
     /// <param name="containerXform">The container's transform component.</param>
     /// <param name="force">Whether to bypass normal insertion checks.</param>
+    /// <param name="context">Optional context explaining why or how this container action occurred.</param>
     /// <returns>False if the entity could not be inserted.</returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown if this container is a child of the entity,
@@ -30,7 +31,8 @@ public abstract partial class SharedContainerSystem
     public bool Insert(Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
         BaseContainer container,
         TransformComponent? containerXform = null,
-        bool force = false)
+        bool force = false,
+        ContainerActionContext? context = null)
     {
         var (uid, transform, meta, physics) = toInsert;
 
@@ -121,8 +123,8 @@ public abstract partial class SharedContainerSystem
         RecursivelyUpdateJoints((toInsert, transform));
 
         // Raise container events (after re-parenting and internal remove).
-        RaiseLocalEvent(container.Owner, new EntInsertedIntoContainerMessage(toInsert, oldParent, container), true);
-        RaiseLocalEvent(toInsert, new EntGotInsertedIntoContainerMessage(toInsert, container), true);
+        RaiseLocalEvent(container.Owner, new EntInsertedIntoContainerMessage(toInsert, oldParent, container, context), true);
+        RaiseLocalEvent(toInsert, new EntGotInsertedIntoContainerMessage(toInsert, container, context), true);
 
         // The sheer number of asserts tells you about how little I trust container and parenting code.
         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after events");
@@ -143,12 +145,13 @@ public abstract partial class SharedContainerSystem
     /// <returns>Whether or not the entity was successfully inserted</returns>
     public bool InsertOrDrop(Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
         BaseContainer container,
-        TransformComponent? containerXform = null)
+        TransformComponent? containerXform = null,
+        ContainerActionContext? context = null)
     {
         if (!Resolve(toInsert.Owner, ref toInsert.Comp1) || !Resolve(container.Owner, ref containerXform))
             return false;
 
-        if (Insert(toInsert, container, containerXform))
+        if (Insert(toInsert, container, containerXform, context: context))
             return true;
 
         _transform.DropNextTo(toInsert, (container.Owner, containerXform));
@@ -164,7 +167,8 @@ public abstract partial class SharedContainerSystem
         EntityUid toInsert,
         BaseContainer container,
         bool assumeEmpty = false,
-        TransformComponent? containerXform = null)
+        TransformComponent? containerXform = null,
+        ContainerActionContext? context = null)
     {
         if (container.Owner == toInsert)
             return false;
@@ -183,12 +187,12 @@ public abstract partial class SharedContainerSystem
         if (_transform.ContainsEntity(toInsert, (container.Owner, containerXform)))
             return false;
 
-        var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(container, toInsert, assumeEmpty);
+        var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(container, toInsert, assumeEmpty, context);
         RaiseLocalEvent(container.Owner, insertAttemptEvent, true);
         if (insertAttemptEvent.Cancelled)
             return false;
 
-        var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(container, toInsert, assumeEmpty);
+        var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(container, toInsert, assumeEmpty, context);
         RaiseLocalEvent(toInsert, gettingInsertedAttemptEvent, true);
 
         return !gettingInsertedAttemptEvent.Cancelled;

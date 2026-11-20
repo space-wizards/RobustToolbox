@@ -26,13 +26,15 @@ public abstract partial class SharedContainerSystem
     /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
     /// container, the grid, or the map.</param>
     /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
+    /// <param name="context">Optional context explaining why or how this container action occurred.</param>
     public bool Remove(
         Entity<TransformComponent?, MetaDataComponent?> toRemove,
         BaseContainer container,
         bool reparent = true,
         bool force = false,
         EntityCoordinates? destination = null,
-        Angle? localRotation = null)
+        Angle? localRotation = null,
+        ContainerActionContext? context = null)
     {
         var (uid, xform, meta) = toRemove;
 
@@ -98,8 +100,8 @@ public abstract partial class SharedContainerSystem
         RecursivelyUpdateJoints((toRemove, xform));
 
         // Raise container events (after re-parenting and internal remove).
-        RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container), true);
-        RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, container), false);
+        RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container, context), true);
+        RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, container, context), false);
 
         DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value), $"Failed to set coordinates of {ToPrettyString(toRemove, meta)} to be inside {ToPrettyString(container.Owner)} container '{container.ID}'");
 
@@ -111,18 +113,18 @@ public abstract partial class SharedContainerSystem
     /// Checks if the entity can be removed from this container.
     /// </summary>
     /// <returns>True if the entity can be removed, false otherwise.</returns>
-    public bool CanRemove(EntityUid toRemove, BaseContainer container)
+    public bool CanRemove(EntityUid toRemove, BaseContainer container, ContainerActionContext? context = null)
     {
         if (!container.Contains(toRemove))
             return false;
 
         //raise events
-        var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(container, toRemove);
+        var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(container, toRemove, context);
         RaiseLocalEvent(container.Owner, removeAttemptEvent, true);
         if (removeAttemptEvent.Cancelled)
             return false;
 
-        var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(container, toRemove);
+        var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(container, toRemove, context);
         RaiseLocalEvent(toRemove, gettingRemovedAttemptEvent, true);
         return !gettingRemovedAttemptEvent.Cancelled;
     }

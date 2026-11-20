@@ -21,7 +21,7 @@ public abstract class ContainerModifiedMessage(EntityUid entity, BaseContainer c
 
     /// <summary>
     /// Optional context explaining why or how this container action occurred.
-    /// I.e., the actor taking the item out of the container (<see cref="EntityActorContext"/>).
+    /// I.e., the actor taking the item out of the container (<see cref="ContainerActorContext"/>).
     /// </summary>
     public ContainerActionContext? Context { get; } = context;
 }

@@ -695,7 +695,7 @@ public abstract partial class SharedContainerSystem
 
 /// <summary>
 /// Base type for container action context that explains why or how container action occurred.
-/// I.e., the actor taking the item out of the container (<see cref="EntityActorContext"/>).
+/// I.e., the actor taking the item out of the container (<see cref="ContainerActorContext"/>).
 /// </summary>
 [PublicAPI]
 public abstract record class ContainerActionContext;
@@ -706,4 +706,4 @@ public abstract record class ContainerActionContext;
 /// <param name="Actor">The entity that performed the container action.</param>
 /// <param name="Used">The entity that was used to perform the container action.</param>
 [PublicAPI]
-public record class EntityActorContext(EntityUid Actor, EntityUid? Used = null) : ContainerActionContext;
+public record class ContainerActorContext(EntityUid Actor, EntityUid? Used = null) : ContainerActionContext;

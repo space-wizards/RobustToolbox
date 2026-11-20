@@ -607,6 +607,9 @@ internal sealed partial class MidiRenderer : IMidiRenderer
                         // CC0 is bank selection
                         if (midiEvent.Control == 0x0 && DisableProgramChangeEvent)
                             break;
+                        // Don't change Banks for Drum Channel.
+                        if (midiEvent.Control == 0x0 && midiEvent.Channel == RobustMidiEvent.PercussionChannel)
+                            break;
 
                         _rendererState.Controllers.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Control] = midiEvent.Value;
                         if(midiEvent.Control != 0x0)

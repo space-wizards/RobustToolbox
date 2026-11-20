@@ -46,7 +46,7 @@ public abstract partial class SharedJointSystem
         EnsureEntitySet<JointRelayTargetComponent>(state.Entities, uid, component.Relayed);
     }
 
-    private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)
+    private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ref ComponentShutdown args)
     {
         if (_gameTiming.ApplyingState)
             return;

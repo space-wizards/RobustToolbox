@@ -19,7 +19,7 @@ public sealed class PreferNonGenericVariantForAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUseNonGenericVariant,
         "Consider using the non-generic variant of this method",
         "Use the non-generic variant of this method for type {0}",
-        "Usage",
+        DiagnosticCategories.Performance,
         DiagnosticSeverity.Warning,
         true,
         "Use the generic variant of this method.");

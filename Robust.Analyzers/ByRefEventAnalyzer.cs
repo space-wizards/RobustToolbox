@@ -18,7 +18,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdByRefEventSubscribedByValue,
         "By-ref event subscribed to by value",
         "Tried to subscribe to a by-ref event '{0}' by value",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Make sure that methods subscribing to a ref event have the ref keyword for the event argument."
@@ -28,7 +28,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdByRefEventRaisedByValue,
         "By-ref event raised by value",
         "Tried to raise a by-ref event '{0}' by value",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Make sure to use the ref keyword when raising ref events."
@@ -38,7 +38,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdValueEventRaisedByRef,
         "Value event raised by-ref",
         "Tried to raise a value event '{0}' by-ref",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Make sure to not use the ref keyword when raising value events."

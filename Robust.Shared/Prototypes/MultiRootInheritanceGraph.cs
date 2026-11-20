@@ -63,11 +63,35 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
 
         _rootNodes.Remove(id);
 
+        if (_parents.TryGetValue(id, out var oldParents))
+        {
+            foreach (var oldParent in oldParents)
+            {
+                if (!_edges.TryGetValue(oldParent, out var oldEdges))
+                    continue;
+
+                oldEdges.Remove(id);
+                if (oldEdges.Count == 0)
+                    _edges.Remove(oldParent);
+            }
+        }
+
+        for (var i = 0; i < parents.Length; i++)
+        {
+            var parent = parents[i];
+            if (parents.LastIndexOf(parent) != i)
+            {
+                throw new InvalidOperationException(
+                    $"Duplicate inheritance detected for id \"{id}\" and parent \"{parent}\". Check any partial prototypes and see if they are adding an existing parent again.");
+            }
+        }
+
+        _parents[id] = parents;
+
         foreach (var parent in parents)
         {
             var edges = _edges.GetOrNew(parent);
             edges.Add(id);
-            _parents[id] = parents;
 
             if (!_parents.ContainsKey(parent))
                 _rootNodes.Add(parent);

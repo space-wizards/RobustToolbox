@@ -16,6 +16,16 @@ public interface ITestPair
     public bool Initialized { get; }
     void Kill();
 
+    /// <summary>
+    /// Runs <see cref="Kill"/> and waits for the pair to be ready.
+    /// </summary>
+    Task KillAsync();
+
+    /// <summary>
+    /// True if the pair can quickly be recycled for the next test.
+    /// </summary>
+    bool CanFastRecycle(PairSettings next);
+
     [Obsolete("Constructed on the spot when needed, use ExtendedTestHistory instead.")]
     List<string> TestHistory => ExtendedTestHistory.Select(x => x.TestName).ToList();
     IReadOnlyList<TestHistoryEntry> ExtendedTestHistory { get; }

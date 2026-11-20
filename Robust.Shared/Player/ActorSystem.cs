@@ -17,7 +17,7 @@ public sealed partial class ActorSystem : EntitySystem
         SubscribeLocalEvent<ActorComponent, ComponentShutdown>(OnActorShutdown);
     }
 
-    private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)
+    private void OnActorShutdown(EntityUid entity, ActorComponent component, ref ComponentShutdown args)
     {
         _playerManager.SetAttachedEntity(component.PlayerSession, null);
     }

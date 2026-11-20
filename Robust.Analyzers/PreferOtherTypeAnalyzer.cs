@@ -17,7 +17,7 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdPreferOtherType,
         "Use the specific type",
         "Use the specific type {0} instead of {1} when the type argument is {2}",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Error,
         true,
         "Use the specific type.");

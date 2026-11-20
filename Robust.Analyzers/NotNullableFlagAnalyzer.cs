@@ -16,7 +16,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdNotNullableFlagNotSet,
         "Not Nullable Flag not set",
         "Class type parameter {0} is not annotated as nullable and notNullableOverride is not set to true",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Assign true to notNullableOverride or specify the type parameter as nullable.");
@@ -25,7 +25,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdInvalidNotNullableFlagValue,
         "Not Nullable Flag wrongfully set",
         "Class type parameter {0} is annotated as nullable but notNullableOverride is set to true",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Remove the true assignment to notNullableOverride or remove the nullable specifier of the type parameter.");
@@ -34,7 +34,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdInvalidNotNullableFlagImplementation,
         "Invalid NotNullable flag implementation",
         "NotNullable flag is either not typed as bool, or does not have a default value equaling false",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Ensure that the notNullable flag is typed bool and has false set as a default value.");
@@ -43,7 +43,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdInvalidNotNullableFlagType,
         "Failed to resolve type parameter",
         "Failed to resolve type parameter \"{0}\"",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Use nameof to avoid typos.");
@@ -52,7 +52,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdNotNullableFlagValueType,
         "NotNullable flag not supported for value types",
         "Value types as generic arguments are not supported for NotNullable flags",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Nullable value types are distinct at runtime when inspected with reflection. Therefore they are not supported for NotNullable flags.");

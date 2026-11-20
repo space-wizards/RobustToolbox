@@ -39,7 +39,7 @@ namespace Robust.Shared.GameObjects
             Dirty(uid, component);
         }
 
-        private void OnRemove(EntityUid uid, CollisionWakeComponent component, ComponentShutdown args)
+        private void OnRemove(EntityUid uid, CollisionWakeComponent component, ref ComponentShutdown args)
         {
             if (component.Enabled
                 && !Terminating(uid)

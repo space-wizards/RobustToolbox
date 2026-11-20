@@ -52,6 +52,7 @@ END TEMPLATE-->
 ### Internal
 
 * Optimized SpriteComponent initialization.
+* Avoid cloning appearance data on client appearance state if it's unchanged.
 
 
 ## 297.0.0

@@ -39,6 +39,11 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private readonly List<(BoundUserInterface Bui, bool value)> _queuedBuis = new();
 
+    /// <summary>
+    /// BUIs with close queued in current batch, so we can skip opening them
+    /// </summary>
+    private readonly HashSet<BoundUserInterface> _closingBuis = new();
+
     public override void Initialize()
     {
         base.Initialize();
@@ -1104,10 +1109,22 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         if (_timing.IsFirstTimePredicted)
         {
-            foreach (var (bui, open) in _queuedBuis)
+            // BUI is only opnened once, so if its being closed this batch dont build it
+            foreach (var (queuedBui, queuedOpen) in _queuedBuis)
             {
+                if (!queuedOpen)
+                    _closingBuis.Add(queuedBui);
+            }
+
+            for (var i = 0; i < _queuedBuis.Count; i++)
+            {
+                var (bui, open) = _queuedBuis[i];
+
                 if (open)
                 {
+                    if (_closingBuis.Contains(bui))
+                        continue;
+
 #if EXCEPTION_TOLERANCE
                     try
                     {
@@ -1162,6 +1179,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             }
 
             _queuedBuis.Clear();
+            _closingBuis.Clear();
         }
 
         var query = AllEntityQuery<ActiveUserInterfaceComponent, UserInterfaceComponent>();

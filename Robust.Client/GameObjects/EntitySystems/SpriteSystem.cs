@@ -13,6 +13,7 @@ using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -29,8 +30,9 @@ namespace Robust.Client.GameObjects
         [Dependency] private IConfigurationManager _cfg = default!;
         [Dependency] private IEyeManager _eye = default!;
         [Dependency] private IGameTiming _timing = default!;
-        [Dependency] private IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
         [Dependency] private IPrototypeManager _prototypes = default!;
+        [Dependency] private IReflectionManager _reflection = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
         [Dependency] private SharedTransformSystem _xforms = default!;
@@ -62,6 +64,14 @@ namespace Robust.Client.GameObjects
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _query = GetEntityQuery<SpriteComponent>();
+            if (_cfg.GetCVar(CVars.ResSpritePreloadingEnabled))
+            {
+                foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
+                {
+                    if (prototype.TryComp(out SpriteComponent? sprite, Factory))
+                        LoadPrototypeData((default, sprite));
+                }
+            }
         }
 
         public bool IsVisible(Layer layer)
@@ -77,29 +87,19 @@ namespace Robust.Client.GameObjects
 
         private void LoadPrototypeData(Entity<SpriteComponent> sprite)
         {
-            LoadBaseRsi(sprite, sprite);
-            LoadLayers(sprite);
-        }
-
-        private void LoadBaseRsi(EntityUid uid, SpriteComponent component)
-        {
-            _resourceCache.LoadBaseRsi(uid, component);
-        }
-
-        private void LoadLayers(Entity<SpriteComponent> sprite)
-        {
-            if (sprite.Comp.layerDatums.Count == 0)
-                return;
-
-            sprite.Comp.LayerMap.Clear();
-            sprite.Comp.Layers.Clear();
-            foreach (var datum in sprite.Comp.layerDatums)
+            var component = sprite.Comp;
+            if (!string.IsNullOrWhiteSpace(component.rsi))
             {
-                var layer = new Layer(sprite, sprite.Comp.Layers.Count);
-                sprite.Comp.Layers.Add(layer);
-                LayerSetData(layer, datum);
+                var path = TextureRoot / component.rsi;
+                if (_resourceCache.TryGetResource(path, out RSIResource? resource))
+                    component._baseRsi = resource.RSI;
+                else
+                    Log.Error($"Unable to load RSI '{path}'.");
             }
+
+            InitializeLayers(sprite);
         }
+
         [SubscribeLocalEvent]
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {

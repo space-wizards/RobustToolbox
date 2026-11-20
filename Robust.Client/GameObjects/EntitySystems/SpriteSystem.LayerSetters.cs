@@ -40,8 +40,7 @@ public sealed partial class SpriteSystem
         DebugTools.Assert(layer.Owner != default);
         DebugTools.AssertNotNull(layer.Owner.Comp);
         DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
-        // TODO SPRITE ECS
-        layer._parent.LayerSetData(layer, data);
+        LayerSetData(layer, data, false);
     }
 
     #endregion

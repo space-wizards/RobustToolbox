@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Optimized SpriteComponent initialization.
 
 
 ## 297.0.0

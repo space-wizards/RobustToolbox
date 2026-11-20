@@ -35,6 +35,9 @@ jobs:
     name: Update ${{ matrix.repo }}
     runs-on: ubuntu-latest
     needs: version
+    permissions:
+      contents: none # If it will somehow fallback to the GITHUB_TOKEN, then it will do nothing.
+      pull-requests: none
 
     strategy:
       fail-fast: false

@@ -16,11 +16,12 @@ Categories:
     Other - Changes to behavior that aren't new features or bug fixes.
     Internal - Notable internal refactors that improve performance/security/etc.
 Example:
-    Bugfix: AnchorEntity was not centering entities on tiles. 
+    Bugfix: AnchorEntity was not centering entities on tiles.
 -->
 
 
 ### Breaking changes
 <!-- List any breaking changes such as public class/method/field changes and provide instructions for fixing them. -->
+<!-- Include migration information for any [Obsolete] code. -->
 <!-- Include any reference PRs in other repositories that mitigate the breaking changes here. -->
 

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.Utility;
@@ -13,7 +12,6 @@ using Robust.Shared;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -33,8 +31,6 @@ namespace Robust.Client.ResourceManagement
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private IConfigurationManager _configurationManager = default!;
 
-        private readonly List<SpriteComponent> _toDeserialize = new();
-
         public void PreloadTextures()
         {
             var sawmill = _logManager.GetSawmill("res.preload");
@@ -50,53 +46,6 @@ namespace Robust.Client.ResourceManagement
             }
 
             PreloadTextures(sawmill);
-        }
-
-        public void AddToDeserialize(SpriteComponent component)
-        {
-            _toDeserialize.Add(component);
-        }
-
-        public void LoadBaseRsi(EntityUid uid, SpriteComponent component)
-        {
-            if (!string.IsNullOrWhiteSpace(component.rsi))
-            {
-                var rsiPath = SpriteSystem.TextureRoot / component.rsi;
-                if (TryGetResource(rsiPath, out RSIResource? resource))
-                    component._baseRsi = resource.RSI;
-                else
-                    Sawmill.Error($"Unable to load RSI '{rsiPath}'.");
-            }
-
-            if (component.layerDatums.Count != 0)
-            {
-                component.LayerMap.Clear();
-                component.Layers.Clear();
-                foreach (var datum in component.layerDatums)
-                {
-                    var layer = new SpriteComponent.Layer((uid, component), component.Layers.Count);
-                    component.Layers.Add(layer);
-                    component.LayerSetData(layer, datum);
-                }
-            }
-        }
-
-        public void AfterDeserialization()
-        {
-            try
-			{
-                if (!_configurationManager.GetCVar(CVars.ResSpritePreloadingEnabled))
-                    return;
-
-        		foreach (var sprite in _toDeserialize)
-        		{
-            		LoadBaseRsi(default, sprite);
-        		}
-            }
-			finally
-			{
-				_toDeserialize.Clear();
-			}
         }
 
         private void PreloadTextures(ISawmill sawmill)

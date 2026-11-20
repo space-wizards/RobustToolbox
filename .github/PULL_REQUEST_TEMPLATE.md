@@ -1,10 +1,10 @@
 ## About the PR
 <!-- What did you change? What will this enable or improve? -->
-<!-- Include links to issues this will close or PRs this supercedes here. -->
+<!-- Include links to issues this will close or PRs this supersedes here. -->
 
 
 ## Technical details
-<!-- Summary of code changes for easier review. -->
+<!-- Summary of notable changes or design decisions. -->
 
 
 ## Release Notes
@@ -14,9 +14,9 @@ Categories:
     New feature - New engine functionality.
     Bugfix - Resovles an issue.
     Other - Changes to behavior that aren't new features or bug fixes.
-    Internal - Refactors to internal methods, obsoleted methods.
+    Internal - Notable internal refactors that improve performance/security/etc.
 Example:
-    Bugfix: The default AnchorEntity method now snaps to tile center again.
+    Bugfix: AnchorEntity was not centering entities on tiles. 
 -->
 
 

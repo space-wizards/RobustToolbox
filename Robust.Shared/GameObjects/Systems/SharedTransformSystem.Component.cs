@@ -35,7 +35,7 @@ public abstract partial class SharedTransformSystem
         var localRotation = xform.LocalRotation + rotation;
         var coordinates = new EntityCoordinates(newGridUid, tilePos + newGrid.TileSizeHalfVector);
 
-        Unanchor(uid, xform);
+        Unanchor(uid, xform, reanchoring: true);
         SetCoordinates((uid, xform, meta), coordinates, localRotation);
         AnchorEntityResolved((uid, xform, meta), (newGridUid, newGrid), tilePos);
 
@@ -408,7 +408,7 @@ public abstract partial class SharedTransformSystem
     ///     Unanchors an entity.
     /// </summary>
     /// <returns>Whether the entity is anchored after this call.</returns>
-    public bool Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
+    public bool Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true, bool reanchoring = false)
     {
         if (!xform._anchored)
             return false;
@@ -431,7 +431,7 @@ public abstract partial class SharedTransformSystem
         if (!xform.Running)
             return xform.Anchored;
 
-        var ev = new AnchorStateChangedEvent(uid, xform);
+        var ev = new AnchorStateChangedEvent(uid, xform, reanchoring: reanchoring);
         RaiseLocalEvent(uid, ref ev, true);
         return xform.Anchored;
     }

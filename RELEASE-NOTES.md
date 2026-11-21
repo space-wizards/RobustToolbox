@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added Reanchoring field to AnchorStateChangedEvent. Also added Reanchor arg to Unanchor if you are manually re-anchoring entities.
 
 ### Bugfixes
 

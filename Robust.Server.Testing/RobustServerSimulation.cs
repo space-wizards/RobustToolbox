@@ -351,6 +351,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<GridSplitNodeComponent>();
             compFactory.RegisterClass<ChunkEntityComponent>();
             compFactory.RegisterClass<ChunkContainerComponent>();
+            compFactory.RegisterClass<EntityRelationsComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -379,6 +380,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
+            entitySystemMan.LoadExtraSystemType<EntityRelationsSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

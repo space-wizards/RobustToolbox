@@ -7,6 +7,10 @@ on:
         description: 'Version Number (example: 0.1.0)'
         required: true
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 env:
   VERSION: ${{ inputs.version }}
 
@@ -28,8 +32,7 @@ jobs:
       - name: Create new version
         run: |
           python ./Tools/version.py $VERSION
-          git push
-          git push ${{ github.server_url }}/${{ github.repository }}.git v$VERSION
+          git push --atomic "${{ github.server_url }}/${{ github.repository }}.git" "HEAD:refs/heads/${{ github.ref_name }}" "refs/tags/v${VERSION}"
 
   update-repos:
     name: Update ${{ matrix.repo }}

@@ -21,7 +21,20 @@ public sealed class RobustRandom : IRobustRandom
     // This should not contain any logic, not directly related to calling specific methods of <see cref="Random"/>.
     // To write additional logic, attached to random roll, please create interface-implemented methods on <see cref="IRobustRandom"/>
     // or add it to <see cref="RandomExtensions"/>.
-    private System.Random _random = new();
+    private System.Random _random;
+
+    public RobustRandom()
+    {
+        _random = new();
+    }
+
+    /// <summary>
+    /// Creates a seeded generator without first allocating an unused unseeded generator.
+    /// </summary>
+    public RobustRandom(int seed)
+    {
+        _random = new(seed);
+    }
 
     /// <inheritdoc />
     public System.Random GetRandom() => _random;

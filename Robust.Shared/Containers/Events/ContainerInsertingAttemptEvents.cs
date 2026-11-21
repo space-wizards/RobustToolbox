@@ -50,7 +50,7 @@ public struct ContainerIsInsertingAttemptEvent<T>(T context, BaseContainer conta
 /// If you need to act on specific context, then use <see cref="ContainerIsInsertingAttemptEvent{T}"/>.
 /// </remarks>
 [ByRefEvent]
-public  struct ContainerIsInsertingAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty)
+public struct ContainerIsInsertingAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty)
 {
     /// <summary>
     /// The container being acted upon.

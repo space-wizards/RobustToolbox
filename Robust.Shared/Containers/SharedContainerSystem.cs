@@ -698,7 +698,13 @@ public abstract partial class SharedContainerSystem
 /// I.e., the actor taking the item out of the container (<see cref="ContainerActorContext"/>).
 /// </summary>
 [PublicAPI]
-public abstract record class ContainerActionContext;
+public interface IContainerActionContext;
+
+// This is needed only to not create almost identical implementations for contextual and uncontextualized overloads.
+/// <summary>
+/// The type that indicates that there are no container action context provided.
+/// </summary>
+internal struct NoContainerActionContext : IContainerActionContext;
 
 /// <summary>
 /// A container action context where an action was made by an entity.
@@ -706,4 +712,4 @@ public abstract record class ContainerActionContext;
 /// <param name="Actor">The entity that performed the container action.</param>
 /// <param name="Used">The entity that was used to perform the container action.</param>
 [PublicAPI]
-public record class ContainerActorContext(EntityUid Actor, EntityUid? Used = null) : ContainerActionContext;
+public readonly record struct ContainerActorContext(EntityUid Actor, EntityUid? Used = null) : IContainerActionContext;

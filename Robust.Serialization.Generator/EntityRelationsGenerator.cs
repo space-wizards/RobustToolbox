@@ -160,7 +160,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
 
                 clearBuilder.AppendLine($"        ent.Comp.{field.Name} = null;");
 
-                shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
+                shutdownBuilder.AppendLine($"        ClearRelation(ent.Owner, ref ent.Comp.{field.Name});");
             }
             else if (field.DictionaryKey)
             {
@@ -168,7 +168,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
 
                 clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
 
-                shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
+                shutdownBuilder.AppendLine($"        ClearRelations(ent.Owner, ent.Comp.{field.Name});");
             }
             else if (field.DictionaryValue)
             {
@@ -187,13 +187,13 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                             }
                     """);
 
-                shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
+                shutdownBuilder.AppendLine($"        ClearRelations(ent.Owner, ent.Comp.{field.Name});");
             }
             else if (field.Collection)
             {
                 relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
                 clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
-                shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
+                shutdownBuilder.AppendLine($"        ClearRelations(ent.Owner, ent.Comp.{field.Name});");
             }
             else
             {
@@ -204,7 +204,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
 
                 clearBuilder.AppendLine($"        ent.Comp.{field.Name} = EntityRelation.Null;");
 
-                shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
+                shutdownBuilder.AppendLine($"        ClearRelation(ent.Owner, ref ent.Comp.{field.Name});");
             }
 
             anyValidField = true;
@@ -218,8 +218,8 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
             relationBuilder.AppendLine("        Dirty(ent);");
             clearBuilder.AppendLine("        Dirty(ent);");
             shutdownBuilder.AppendLine("""
-                        if (entMan.GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
-                            entMan.Dirty(ent);
+                        if (GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
+                            Dirty(ent);
                 """);
         }
 
@@ -263,6 +263,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                 {
             {{shutdownBuilder}}
                 }
+            }
             }
             """);
 

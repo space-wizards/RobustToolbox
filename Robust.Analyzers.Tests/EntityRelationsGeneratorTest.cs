@@ -80,9 +80,10 @@ public sealed class EntityRelationsGeneratorTest
 
         private void OnRelationRemove(Entity<FooComponent> ent, ref ComponentRemove args)
         {
-            entMan.ClearRelations(ent.Owner, ent.Comp.Foo, false);
+            ClearRelations(ent.Owner, ent.Comp.Foo);
 
         }
+    }
     }
 
     """;
@@ -136,9 +137,10 @@ public sealed class EntityRelationsGeneratorTest
 
                 private void OnRelationRemove(Entity<FooComponent> ent, ref ComponentRemove args)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
+                    ClearRelation(ent.Owner, ref ent.Comp.Foo);
 
                 }
+            }
             }
 
             """);
@@ -193,9 +195,10 @@ public sealed class EntityRelationsGeneratorTest
 
                 private void OnRelationRemove(Entity<FooComponent> ent, ref ComponentRemove args)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
+                    ClearRelation(ent.Owner, ref ent.Comp.Foo);
 
                 }
+            }
             }
 
             """);
@@ -310,9 +313,10 @@ public sealed class EntityRelationsGeneratorTest
 
                 private void OnRelationRemove(Entity<FooComponent> ent, ref ComponentRemove args)
                 {
-                    entMan.ClearRelations(ent.Owner, ent.Comp.Foo, false);
+                    ClearRelations(ent.Owner, ent.Comp.Foo);
 
                 }
+            }
             }
 
             """);
@@ -369,11 +373,12 @@ public sealed class EntityRelationsGeneratorTest
 
                 private void OnRelationRemove(Entity<FooComponent> ent, ref ComponentRemove args)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
-                    if (entMan.GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
-                        entMan.Dirty(ent);
+                    ClearRelation(ent.Owner, ref ent.Comp.Foo);
+                    if (GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
+                        Dirty(ent);
 
                 }
+            }
             }
 
             """);
@@ -430,11 +435,12 @@ public sealed class EntityRelationsGeneratorTest
 
                 private void OnRelationRemove(Entity<FooComponent> ent, ref ComponentRemove args)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
-                    if (entMan.GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
-                        entMan.Dirty(ent);
+                    ClearRelation(ent.Owner, ref ent.Comp.Foo);
+                    if (GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
+                        Dirty(ent);
 
                 }
+            }
             }
 
             """);

@@ -4,11 +4,16 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Robust.Roslyn.Shared;
 
-namespace Robust.Serialization.Generator;
+namespace Robust.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
 {
+    private const string AutoGenerateEntityRelationsAttributeName = "Robust.Shared.Analyzers.AutoGenerateEntityRelationsAttribute";
+    private const string AutoRelationFieldAttributeName = "Robust.Shared.Analyzers.AutoRelationFieldAttribute";
+    // ReSharper disable once InconsistentNaming
+    private const string IComponentTypeName = "Robust.Shared.GameObjects.IComponent";
+
     private static readonly DiagnosticDescriptor NotComponentDiagnostic = new(
         Diagnostics.IdComponentRelationNotComponent,
         "Class must be an IComponent to use AutoGenerateEntityRelations",
@@ -62,14 +67,14 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
         if (context.Symbol is not INamedTypeSymbol symbol)
             return;
 
-        if (!AttributeHelper.HasAttribute(symbol, EntityRelationsGenerator.AutoGenerateEntityRelationsAttributeName))
+        if (!AttributeHelper.HasAttribute(symbol, AutoGenerateEntityRelationsAttributeName))
             return;
 
         var syntax = symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as TypeDeclarationSyntax;
         var location = syntax?.Identifier.GetLocation() ?? symbol.Locations.FirstOrDefault();
 
         // Check if it implements IComponent
-        if (!TypeSymbolHelper.ImplementsInterface(symbol, EntityRelationsGenerator.IComponentTypeName))
+        if (!symbol.ImplementsInterface(IComponentTypeName))
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(NotComponentDiagnostic, location, symbol.Name)
@@ -81,7 +86,7 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
         foreach (var member in symbol.GetMembers())
         {
             if (member is not IFieldSymbol and not IPropertySymbol
-                || !AttributeHelper.HasAttribute(member, EntityRelationsGenerator.AutoRelationFieldAttributeName))
+                || !AttributeHelper.HasAttribute(member, AutoRelationFieldAttributeName))
             {
                 continue;
             }
@@ -101,7 +106,7 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
     {
         var symbol = context.Symbol;
 
-        if (!AttributeHelper.HasAttribute(symbol, EntityRelationsGenerator.AutoRelationFieldAttributeName))
+        if (!AttributeHelper.HasAttribute(symbol, AutoRelationFieldAttributeName))
             return;
 
         var syntax = symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
@@ -109,11 +114,11 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
         {
             PropertyDeclarationSyntax prop => prop.Identifier.GetLocation(),
             VariableDeclaratorSyntax varDecl => varDecl.Identifier.GetLocation(),
-            _ => symbol.Locations.FirstOrDefault()
+            _ => symbol.Locations.FirstOrDefault(),
         };
 
         // Check if parent has [AutoGenerateEntityRelations]
-        if (!AttributeHelper.HasAttribute(symbol.ContainingType, EntityRelationsGenerator.AutoGenerateEntityRelationsAttributeName))
+        if (!AttributeHelper.HasAttribute(symbol.ContainingType, AutoGenerateEntityRelationsAttributeName))
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(NoParentAttributeDiagnostic, location, symbol.Name));

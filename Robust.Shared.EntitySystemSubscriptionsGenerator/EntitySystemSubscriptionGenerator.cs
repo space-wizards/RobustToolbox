@@ -23,6 +23,8 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
     {
         var annotatedEntitySystems = Aggregate(
                 GetEntityTypeCandidatesContainingAnnotatedMethods(context, AllSubscriptionMemberAttributeName),
+                // Temporary fallback, to be deleted later. See the TO DO in EntitySystemSubscriptionsGeneratorAttributes.cs
+                GetEntityTypeCandidatesContainingAnnotatedMethods(context, AllSubscriptionMemberAttributeFallbackName),
                 GetEntityTypeCandidatesContainingAnnotatedMethods(context, NetworkSubscriptionMemberAttributeName),
                 GetEntityTypeCandidatesContainingAnnotatedMethods(context, LocalSubscriptionMemberAttributeName)
             ) // Get all candidate types containing subscription annotated methods
@@ -134,6 +136,11 @@ using JetBrains.Annotations;
         return TryParseSubscription(
             method,
             AllSubscriptionMemberAttributeName,
+            m => TryParseEntityEventHandler(m) ?? TryParseEntitySessionEventHandler(m)
+        ) // Temporary fallback, to be deleted later. See the TO DO in EntitySystemSubscriptionsGeneratorAttributes.cs
+            ?? TryParseSubscription(
+            method,
+            AllSubscriptionMemberAttributeFallbackName,
             m => TryParseEntityEventHandler(m) ?? TryParseEntitySessionEventHandler(m)
         ) ?? TryParseSubscription(
             method,

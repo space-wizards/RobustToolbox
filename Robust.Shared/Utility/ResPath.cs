@@ -690,14 +690,6 @@ public static class ResPathUtil
         if (path.Clean() != path)
             return false;
 
-        // Clean() intentionally preserves base-level relative traversal like "../foo".
-        // Those paths are normalized, but still not safe file paths.
-        foreach (var segment in path.EnumerateSegments())
-        {
-            if (segment == "..")
-                return false;
-        }
-
-        return path.Filename is not ("." or "..");
+        return path.CanonPath != ".." && !path.CanonPath.StartsWith("../", StringComparison.Ordinal);
     }
 }

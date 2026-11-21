@@ -161,6 +161,14 @@ internal sealed class ResPathTest
     [TestCase("/replay.zip", false, ExpectedResult = false)]
     [TestCase(".", false, ExpectedResult = false)]
     [TestCase("/", true, ExpectedResult = false)]
+    [TestCase("..", false, ExpectedResult = false)]
+    [TestCase("../../replay.zip", false, ExpectedResult = false)]
+    [TestCase("a/../../replay.zip", false, ExpectedResult = false)]
+    [TestCase("/a/b/../../../../c", true, ExpectedResult = false)]
+    [TestCase("..replay.zip", false, ExpectedResult = true)]
+    [TestCase("a/..replay.zip", false, ExpectedResult = true)]
+    [TestCase("a/", false, ExpectedResult = false)]
+    [TestCase("a/.", false, ExpectedResult = false)]
     public bool IsValidFilePathTest(string input, bool rooted)
     {
         return new ResPath(input).IsValidFilePath(rooted);

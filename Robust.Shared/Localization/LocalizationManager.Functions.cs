@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -39,10 +39,15 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "PROPER", FuncProper);
             AddCtxFunction(bundle, "THE", FuncThe);
 
+            // Basic string manipulation
+            AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
+            AddCtxFunction(bundle, "TO-UPPER", FuncToUpper);
+            AddCtxFunction(bundle, "TO-LOWER", FuncToLower);
+
             // Misc
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
-            AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
             AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
+            AddCtxFunction(bundle, "DEFINITE-IF-PROPER", FuncDefiniteIfProper);
 
             // Rich text
             AddCtxFunction(bundle, "ESCAPE", FuncEscape);
@@ -65,6 +70,28 @@ namespace Robust.Shared.Localization
             var input = args.Args[0].Format(new LocContext());
             if (!String.IsNullOrEmpty(input))
                 return new LocValueString(input[0].ToString().ToUpper() + input.Substring(1));
+            else return new LocValueString("");
+        }
+
+        /// <summary>
+        /// Returns the string passed in, fully capitalized.
+        /// </summary>
+        private ILocValue FuncToUpper(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            if (!String.IsNullOrEmpty(input))
+                return new LocValueString(input.ToString().ToUpper());
+            else return new LocValueString("");
+        }
+
+        /// <summary>
+        /// Returns the string passed in, fully in lowercase.
+        /// </summary>
+        private ILocValue FuncToLower(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            if (!String.IsNullOrEmpty(input))
+                return new LocValueString(input.ToString().ToLower());
             else return new LocValueString("");
         }
 
@@ -338,6 +365,14 @@ namespace Robust.Shared.Localization
             }
 
             return new LocValueString("false");
+        }
+
+        /// <summary>
+        /// Returns the entity if proper, returns the indefinitive article plus the entity otherwise.
+        /// </summary>
+        private ILocValue FuncDefiniteIfProper(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-definite-if-proper", ("ent", args.Args[0])));
         }
 
 

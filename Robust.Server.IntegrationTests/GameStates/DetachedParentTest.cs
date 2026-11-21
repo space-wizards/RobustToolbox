@@ -26,7 +26,6 @@ public sealed class DetachedParentTest : RobustIntegrationTest
 
         var mapSys = server.System<SharedMapSystem>();
         var xformSys = server.System<SharedTransformSystem>();
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -67,20 +66,20 @@ public sealed class DetachedParentTest : RobustIntegrationTest
             // I made a mistake earlier in this test where I used a server-side uid on the client
             for (var i = 0; i < 10; i++)
             {
-                server.EntMan.DeleteEntity(server.EntMan.SpawnEntity(null, MapCoordinates.Nullspace));
+                server.EntMan.DeleteEntity(server.EntMan.Spawn());
             }
 
             map = mapSys.CreateMap(out mapId);
 
-            var gridEnt = mapMan.CreateGridEntity(mapId);
+            var gridEnt = mapSys.CreateGridEntity(mapId);
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             gridCoords = new EntityCoordinates(gridEnt, .5f, .5f);
             mapCoords = new EntityCoordinates(map, 200, 200);
             grid = gridEnt.Owner;
 
-            parent = sEntMan.SpawnEntity(null, gridCoords);
-            player = sEntMan.SpawnEntity(null, gridCoords);
-            child = sEntMan.SpawnEntity(null, mapCoords);
+            parent = sEntMan.SpawnAttachedTo(null, gridCoords);
+            player = sEntMan.SpawnAttachedTo(null, gridCoords);
+            child = sEntMan.SpawnAttachedTo(null, mapCoords);
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();
@@ -224,7 +223,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
 
         // Create a new parent entity
         EntityUid parent2 = default;
-        await server.WaitPost(() => parent2 = sEntMan.SpawnEntity(null, gridCoords));
+        await server.WaitPost(() => parent2 = sEntMan.SpawnAttachedTo(null, gridCoords));
 
         await RunTicksSync(server, client, 10);
 
@@ -268,11 +267,11 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             map2 = mapSys.CreateMap(out mapId2);
-            var gridEnt = mapMan.CreateGridEntity(mapId2);
+            var gridEnt = mapSys.CreateGridEntity(mapId2);
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             var grid2Coords = new EntityCoordinates(gridEnt, .5f, .5f);
             grid2 = gridEnt.Owner;
-            parent3 = sEntMan.SpawnEntity(null, grid2Coords);
+            parent3 = sEntMan.SpawnAttachedTo(null, grid2Coords);
         });
 
         await RunTicksSync(server, client, 10);
@@ -341,11 +340,11 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             map3 = mapSys.CreateMap(out mapId3);
-            var gridEnt = mapMan.CreateGridEntity(mapId3);
+            var gridEnt = mapSys.CreateGridEntity(mapId3);
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             var grid3Coords = new EntityCoordinates(gridEnt, .5f, .5f);
             grid3 = gridEnt.Owner;
-            parent4 = sEntMan.SpawnEntity(null, grid3Coords);
+            parent4 = sEntMan.SpawnAttachedTo(null, grid3Coords);
 
             var parent4Coords = new EntityCoordinates(parent4, Vector2.Zero);
 

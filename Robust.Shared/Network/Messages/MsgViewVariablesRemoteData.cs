@@ -32,6 +32,7 @@ namespace Robust.Shared.Network.Messages
         {
             RequestId = buffer.ReadUInt32();
             var length = buffer.ReadInt32();
+            buffer.AssertAtLeastSize(length);
             using var stream = RobustMemoryManager.GetMemoryStream(length);
             buffer.ReadAlignedMemory(stream, length);
             Blob = serializer.Deserialize<ViewVariablesBlob>(stream);

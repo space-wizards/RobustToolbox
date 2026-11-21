@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Robust.Shared.IoC;
@@ -122,5 +123,29 @@ namespace Robust.Shared.Reflection
         IEnumerable<Type> FindAllTypes();
 
         void Initialize();
+
+        /// <summary>
+        /// Returns whether the given <see cref="type"/> has at least one attribute
+        /// of type <see cref="attribute"/>.
+        /// This includes inherited attributes if the specified attribute type
+        /// is marked as being inherited using <see cref="AttributeUsageAttribute"/>.
+        /// </summary>
+        /// <param name="type">The type to check for attributes on.</param>
+        /// <param name="attribute">The type of attribute to look for.</param>
+        /// <returns></returns>
+        bool IsAttributeDefined(Type type, Type attribute);
+
+        /// <summary>
+        /// Returns all types discoverable by <see cref="IReflectionManager"/>
+        /// which have at least one attribute of type <see cref="T"/>.
+        /// This includes inherited attributes if the specified attribute type
+        /// is marked as being inherited using <see cref="AttributeUsageAttribute"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the attribute.</typeparam>
+        /// <returns>
+        /// Returns a set of the types with the given attribute.
+        /// Includes inherited attributes if the attribute type is inherited.
+        /// </returns>
+        ImmutableHashSet<Type> FindTypesWithAttributeSet<T>();
     }
 }

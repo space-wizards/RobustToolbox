@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
@@ -28,6 +29,28 @@ public sealed class CommandImplementationAttribute :  Attribute
     {
         SubCommand = subCommand;
     }
+}
+
+/// <summary>
+///     Provides a default description for this function in a <see cref="ToolshedCommand"/>.
+///     If localized, the localized string will take priority over the one in this attribute.
+///     To localize it, use command-description-yourcommandname in an .ftl file.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class CommandDescriptionAttribute(string description) : Attribute
+{
+    public readonly string Description = description;
+}
+
+/// <summary>
+///     Provides a default help string for this function in a <see cref="ToolshedCommand"/>.
+///     If localized, the localized string will take priority over the one in this attribute.
+///     To localize it, use command-help-yourcommandname in an .ftl file.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class CommandHelpAttribute(string help) : Attribute
+{
+    public readonly string Help = help;
 }
 
 /// <summary>
@@ -93,3 +116,13 @@ public sealed class CommandInvocationContextAttribute : Attribute;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class TakesPipedTypeAsGenericAttribute : Attribute;
+
+/// <summary>
+/// Sets the min/max length for a <see cref="List{T}"/> in a bit cleaner of a way than the existing attributes for doing so.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+public sealed class ListLengthAttribute : Attribute
+{
+    public int MinLength { get; init; }
+    public int MaxLength { get; init; } = -1; // -1 = no max length
+}

@@ -58,7 +58,7 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
         {
             var map = server.System<SharedMapSystem>().CreateMap();
             coords = new(map, default);
-            var playerUid = sEntMan.SpawnEntity(null, coords);
+            var playerUid = sEntMan.SpawnAttachedTo(null, coords);
             player = sEntMan.GetNetEntity(playerUid);
             server.PlayerMan.SetAttachedEntity(session, playerUid);
         });

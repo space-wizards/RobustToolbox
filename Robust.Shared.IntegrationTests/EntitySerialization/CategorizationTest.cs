@@ -35,7 +35,6 @@ internal sealed partial class CategorizationTest : RobustIntegrationTest
         var meta = server.System<MetaDataSystem>();
         var mapSys = server.System<SharedMapSystem>();
         var loader = server.System<MapLoaderSystem>();
-        var mapMan = server.ResolveDependency<IMapManager>();
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var path = new ResPath($"{nameof(TestCategorization)}.yml");
 
@@ -56,17 +55,17 @@ internal sealed partial class CategorizationTest : RobustIntegrationTest
         {
             mapA = mapSys.CreateMap(out var mapIdA);
             mapB = mapSys.CreateMap(out var mapIdB);
-            var gridEntA = mapMan.CreateGridEntity(mapIdA);
-            var gridEntB = mapMan.CreateGridEntity(mapIdB);
+            var gridEntA = mapSys.CreateGridEntity(mapIdA);
+            var gridEntB = mapSys.CreateGridEntity(mapIdB);
             mapSys.SetTile(gridEntA, Vector2i.Zero, new Tile(tDef.TileId));
             mapSys.SetTile(gridEntB, Vector2i.Zero, new Tile(tDef.TileId));
             gridA = gridEntA.Owner;
             gridB = gridEntB.Owner;
-            entA = entMan.SpawnEntity(null, new EntityCoordinates(gridA, 0.5f, 0.5f));
-            entB = entMan.SpawnEntity(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
-            entC = entMan.SpawnEntity(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
-            child = entMan.SpawnEntity(null, new EntityCoordinates(entB, 0.5f, 0.5f));
-            @null = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            entA = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridA, 0.5f, 0.5f));
+            entB = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
+            entC = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
+            child = entMan.SpawnAttachedTo(null, new EntityCoordinates(entB, 0.5f, 0.5f));
+            @null = entMan.Spawn();
         });
 
         FileCategory Save(params EntityUid[] ents)

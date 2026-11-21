@@ -23,6 +23,15 @@ namespace Robust.Client.Graphics
         Vector2 ContentScale { get; }
 
         /// <summary>
+        /// Enables or disables relative mouse mode for this window.
+        /// </summary>
+        /// <remarks>
+        /// While enabled, the cursor is hidden and confined to the window, and mouse motion continues to be reported
+        /// when the cursor would otherwise reach the edge of the window.
+        /// </remarks>
+        void SetRelativeMouseMode(bool enabled);
+
+        /// <summary>
         ///     If set to true, the user closing the window will also <see cref="IDisposable.Dispose"/> it.
         /// </summary>
         bool DisposeOnClose { get; set; }
@@ -69,6 +78,16 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <seealso cref="TextInputStart"/>
         void TextInputStop();
+
+        /// <summary>
+        /// Tell the OS to maximize this window.
+        /// </summary>
+        /// <remarks>
+        /// This is not guaranteed to be respected, either by RT or by the OS.
+        /// This operation may be asynchronous, so the method can return before the window is maximized, if it is
+        /// maximized at all.
+        /// </remarks>
+        void Maximize();
     }
 
     internal enum WindowProgressState : byte

@@ -7,17 +7,16 @@ using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
-    // This method will soon(TM) be marked as obsolete.
+    [Obsolete($"Call {nameof(SpawnAttachedTo)} directly or switch to {nameof(SpawnAtPosition)}.")]
     public EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => SpawnAttachedTo(protoName, coordinates, overrides);
 
-    // This method will soon(TM) be marked as obsolete.
+    [Obsolete($"Call {nameof(Spawn)} directly.")]
     public EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         => Spawn(protoName, coordinates, overrides);
 
@@ -125,7 +124,11 @@ public partial class EntityManager
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => Spawn(protoName, _xforms.ToMapCoordinates(coordinates), overrides);
+        => SpawnAtPosition(protoName, coordinates, _xforms.GetWorldRotation(coordinates.EntityId), overrides);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, Angle rotation, ComponentRegistry? overrides = null)
+        => Spawn(protoName, _xforms.ToMapCoordinates(coordinates), overrides, rotation: rotation);
 
     public bool TrySpawnNextTo(
         string? protoName,
@@ -252,6 +255,11 @@ public partial class EntityManager
     public virtual EntityUid PredictedSpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
     {
         return SpawnAtPosition(protoName, coordinates, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnAtPosition(string? protoName, EntityCoordinates coordinates, Angle rotation, ComponentRegistry? overrides = null)
+    {
+        return SpawnAtPosition(protoName, coordinates, rotation, overrides);
     }
 
     public virtual bool PredictedTrySpawnNextTo(

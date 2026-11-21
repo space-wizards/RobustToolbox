@@ -19,11 +19,11 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
         "Unreachable AfterAutoHandleState subscription",
         "Tried to subscribe to AfterAutoHandleStateEvent for '{0}' which doesn't have an "
         + "AutoGenerateComponentState attribute",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         // Does this even show up anywhere in Rider? >:(
-        "You must mark your component with '[AutoGenerateComponentState(true)]' to subscribe to this event."
+        "You must mark your component with '[AutoGenerateComponentState(raiseAfterAutoHandleState: true)]' to subscribe to this event."
     );
 
     public static readonly DiagnosticDescriptor MissingAttributeParam = new(
@@ -31,7 +31,7 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
         "Unreachable AfterAutoHandleState subscription",
         "Tried to subscribe to AfterAutoHandleStateEvent for '{0}' which doesn't have "
         + "raiseAfterAutoHandleState set",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "The AutoGenerateComponentState attribute must be passed 'true' in order to subscribe to this event."

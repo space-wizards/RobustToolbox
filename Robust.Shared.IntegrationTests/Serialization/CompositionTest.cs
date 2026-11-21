@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 
 namespace Robust.UnitTesting.Shared.Serialization;
 
@@ -18,6 +19,8 @@ internal sealed partial class CompositionTest : OurSerializationTest
         public int NeverPushValueParent1;
         [DataField("f5"), NeverPushInheritance]
         public int NeverPushValueParent2;
+        [DataField("f6"), AlwaysPushInheritance]
+        public List<int> AlwaysPushValues = [];
     }
 
     [Test]
@@ -38,6 +41,11 @@ internal sealed partial class CompositionTest : OurSerializationTest
             { "f5", "1" }
         };
 
+        var childValues = new SequenceDataNode("1");
+        var parentValues = new SequenceDataNode("2");
+        child.Add("f6", childValues);
+        parent1.Add("f6", parentValues);
+
         var finalMapping = Serialization.PushComposition<CompositionTestClass, MappingDataNode>(new[] { parent1, parent2 }, child);
         var val = Serialization.Read<CompositionTestClass>(finalMapping, notNullableOverride: true);
 
@@ -46,5 +54,13 @@ internal sealed partial class CompositionTest : OurSerializationTest
         Assert.That(val.Parent2Value, Is.EqualTo(1));
         Assert.That(val.NeverPushValueParent1, Is.EqualTo(0));
         Assert.That(val.NeverPushValueParent2, Is.EqualTo(0));
+        Assert.That(val.AlwaysPushValues, Is.EqualTo(new[] { 1, 2 }));
+
+        // Composition must not clone immutable source subtrees just to replace top-level fields.
+        Assert.That(finalMapping["f1"], Is.SameAs(child["f1"]));
+        var finalValues = finalMapping.Get<SequenceDataNode>("f6");
+        Assert.That(finalValues[0], Is.SameAs(childValues[0]));
+        Assert.That(finalValues[1], Is.SameAs(parentValues[0]));
     }
+
 }

@@ -19,18 +19,30 @@ public sealed class MsgStateLeavePvs : NetMessage
 {
     public override MsgGroups MsgGroup => MsgGroups.Entity;
 
-    public List<NetEntity> Entities;
+    public List<NetEntity> Entities = new();
+    public List<NetEntity> ChunkEntities = new();
     public GameTick Tick;
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
         Tick = buffer.ReadGameTick();
         var length = buffer.ReadInt32();
+
+        buffer.AssertAtLeastSize(length * NetMessageExt.SizeOfNetEntity);
         Entities = new(length);
 
         for (int i = 0; i < length; i++)
         {
             Entities.Add(buffer.ReadNetEntity());
+        }
+
+        length = buffer.ReadInt32();
+        buffer.AssertAtLeastSize(length * NetMessageExt.SizeOfNetEntity);
+        ChunkEntities = new(length);
+
+        for (int i = 0; i < length; i++)
+        {
+            ChunkEntities.Add(buffer.ReadNetEntity());
         }
     }
 
@@ -39,6 +51,12 @@ public sealed class MsgStateLeavePvs : NetMessage
         buffer.Write(Tick);
         buffer.Write(Entities.Count);
         foreach (var ent in Entities)
+        {
+            buffer.Write(ent);
+        }
+
+        buffer.Write(ChunkEntities.Count);
+        foreach (var ent in ChunkEntities)
         {
             buffer.Write(ent);
         }

@@ -1,5 +1,7 @@
 # Legal Info
 
+(Make sure this and other LICENSE files are properly copied into `/Resources/EngineLicenses`)
+
 ## Copyright
 
 The Authors retain all copyright to their respective work here submitted.

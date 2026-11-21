@@ -19,12 +19,13 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
                 .NewSimulation()
                 .InitializeInstance();
 
-            var mapId = sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap();
-            var mapManager = sim.Resolve<IMapManager>();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSys = entMan.System<SharedMapSystem>();
+            var mapId = mapSys.CreateMap();
 
             // Adds two grids to use in tests.
-            var gridA = mapManager.CreateGridEntity(mapId);
-            var gridB = mapManager.CreateGridEntity(mapId);
+            var gridA = mapSys.CreateGridEntity(mapId);
+            var gridB = mapSys.CreateGridEntity(mapId);
 
             return (sim, gridA, gridB);
         }
@@ -43,8 +44,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
 
             // Arrange
             var initialPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
-            var parent = entMan.SpawnEntity(null, initialPos);
-            var child = entMan.SpawnEntity(null, initialPos);
+            var parent = entMan.SpawnAttachedTo(null, initialPos);
+            var child = entMan.SpawnAttachedTo(null, initialPos);
             var parentTrans = entMan.GetComponent<TransformComponent>(parent);
             var childTrans = entMan.GetComponent<TransformComponent>(child);
             ComponentHandleState handleState;
@@ -86,9 +87,9 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
 
             // Arrange
             var initalPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
-            var node1 = entMan.SpawnEntity(null, initalPos);
-            var node2 = entMan.SpawnEntity(null, initalPos);
-            var node3 = entMan.SpawnEntity(null, initalPos);
+            var node1 = entMan.SpawnAttachedTo(null, initalPos);
+            var node2 = entMan.SpawnAttachedTo(null, initalPos);
+            var node3 = entMan.SpawnAttachedTo(null, initalPos);
 
             metaSystem.SetEntityName(node1, "node1_dummy");
             metaSystem.SetEntityName(node2, "node2_dummy");

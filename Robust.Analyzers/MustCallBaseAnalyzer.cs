@@ -21,7 +21,7 @@ public sealed class MustCallBaseAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdMustCallBase,
         "No base call in overriden function",
         "Overriders of this function must always call the base function",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
@@ -31,16 +31,21 @@ public sealed class MustCallBaseAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.Method);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var attrSymbol = compilationContext.Compilation.GetTypeByMetadataName(Attribute);
+            if (attrSymbol is null)
+                return;
+
+            compilationContext.RegisterSymbolAction(
+                symbolContext => AnalyzeSymbol(symbolContext, attrSymbol),
+                SymbolKind.Method);
+        });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol attrSymbol)
     {
         if (context.Symbol is not IMethodSymbol { IsOverride: true } method)
-            return;
-
-        var attrSymbol = context.Compilation.GetTypeByMetadataName(Attribute);
-        if (attrSymbol == null)
             return;
 
         if (DoesMethodOverriderHaveAttribute(method, attrSymbol) is not { } data)

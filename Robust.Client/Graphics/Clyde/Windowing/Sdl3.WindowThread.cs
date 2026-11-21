@@ -105,6 +105,10 @@ internal partial class Clyde
                     WinThreadWinSetVisible(cmd);
                     break;
 
+                case CmdWinSetRelativeMouseMode cmd:
+                    WinThreadWinSetRelativeMouseMode(cmd);
+                    break;
+
                 case CmdCursorCreate cmd:
                     WinThreadCursorCreate(cmd);
                     break;
@@ -123,6 +127,10 @@ internal partial class Clyde
 
                 case CmdWinSetWindowed cmd:
                     WinThreadWinSetWindowed(cmd);
+                    break;
+
+                case CmdWinMaximize cmd:
+                    WinThreadWinMaximize(cmd);
                     break;
 
                 case CmdTextInputSetRect cmd:
@@ -285,6 +293,12 @@ internal partial class Clyde
             public bool Visible;
         }
 
+        private sealed class CmdWinSetRelativeMouseMode : CmdBase
+        {
+            public nint Window;
+            public bool Enabled;
+        }
+
         private sealed class CmdWinSetTitle : CmdBase
         {
             public nint Window;
@@ -321,6 +335,11 @@ internal partial class Clyde
             public int Height;
             public int PosX;
             public int PosY;
+        }
+
+        private sealed class CmdWinMaximize : CmdBase
+        {
+            public nint Window;
         }
 
         // IME

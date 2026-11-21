@@ -45,9 +45,9 @@ internal sealed partial class ReplayRecordingManager : SharedReplayRecordingMana
             return;
         }
 
-        _pvs.ComputeSessionState(_pvsSession);
-        Update(_pvsSession.State);
-        _pvsSession.ClearState();
+        var state = _pvs.ComputeSessionState(_pvsSession);
+        Update(state);
+        _pvs.ClearSessionState(_pvsSession);
         _pvsSession.LastReceivedAck = Timing.CurTick;
     }
 
@@ -55,6 +55,6 @@ internal sealed partial class ReplayRecordingManager : SharedReplayRecordingMana
     {
         base.Reset();
         _pvsSession.LastReceivedAck = GameTick.Zero;
-        _pvsSession.ClearState();
+        _pvs.ClearSessionState(_pvsSession);
     }
 }

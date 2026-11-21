@@ -16,13 +16,13 @@ public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     public override void Initialize()
     {
         base.Initialize();
-        ProtoManager.PrototypesReloaded += OnProtoReload;
+        ProtoMan.PrototypesReloaded += OnProtoReload;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        ProtoManager.PrototypesReloaded -= OnProtoReload;
+        ProtoMan.PrototypesReloaded -= OnProtoReload;
     }
 
     /// <inheritdoc />

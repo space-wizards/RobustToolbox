@@ -19,7 +19,6 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         await using var pair = await StartConnectedPair();
         var (client, server) = pair;
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -63,13 +62,13 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             mapCoords = new(map1, default);
 
             map2 = server.System<SharedMapSystem>().CreateMap();
-            var gridComp = mapMan.CreateGridEntity(map2);
+            var gridComp = mapSys.CreateGridEntity(map2);
             grid = gridComp.Owner;
             mapSys.SetTile(grid, gridComp, Vector2i.Zero, new Tile(1));
             var gridCoords = new EntityCoordinates(grid, .5f, .5f);
 
-            player = sEntMan.SpawnEntity(null, mapCoords);
-            entity = sEntMan.SpawnEntity(null, gridCoords);
+            player = sEntMan.SpawnAttachedTo(null, mapCoords);
+            entity = sEntMan.SpawnAttachedTo(null, gridCoords);
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();

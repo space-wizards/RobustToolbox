@@ -22,7 +22,6 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         await using var pair = await StartConnectedPair();
         var (client, server) = pair;
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -42,7 +41,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             map = server.System<SharedMapSystem>().CreateMap(out var mapId);
-            var gridComp = mapMan.CreateGridEntity(mapId);
+            var gridComp = maps.CreateGridEntity(mapId);
             maps.SetTile(gridComp, Vector2i.Zero, new Tile(1));
             grid = gridComp.Owner;
         });
@@ -55,12 +54,12 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         var mapCoords = new EntityCoordinates(map, new Vector2(2, 2));
         await server.WaitPost(() =>
         {
-            player = sEntMan.SpawnEntity(null, gridCoords);
-            other = sEntMan.SpawnEntity(null, gridCoords);
+            player = sEntMan.SpawnAttachedTo(null, gridCoords);
+            other = sEntMan.SpawnAttachedTo(null, gridCoords);
             otherXform = sEntMan.GetComponent<TransformComponent>(other);
 
             // Ensure map PVS chunk is not empty
-            sEntMan.SpawnEntity(null, mapCoords);
+            sEntMan.SpawnAttachedTo(null, mapCoords);
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();

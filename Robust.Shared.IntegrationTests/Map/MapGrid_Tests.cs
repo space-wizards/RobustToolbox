@@ -30,12 +30,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetTileRefCoords()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(typeId: 1, flags: 1, variant: 1));
             var result = mapSystem.GetTileRef(grid.Owner, grid.Comp, new Vector2i(-9, -1));
@@ -52,13 +51,12 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsExpansion()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var transformSystem = sim.Resolve<IEntityManager>().System<SharedTransformSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
             transformSystem.SetWorldPosition(grid, new Vector2(3, 5));
 
             mapSystem.SetTile(grid, new Vector2i(-1, -2), new Tile(1));
@@ -80,13 +78,12 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsContract()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var transformSystem = sim.Resolve<IEntityManager>().System<SharedTransformSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             transformSystem.SetWorldPosition(grid, new Vector2(3, 5));
 
@@ -108,12 +105,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void GridTileToChunkIndices()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             var result = mapSystem.GridTileToChunkIndices(grid.Comp, new Vector2i(-9, -1));
 
@@ -127,12 +123,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void ToLocalCentered()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             var result = mapSystem.GridTileToLocal(grid.Owner, grid.Comp, new Vector2i(0, 0)).Position;
 
@@ -144,12 +139,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void TryGetTileRefNoTile()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             var foundTile = mapSystem.TryGetTileRef(grid.Owner, grid.Comp, new Vector2i(-9, -1), out var tileRef)
 ;
@@ -162,12 +156,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void TryGetTileRefTileExists()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(typeId: 1, flags: 1, variant: 1));
 
@@ -183,12 +176,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void PointCollidesWithGrid()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             mapSystem.SetTile(grid, new Vector2i(19, 23), new Tile(1));
 
@@ -201,12 +193,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void PointNotCollideWithGrid()
         {
             var sim = SimulationFactory();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
             var gridOptions = new GridCreateOptions();
             gridOptions.ChunkSize = 8;
-            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            var grid = mapSystem.CreateGridEntity(mapId, gridOptions);
 
             mapSystem.SetTile(grid, new Vector2i(19, 23), new Tile(1));
 

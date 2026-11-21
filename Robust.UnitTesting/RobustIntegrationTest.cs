@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -406,7 +408,6 @@ namespace Robust.UnitTesting
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
             public INetManager NetMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
-            public IMapManager MapMan { get; private set; } = default!;
             public IConsoleHost ConsoleHost { get; private set; } = default!;
             public ISawmill Log { get; private set; } = default!;
 
@@ -418,7 +419,6 @@ namespace Robust.UnitTesting
                 PlayerMan = deps.Resolve<ISharedPlayerManager>();
                 Timing = deps.Resolve<IGameTiming>();
                 NetMan = deps.Resolve<INetManager>();
-                MapMan = deps.Resolve<IMapManager>();
                 ConsoleHost = deps.Resolve<IConsoleHost>();
                 Log = deps.Resolve<ILogManager>().GetSawmill("test");
             }
@@ -915,7 +915,21 @@ namespace Robust.UnitTesting
                 _dummySessions.Add(userId, session);
 
                 session.ConnectedTime = DateTime.UtcNow;
-                await WaitPost(() => man.SetStatus(session, SessionStatus.Connected));
+                await WaitPost(() =>
+                {
+                    var userData = new NetUserData(userId, userName)
+                    {
+                        HWId = ImmutableArray<byte>.Empty,
+                        ModernHWIds = []
+                    };
+
+                    (NetMan as IntegrationNetManager)?.OnConnecting(
+                        new IPEndPoint(IPAddress.Loopback, 1212),
+                        userData,
+                        LoginType.GuestAssigned
+                    );
+                    man.SetStatus(session, SessionStatus.Connected);
+                });
 
                 return session;
             }
@@ -1115,7 +1129,9 @@ namespace Robust.UnitTesting
                     (CVars.DiscordEnabled.Name, "false"),
 
                     // Avoid preloading textures.
-                    (CVars.ResTexturePreloadingEnabled.Name, "false"),
+                    (CVars.ResTexturePreloadingEnabled.Name, (ClientOptions?.PreloadResources == true).ToString()),
+                    (CVars.ResRsiPreloadingEnabled.Name, (ClientOptions?.PreloadResources == true).ToString()),
+                    (CVars.ResSpritePreloadingEnabled.Name, (ClientOptions?.PreloadResources == true).ToString()),
 
                     (CVars.SysGCCollectStart.Name, "false"),
 
@@ -1151,7 +1167,7 @@ namespace Robust.UnitTesting
                 /* TODO: End my suffering and fix this because entmanager hasn't started up yet.
                 for (var i = 0; i < 10; i++)
                 {
-                    EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
+                    EntMan.Spawn();
                 }
                 */
 
@@ -1290,6 +1306,11 @@ namespace Robust.UnitTesting
         [Virtual]
         public class ClientIntegrationOptions : IntegrationOptions
         {
+            /// <summary>
+            /// Opt into image and prototype sprite preloading.
+            /// </summary>
+            public bool PreloadResources { get; set; }
+
             public virtual GameControllerOptions Options { get; set; } = new()
             {
                 LoadContentResources = false,

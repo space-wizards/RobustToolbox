@@ -40,10 +40,11 @@
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Text.Json" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Tracy-CSharp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
+    <PackageReference Include="SpaceWizards.NetSerializer" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
@@ -69,6 +70,7 @@
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />
 
   <Import Project="..\MSBuild\Robust.Trimming.targets" />
 </Project>

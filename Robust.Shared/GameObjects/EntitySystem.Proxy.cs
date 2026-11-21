@@ -495,6 +495,14 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        return EntityManager.TryGetComponent(uid, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryComp(EntityUid uid, [NotNullWhen(true)] out TransformComponent? comp)
@@ -523,6 +531,20 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid.Value, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = null;
+            return false;
+        }
+
+        return EntityManager.TryGetComponent(uid.Value, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     protected bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TransformComponent? comp)
     {
@@ -545,6 +567,36 @@ public partial class EntitySystem
         }
 
         return EntityManager.MetaQuery.TryGetComponent(uid.Value, out comp);
+    }
+
+    /// <summary>
+    /// Retrieves the given entity's component of the specified type, assembled into an <see cref="Entity{T}"/>. If no
+    /// such component exists, returns null.
+    /// </summary>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
+    /// <param name="uid">The UID of the entity whose component will be retrieved.</param>
+    /// <returns>The assembled entity UID and component, if the component exists; otherwise <c>null</c>.</returns>
+    protected Entity<T>? WithCompOrNull<T>(EntityUid uid) where T : IComponent
+    {
+        return EntityManager.TryGetComponent<T>(uid, out var comp) ? new Entity<T>(uid, comp) : null;
+    }
+
+    /// <summary>
+    /// Retrieves the given entity's component of the specified type, assembled into an <see cref="Entity{T}"/>. If the
+    /// given entity already contains a component value, that is returned in the assembled return value. If the given
+    /// entity has no such component, returns null.
+    /// </summary>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
+    /// <param name="entity">
+    /// An <see cref="Entity{T}"/> containing the UID of the entity whose component will be retrieved. Note that this
+    /// MAY already contain a component value.
+    /// </param>
+    /// <returns>The assembled entity UID and component, if the component exists; otherwise <c>null</c>.</returns>
+    protected Entity<T>? WithCompOrNull<T>(Entity<T?> entity) where T : IComponent
+    {
+        return entity.Comp is { } comp || EntityManager.TryGetComponent(entity, out comp)
+            ? new Entity<T>(entity, comp)
+            : null;
     }
 
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
@@ -866,6 +918,14 @@ public partial class EntitySystem
         EntityManager.DeleteEntity(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid, MetaDataComponent, TransformComponent)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.DeleteEntity))]
+    protected void Del(EntityUid uid, MetaDataComponent meta)
+    {
+        EntityManager.DeleteEntity(uid, meta);
+    }
+
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.QueueDeleteEntity))]
@@ -876,66 +936,66 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedDeleteEntity))]
+    [Obsolete("Use Del")]
     protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
-        EntityManager.PredictedDeleteEntity(ent);
+        EntityManager.DeleteEntity(ent.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedDeleteEntity))]
+    [Obsolete("Use Del")]
     protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
-        EntityManager.PredictedDeleteEntity(ent);
+        EntityManager.DeleteEntity(ent?.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?> ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?>? ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent?.Owner);
     }
 
-    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(EntityUid uid)
     {
-        EntityManager.PredictedQueueDeleteEntity(uid);
+        EntityManager.QueueDeleteEntity(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(EntityUid? uid)
     {
-        EntityManager.PredictedQueueDeleteEntity(uid);
+        EntityManager.QueueDeleteEntity(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("use variant without TransformComponent")]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("use variant without TransformComponent")]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent?.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
@@ -950,7 +1010,7 @@ public partial class EntitySystem
 
     #region Entity Spawning
 
-    // This method will be obsoleted soon(TM).
+    [Obsolete($"Call {nameof(SpawnAttachedTo)} directly or switch to {nameof(SpawnAtPosition)}.")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.SpawnEntity))]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
@@ -1051,11 +1111,29 @@ public partial class EntitySystem
     protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
+    /// <inheritdoc cref="EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected EntityUid PredictedSpawn(string? prototype = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+        => EntityManager.PredictedSpawn(prototype, overrides, doMapInit);
+
+    /// <inheritdoc cref="EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected EntityUid PredictedSpawn(string? prototype, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
+        => EntityManager.PredictedSpawn(prototype, coordinates, overrides, rotation);
+
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, overrides);
+
+    /// <inheritdoc cref="EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, Angle rotation, ComponentRegistry? overrides = null)
+        => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, rotation, overrides);
 
     /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1108,6 +1186,21 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.PredictedSpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
+    }
+
+    /// <inheritdoc cref="EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? container = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnInContainerOrDrop(protoName, containerUid, containerId, out inserted, xform, container, overrides);
     }
 
     #endregion

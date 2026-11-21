@@ -16,7 +16,7 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdValidateMember,
         "Invalid member name",
         "{0} is not a member of {1}",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Be sure the type and member name are correct.");
@@ -26,7 +26,7 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
     public override void Initialize(AnalysisContext context)
     {
         context.EnableConcurrentExecution();
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.RegisterOperationAction(AnalyzeOperation, OperationKind.Invocation);
     }
 

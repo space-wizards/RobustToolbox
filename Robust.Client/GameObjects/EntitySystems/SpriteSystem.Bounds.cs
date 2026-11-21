@@ -32,7 +32,7 @@ public sealed partial class SpriteSystem
                 bounds = bounds.Union(GetLocalBounds(layer));
         }
 
-        sprite.Comp._bounds = bounds.Scale(sprite.Comp.Scale);
+        sprite.Comp._bounds = bounds.Scale(Vector2.Abs(sprite.Comp.Scale));
         sprite.Comp.BoundsDirty = false;
         return sprite.Comp._bounds;
     }
@@ -68,7 +68,7 @@ public sealed partial class SpriteSystem
         if (layer._rotation != 0)
         {
             size = new Vector2(longestRotatedSide, longestRotatedSide);
-            return Box2.CenteredAround(layer.Offset, size * layer._scale);
+            return Box2.CenteredAround(layer.Offset, size * Vector2.Abs(layer._scale));
         }
 
         var snapToCardinals = sprite.SnapCardinals;
@@ -84,7 +84,7 @@ public sealed partial class SpriteSystem
 
             // We won't know the actual direction it snaps to, so we ahve to assume the box is given by the longest side.
             size = new Vector2(longestSide, longestSide);
-            return Box2.CenteredAround(layer.Offset, size * layer._scale);
+            return Box2.CenteredAround(layer.Offset, size * Vector2.Abs(layer._scale));
         }
 
         // Build the bounding box based on how many directions the sprite has
@@ -95,7 +95,7 @@ public sealed partial class SpriteSystem
             _ => textureSize
         };
 
-        return Box2.CenteredAround(layer.Offset, size * layer._scale);
+        return Box2.CenteredAround(layer.Offset, size * Vector2.Abs(layer._scale));
     }
 
     /// <summary>

@@ -2115,7 +2115,7 @@ public partial class EntitySystem
 
     #region Entity Relations
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, Entity{EntityRelationsComponent?}?, bool)"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, Entity{EntityRelationsComponent?}?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, Entity<EntityRelationsComponent?>? entity)
@@ -2123,7 +2123,7 @@ public partial class EntitySystem
         EntityManager.SetRelation(owner, ref relation, entity);
     }
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation?, Entity{EntityRelationsComponent?}?, bool)"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation?, Entity{EntityRelationsComponent?}?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, Entity<EntityRelationsComponent?>? entity)

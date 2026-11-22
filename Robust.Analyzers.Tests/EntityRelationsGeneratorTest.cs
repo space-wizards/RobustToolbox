@@ -308,20 +308,23 @@ public sealed class EntityRelationsGeneratorTest
 
                 private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
                 {
+                    var toRemove0 = new List<int>();
                     foreach (var (key, value) in ent.Comp.Foo)
                     {
                         if (value == args.Relation)
-                            ent.Comp.Foo[key] = EntityRelation.Null;
+                            toRemove0.Add(key);
+                    }
+
+                    foreach (var key in toRemove0)
+                    {
+                        ent.Comp.Foo.Remove(key);
                     }
 
                 }
 
                 private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
                 {
-                    foreach (var key in ent.Comp.Foo.Keys)
-                    {
-                        ent.Comp.Foo[key] = EntityRelation.Null;
-                    }
+                    ent.Comp.Foo.Clear();
 
                 }
 

@@ -221,9 +221,10 @@ public partial interface IEntityManager
 
     /// <summary>
     /// Removes a list of relations from an entity with <see cref="EntityRelationsComponent"/>.
-    /// The list is cleared after the call.
+    /// If <paramref name="remove"/> is true, clears the list;
+    /// otherwise sets all relation values to <see cref="EntityRelation.Null"/> and keeps the element count.
     /// </summary>
-    public void ClearRelations(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations);
+    public void ClearRelations(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations, bool remove = true);
 
     /// <summary>
     /// Removes a set of relations from an entity with <see cref="EntityRelationsComponent"/>.
@@ -233,15 +234,16 @@ public partial interface IEntityManager
 
     /// <summary>
     /// Removes all dictionary keys of relations from an entity with <see cref="EntityRelationsComponent"/>.
-    /// The dictionary is cleared after the call.
+    /// The dictionary is always cleared after the call.
     /// </summary>
     public void ClearRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations);
 
     /// <summary>
     /// Removes all dictionary values relations from an entity with <see cref="EntityRelationsComponent"/>.
-    /// All values are set to null after the call.
+    /// If <paramref name="removeKeys"/> is true, clears the dictionary;
+    /// otherwise sets all relation values to <see cref="EntityRelation.Null"/>.
     /// </summary>
-    public void ClearRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull;
+    public void ClearRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations, bool removeKeys = true) where T : notnull;
 
     /// <summary>
     /// Removes a list of relations from an entity with <see cref="EntityRelationsComponent"/>.

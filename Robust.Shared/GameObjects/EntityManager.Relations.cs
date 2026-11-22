@@ -534,12 +534,22 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void ClearRelations(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
+    public void ClearRelations(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations, bool remove = true)
     {
         ClearRelationsInternal(ent, relations);
         RemoveRelationCompIfEmpty(ref ent);
         RemoveRelationCompsIfEmpty(relations);
-        relations.Clear();
+        if (remove)
+            relations.Clear();
+        else
+        {
+            var count = relations.Count;
+            relations.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                relations.Add(EntityRelation.Null);
+            }
+        }
         DirtyRelations(ent);
     }
 
@@ -598,14 +608,21 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void ClearRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull
+    public void ClearRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations, bool removeKeys = true) where T : notnull
     {
         ClearRelationsInternal(ent, relations);
         RemoveRelationCompIfEmpty(ref ent);
         RemoveRelationCompsIfEmpty(relations);
-        foreach (var relation in relations.Keys)
+        if (removeKeys)
         {
-            relations[relation] = EntityRelation.Null;
+            relations.Clear();
+        }
+        else
+        {
+            foreach (var relation in relations.Keys)
+            {
+                relations[relation] = EntityRelation.Null;
+            }
         }
     }
 

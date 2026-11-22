@@ -154,7 +154,10 @@ public partial class EntityManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityRelation EnsureEntityRelation<T>(NetEntity? nEntity, EntityUid callerEntity)
     {
-        if (nEntity == null)
+        // Invalid NetEntities get converted to null relations for safety.
+        if (nEntity == null
+            || nEntity == NetEntity.Invalid
+            || !NetEntityLookup.ContainsKey(nEntity.Value))
             return EntityRelation.Null;
 
         return new EntityRelation(EnsureEntity<T>(nEntity.Value, callerEntity));
@@ -444,7 +447,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TValue>(
+        Dictionary<NetEntity, TValue> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, TValue> entities)
     {
         entities.Clear();
@@ -455,7 +460,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionaryNullableValue<TComp, TValue>(
+        Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, TValue?> entities)
     {
         entities.Clear();
@@ -466,7 +473,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity> netEntities,
+        EntityUid callerEntity,
         Dictionary<TKey, EntityUid> entities) where TKey : notnull
     {
         entities.Clear();
@@ -477,7 +486,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity?> netEntities,
+        EntityUid callerEntity,
         Dictionary<TKey, EntityUid?> entities) where TKey : notnull
     {
         entities.Clear();
@@ -488,7 +499,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TValue>(
+        Dictionary<NetEntity, TValue> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityRelation, TValue> entities)
     {
         entities.Clear();
@@ -499,7 +512,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionaryNullableValue<TComp, TValue>(
+        Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityRelation, TValue?> entities)
     {
         entities.Clear();
@@ -510,7 +525,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity?> netEntities,
+        EntityUid callerEntity,
         Dictionary<TKey, EntityRelation> entities) where TKey : notnull
     {
         entities.Clear();
@@ -521,7 +538,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity?> netEntities,
+        EntityUid callerEntity,
         Dictionary<TKey, EntityRelation?> entities) where TKey : notnull
     {
         entities.Clear();
@@ -532,7 +551,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp>(
+        Dictionary<NetEntity, NetEntity> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, EntityUid> entities)
     {
         entities.Clear();
@@ -543,7 +564,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp>(
+        Dictionary<NetEntity, NetEntity?> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, EntityUid?> entities)
     {
         entities.Clear();

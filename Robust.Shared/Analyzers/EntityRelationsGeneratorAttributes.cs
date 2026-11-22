@@ -40,4 +40,33 @@ public sealed class AutoGenerateEntityRelationsAttribute(bool dirty = false) : A
 /// <see cref="EntityRelationDeleteEvent"/>, <see cref="ComponentShutdown"/> and <see cref="EntityRelationShutdownEvent"/>.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public sealed class AutoRelationFieldAttribute : Attribute;
+public sealed class AutoRelationFieldAttribute(
+    EntityRelationCollectionOptions options = EntityRelationCollectionOptions.RemoveRelation)
+    : Attribute
+{
+    /// <summary>
+    /// Options that define how to handle collection relations in this field.
+    /// </summary>
+    public readonly EntityRelationCollectionOptions Options = options;
+}
+
+/// <summary>
+/// Options for <see cref="AutoRelationFieldAttribute"/>
+/// that define how collection relations will be handled.
+/// </summary>
+public enum EntityRelationCollectionOptions : byte
+{
+    /// <summary>
+    /// Fully removes the entry from the collection,
+    /// including the additional data in dictionaries.
+    /// </summary>
+    RemoveRelation = 0,
+
+    /// <summary>
+    /// Sets the entry to <see cref="EntityRelation.Null"/>,
+    /// but doesn't remove it from the collection. Works only on
+    /// <see cref="List{T}"/>s and <see cref="Dictionary{TKey,TValue}"/>
+    /// with EntityRelation as a value.
+    /// </summary>
+    NullRelation = 1,
+}

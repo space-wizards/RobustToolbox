@@ -58,7 +58,10 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                  nullable = false,
                  dictionaryKey = false,
                  dictionaryValue = false,
-                 collection = false;
+                 list = false,
+                 set = false;
+
+            ITypeSymbol? dictSymbol = null;
 
             if (namedType.Name != "EntityRelation")
             {
@@ -70,30 +73,37 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                     case { Name: "Dictionary", TypeArguments: [{ Name: "EntityRelation" }, not null] }:
                         dictionaryKey = true;
                         break;
-                    case { Name: "Dictionary", TypeArguments: [not null, { Name: "EntityRelation" }] }:
+                    case { Name: "Dictionary", TypeArguments: [not null , { Name: "EntityRelation" }] }:
+                        dictSymbol = namedType.TypeArguments[0];
                         dictionaryValue = true;
                         break;
-                    default:
-                    {
-                        if (namedType.Name == "List" || namedType.Name == "HashSet" && namedType is { TypeArguments: [{ Name: "EntityRelation" }] })
-                        {
-                            collection = true;
-                        }
-                        else
-                        {
-                            invalid = true;
-                        }
-
+                    case { Name: "List", TypeArguments: [{ Name: "EntityRelation" }]}:
+                        list = true;
                         break;
-                    }
+                    case { Name: "HashSet", TypeArguments: [{ Name: "EntityRelation" }]}:
+                        set = true;
+                        break;
+                    default:
+                        invalid = true;
+                        break;
                 }
+            }
+
+            byte collectionOption = 0;
+            foreach (var attributeData in member.GetAttributes())
+            {
+                if (attributeData.AttributeClass?.ToString() != AutoRelationFieldAttributeName)
+                    continue;
+
+                if (attributeData.ConstructorArguments[0].Value is byte collectionOptionByte)
+                    collectionOption = collectionOptionByte;
             }
 
             // If any relation field has [AutoNetworkedField], automatically mark it to dirty on reference reset.
             if (AttributeHelper.HasAttribute(member, AutoNetworkFieldAttributeName, out var _))
                 dirty = true;
 
-            fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, dictionaryKey, dictionaryValue, collection));
+            fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, dictionaryKey, dictionaryValue, list, set, collectionOption, dictSymbol));
         }
 
         return new ComponentInfo(partialTypeInfo,
@@ -145,6 +155,9 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         // Properly clears all EntityRelations and fixes them in target entities
         var shutdownBuilder = new StringBuilder();
 
+        // A counter for the amount of variables initialized in the current context.
+        var counter = 0;
+
         var anyValidField = false;
         foreach (var field in info.Fields)
         {
@@ -172,27 +185,78 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
             }
             else if (field.DictionaryValue)
             {
-                relationBuilder.AppendLine($$"""
-                            foreach (var (key, value) in ent.Comp.{{field.Name}})
-                            {
-                                if (value == args.Relation)
-                                    ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
-                            }
-                    """);
+                if (field.CollectionOption == 1)
+                {
+                    relationBuilder.AppendLine($$"""
+                                foreach (var (key, value) in ent.Comp.{{field.Name}})
+                                {
+                                    if (value == args.Relation)
+                                        ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
+                                }
+                        """);
 
-                clearBuilder.AppendLine($$"""
-                            foreach (var key in ent.Comp.{{field.Name}}.Keys)
-                            {
-                                ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
-                            }
-                    """);
+                    clearBuilder.AppendLine($$"""
+                                foreach (var key in ent.Comp.{{field.Name}}.Keys)
+                                {
+                                    ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
+                                }
+                        """);
+                }
+                else
+                {
+                    // This does allocate a list every run here, but it's inevitable.
+                    // If you feel brave today, solve this by adding collection pooling. In codegen. Good luck.
+                    relationBuilder.AppendLine($$"""
+                                var toRemove{{counter.ToString()}} = new List<{{field.DictSymbol!}}>();
+                                foreach (var (key, value) in ent.Comp.{{field.Name}})
+                                {
+                                    if (value == args.Relation)
+                                        toRemove{{counter.ToString()}}.Add(key);
+                                }
+
+                                foreach (var key in toRemove{{counter.ToString()}})
+                                {
+                                    ent.Comp.{{field.Name}}.Remove(key);
+                                }
+                        """);
+
+                    counter++;
+                    clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+                }
 
                 shutdownBuilder.AppendLine($"        ClearRelations(ent.Owner, ent.Comp.{field.Name});");
             }
-            else if (field.Collection)
+            else if (field.Set)
             {
                 relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
                 clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+                shutdownBuilder.AppendLine($"        ClearRelations(ent.Owner, ent.Comp.{field.Name});");
+            }
+            else if (field.List)
+            {
+                if (field.CollectionOption == 1)
+                {
+                    relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
+                    relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Add(EntityRelation.Null);");
+
+                    clearBuilder.AppendLine($"        var count{counter.ToString()} = ent.Comp.{field.Name}.Count;");
+                    clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+                    clearBuilder.AppendLine($$"""
+                                for (var i = 0; i < count{{counter.ToString()}}; i++)
+                                {
+                                    ent.Comp.{{field.Name}}.Add(EntityRelation.Null);
+                                }
+                        """);
+
+                    counter++;
+                }
+                else
+                {
+                    relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
+
+                    clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+                }
+
                 shutdownBuilder.AppendLine($"        ClearRelations(ent.Owner, ent.Comp.{field.Name});");
             }
             else
@@ -285,6 +349,9 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         bool Invalid,
         bool DictionaryKey,
         bool DictionaryValue,
-        bool Collection
+        bool List,
+        bool Set,
+        byte CollectionOption,
+        ITypeSymbol? DictSymbol = null
     );
 }

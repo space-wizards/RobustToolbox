@@ -4,6 +4,9 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Upload;
 
+/// <summary>
+///     Sent by the client after it has applied a prototype dump.
+/// </summary>
 internal sealed class GamePrototypeLoadAckMessage : NetMessage
 {
     public override MsgGroups MsgGroup => MsgGroups.String;

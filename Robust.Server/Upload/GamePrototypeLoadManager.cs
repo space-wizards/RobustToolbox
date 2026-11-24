@@ -47,6 +47,10 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         }
     }
 
+    /// <summary>
+    ///     Sends the currently loaded prototypes to a newly connected client.
+    /// </summary>
+    /// <param name="channel">The client's network channel.</param>
     /// <returns>Whether any data was sent, and thus an ack is expected.</returns>
     internal bool SendToNewUser(INetChannel channel)
     {

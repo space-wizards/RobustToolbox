@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Robust.Server.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -19,6 +22,7 @@ internal sealed partial class UploadedContentManager
     [Dependency] private GamePrototypeLoadManager _prototypeLoadManager = default!;
     [Dependency] private NetworkResourceManager _networkResourceManager = default!;
     [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     /// <summary>
     ///     Channels that have been sent a prototype dump but have not yet acknowledged applying it.
@@ -29,11 +33,6 @@ internal sealed partial class UploadedContentManager
     ///     Live prototype uploads that arrived while a channel was receiving a prototype dump.
     /// </summary>
     private readonly Dictionary<INetChannel, List<string>> _deferredPrototypes = new();
-
-    /// <summary>
-    ///     How long to wait for a client to acknowledge a prototype dump before marking it ready anyway.
-    /// </summary>
-    private const int PrototypeAckTimeoutMs = 120000; //2 minutes
 
     private ISawmill _sawmill = default!;
 
@@ -91,7 +90,8 @@ internal sealed partial class UploadedContentManager
         // The dump transfer has started. Mark the channel as awaiting so live uploads that arrive
         // while it is in flight are deferred instead of racing it.
         _awaitingPrototypeAck.Add(channel);
-        Timer.Spawn(PrototypeAckTimeoutMs, () => OnPrototypeAckTimeout(channel));
+        var timeoutMs = GetPrototypeAckTimeoutMs();
+        Timer.Spawn(timeoutMs, () => OnPrototypeAckTimeout(channel, timeoutMs));
     }
 
     private void OnPrototypeLoaded(string data)
@@ -127,16 +127,11 @@ internal sealed partial class UploadedContentManager
             return;
         }
 
-        if (_deferredPrototypes.Remove(channel, out var deferred))
-        {
-            foreach (var prototype in deferred)
-                channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = prototype });
-        }
-
+        SendDeferredPrototypes(channel);
         _playerManager.MarkPlayerResourcesSent(channel);
     }
 
-    private void OnPrototypeAckTimeout(INetChannel channel)
+    private void OnPrototypeAckTimeout(INetChannel channel, int timeoutMs)
     {
         if (!_awaitingPrototypeAck.Remove(channel))
             return;
@@ -151,14 +146,24 @@ internal sealed partial class UploadedContentManager
         // a client that never acknowledges shouldn't be stuck in "connecting" forever.
         _sawmill.Warning(
             $"Client {channel.RemoteEndPoint} did not acknowledge the prototype dump within " +
-            $"{PrototypeAckTimeoutMs} ms; marking resources sent without confirmation.");
+            $"{timeoutMs} ms; marking resources sent without confirmation.");
 
-        if (_deferredPrototypes.Remove(channel, out var deferred))
-        {
-            foreach (var prototype in deferred)
-                channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = prototype });
-        }
-
+        SendDeferredPrototypes(channel);
         _playerManager.MarkPlayerResourcesSent(channel);
+    }
+
+    private void SendDeferredPrototypes(INetChannel channel)
+    {
+        if (!_deferredPrototypes.Remove(channel, out var deferred))
+            return;
+
+        foreach (var prototype in deferred)
+            channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = prototype });
+    }
+
+    private int GetPrototypeAckTimeoutMs()
+    {
+        var seconds = _cfg.GetCVar(CVars.NetPrototypeDumpAckTimeout);
+        return (int) (Math.Max(0f, seconds) * 1000f);
     }
 }

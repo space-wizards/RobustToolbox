@@ -165,6 +165,13 @@ namespace Robust.Shared
             CVarDef.Create("net.fragment_group_timeout", 30.0f, CVar.ARCHIVE);
 
         /// <summary>
+        /// How many seconds the server waits for a client to acknowledge a prototype dump before
+        /// marking its resources as sent anyway.
+        /// </summary>
+        public static readonly CVarDef<float> NetPrototypeDumpAckTimeout =
+            CVarDef.Create("net.prototype_dump_ack_timeout", 120.0f, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>

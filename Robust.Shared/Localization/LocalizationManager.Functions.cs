@@ -368,7 +368,7 @@ namespace Robust.Shared.Localization
         }
 
         /// <summary>
-        /// Returns the entity if proper, returns the indefinitive article plus the entity otherwise.
+        /// Returns the entity if proper (which are inherently definite), or returns the indefinite article plus the entity.
         /// </summary>
         private ILocValue FuncDefiniteIfProper(LocArgs args)
         {

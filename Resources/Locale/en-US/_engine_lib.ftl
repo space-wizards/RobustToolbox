@@ -82,7 +82,7 @@ zzzz-conjugate-basic = { GENDER($ent) ->
    *[other] { $second }
    }
 
-# Used interanlly by the DEFINITE-IF-PROPER() function.
+# Used internally by the DEFINITE-IF-PROPER() function.
 zzzz-definite-if-proper = { PROPER($ent) ->
    *[false] { INDEFINITE($ent) } { $ent }
     [true] { $ent }

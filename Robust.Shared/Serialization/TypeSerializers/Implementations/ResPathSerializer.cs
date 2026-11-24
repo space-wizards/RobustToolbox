@@ -42,18 +42,28 @@ public sealed partial class ResPathSerializer : ITypeSerializer<ResPath, ValueDa
                 if (_resMan.ContentGetDirectoryEntries(path).Any())
                     return new ValidatedValueNode(node);
 
-                return new ErrorNode(node, $"Folder not found. ({path})");
+                return NotFound(node, path, $"Folder not found. ({path})");
             }
 
             if (_resMan.ContentFileExists(path))
                 return new ValidatedValueNode(node);
 
-            return new ErrorNode(node, $"File not found. ({path})");
+            return NotFound(node, path, $"File not found. ({path})");
         }
         catch (Exception e)
         {
             return new ErrorNode(node, $"Failed parsing filepath. ({path}) ({e.Message})");
         }
+    }
+
+    private ValidationNode NotFound(ValueDataNode node, ResPath path, string error)
+    {
+        // Packaging removes some top-level directories depending on the build side, so their absence doesn't make a path invalid
+        var topLevelDirectory = $"{path.EnumerateSegments()[0]}{ResPath.Separator}";
+        if (_resMan.ContentGetDirectoryEntries(ResPath.Root).Contains(topLevelDirectory))
+            return new ErrorNode(node, error);
+
+        return new ValidatedValueNode(node);
     }
 
     public ResPath Read(ISerializationManager serializationManager, ValueDataNode node,

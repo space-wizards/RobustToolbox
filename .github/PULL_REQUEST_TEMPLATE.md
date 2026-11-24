@@ -12,7 +12,7 @@
 <!--
 Categories:
     New feature - New engine functionality.
-    Bugfix - Resovles an issue.
+    Bugfix - Resolves an issue.
     Other - Changes to behavior that aren't new features or bug fixes.
     Internal - Notable internal refactors that improve performance/security/etc.
 Example:

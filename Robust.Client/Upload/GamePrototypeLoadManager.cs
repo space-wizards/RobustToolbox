@@ -1,5 +1,6 @@
 using System;
-using System.IO;
+using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.Text;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
@@ -11,6 +12,7 @@ namespace Robust.Client.Upload;
 
 public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManager
 {
+    // Strict decoder: reject malformed UTF-8 instead of silently replacing it.
     private static readonly UTF8Encoding Utf8 = new(false, true);
 
     [Dependency] private ITaskManager _taskManager = default!;
@@ -30,13 +32,54 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         try
         {
             await using var stream = ev.DataStream;
-            using var reader = new StreamReader(stream, Utf8, false, 1024, leaveOpen: true);
-            var text = await reader.ReadToEndAsync();
+
+            if (ev.Channel != ((IClientNetManager) NetManager).ServerChannel)
+                return;
+
+            var header = new byte[PrototypeDumpFormat.LengthSize];
+            await stream.ReadExactlyAsync(header).ConfigureAwait(false);
+            var ackKey = BinaryPrimitives.ReadInt32LittleEndian(header);
+
+            await stream.ReadExactlyAsync(header).ConfigureAwait(false);
+            var count = BinaryPrimitives.ReadInt32LittleEndian(header);
+            if (count < 0)
+            {
+                FailDump($"Invalid dump prototype count {count}");
+                return;
+            }
+
+            var prototypes = new List<string>();
+            for (var i = 0; i < count; i++)
+            {
+                await stream.ReadExactlyAsync(header).ConfigureAwait(false);
+
+                var length = BinaryPrimitives.ReadInt32LittleEndian(header);
+                if (length < 0)
+                {
+                    FailDump($"Invalid dump prototype length {length}");
+                    return;
+                }
+
+                var data = new byte[length];
+                await stream.ReadExactlyAsync(data).ConfigureAwait(false);
+                prototypes.Add(Utf8.GetString(data));
+            }
 
             _taskManager.RunOnMainThread(() =>
             {
-                TryLoadPrototypeData(text);
-                SendLoadAck();
+                if (ev.Channel != ((IClientNetManager) NetManager).ServerChannel
+                    || !NetManager.IsConnected)
+                {
+                    return;
+                }
+
+                if (!TryApplyPrototypeDump(prototypes))
+                {
+                    Disconnect("Failed to apply prototype dump");
+                    return;
+                }
+
+                SendLoadAck(ackKey);
             });
         }
         catch (Exception e)
@@ -46,9 +89,15 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         }
     }
 
-    private void SendLoadAck()
+    private void SendLoadAck(int ackKey)
     {
-        NetManager.ClientSendMessage(new GamePrototypeLoadAckMessage());
+        NetManager.ClientSendMessage(new NetworkResourceAckMessage { Key = ackKey });
+    }
+
+    private void FailDump(string reason)
+    {
+        Sawmill.Error($"{reason}. Disconnecting.");
+        Disconnect($"Prototype dump error: {reason}");
     }
 
     private void Disconnect(string reason)

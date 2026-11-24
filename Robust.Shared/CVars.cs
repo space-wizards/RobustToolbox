@@ -166,10 +166,22 @@ namespace Robust.Shared
 
         /// <summary>
         /// How many seconds the server waits for a client to acknowledge a prototype dump before
-        /// marking its resources as sent anyway.
+        /// disconnecting the client.
         /// </summary>
         public static readonly CVarDef<float> NetPrototypeDumpAckTimeout =
             CVarDef.Create("net.prototype_dump_ack_timeout", 120.0f, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        public const int NetPrototypeDumpMaxBytesDefault = 64 * 1024 * 1024;
+
+        /// <summary>
+        ///     Maximum total size in bytes of the prototype dump. Uploads that would exceed it are rejected.
+        ///     Lowering it does not remove already loaded prototypes.
+        /// </summary>
+        public static readonly CVarDef<int> NetPrototypeDumpMaxBytes =
+            CVarDef.Create(
+                "net.prototype_dump_max_bytes",
+                NetPrototypeDumpMaxBytesDefault,
+                CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.

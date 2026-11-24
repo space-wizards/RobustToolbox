@@ -17,9 +17,6 @@ namespace Robust.Shared.Upload;
 /// </summary>
 public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadManager
 {
-    /// <summary>
-    ///     Transfer key used to send the prototype dump to connecting clients.
-    /// </summary>
     internal const string TransferKeyPrototypeDump = "TransferKeyPrototypeDump";
 
     [Dependency] private IConfigurationManager _cfg = default!;
@@ -39,7 +36,6 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         _replay.RecordingStarted += OnStartReplayRecording;
         Sawmill = Logger.GetSawmill("adminbus");
         NetManager.RegisterNetMessage<GamePrototypeLoadMessage>(LoadPrototypeData);
-        NetManager.RegisterNetMessage<GamePrototypeLoadAckMessage>(OnPrototypeLoadAck, NetMessageAccept.Server);
         TransferManager.RegisterTransferMessage(
             TransferKeyPrototypeDump,
             OnPrototypeDumpReceived,
@@ -49,32 +45,33 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     public abstract void SendGamePrototype(string prototype);
 
     /// <summary>
-    ///     Raised on the server when a connecting client confirms it has applied a prototype dump.
-    /// </summary>
-    public event Action<INetChannel>? LoadComplete;
-
-    private void OnPrototypeLoadAck(GamePrototypeLoadAckMessage message)
-    {
-        LoadComplete?.Invoke(message.MsgChannel);
-    }
-
-    /// <summary>
     ///     Called on the client when a prototype dump transfer has been received.
     /// </summary>
-    protected virtual void OnPrototypeDumpReceived(TransferReceivedEvent ev)
-    {
-    }
+    protected virtual void OnPrototypeDumpReceived(TransferReceivedEvent ev) { }
 
     protected virtual void LoadPrototypeData(GamePrototypeLoadMessage message)
     {
         TryLoadPrototypeData(message.PrototypeData);
     }
 
+    protected virtual bool CanAcceptPrototype(string data)
+    {
+        return true;
+    }
+
+    protected int GetPrototypeDumpMaxBytes()
+    {
+        return Math.Max(0, _cfg.GetCVar(CVars.NetPrototypeDumpMaxBytes));
+    }
+
     protected bool TryLoadPrototypeData(string data)
     {
+        if (!CanAcceptPrototype(data))
+            return false;
+
         try
         {
-            LoadPrototypeData(data);
+            ApplyPrototypeData(data);
         }
         catch (Exception e)
         {
@@ -91,15 +88,58 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         return true;
     }
 
-    private void LoadPrototypeData(string data)
+    // Client-side dump apply. Server uploads go through TryLoadPrototypeData.
+    protected bool TryApplyPrototypeDump(IReadOnlyList<string> prototypes)
     {
+        if (prototypes.Count == 0)
+            return true;
+
         var changed = new Dictionary<Type, HashSet<string>>();
+
+        try
+        {
+            foreach (var data in prototypes)
+                LoadPrototypeDataInto(data, changed);
+
+            ReloadPrototypes(changed);
+        }
+        catch (Exception e)
+        {
+            Sawmill.Error($"Failed to apply prototype dump. Dropping it.\n{e}");
+            TryReloadLoadedPrototypeData();
+            return false;
+        }
+
+        foreach (var data in prototypes)
+        {
+            LoadedPrototypes.Add(data);
+            _replay.RecordReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = data });
+        }
+
+        Sawmill.Info("Loaded adminbus prototype dump.");
+        return true;
+    }
+
+    private void LoadPrototypeDataInto(string data, Dictionary<Type, HashSet<string>> changed)
+    {
         _prototypeManager.LoadString(data, true, changed);
+    }
+
+    private void ReloadPrototypes(Dictionary<Type, HashSet<string>> changed)
+    {
         if (_cfg.GetCVar(CVars.ResValidatePrototypeUpload))
             _prototypeManager.ReloadPrototypesOrThrow(changed);
         else
             _prototypeManager.ReloadPrototypes(changed);
+
         _localizationManager.ReloadLocalizations();
+    }
+
+    private void ApplyPrototypeData(string data)
+    {
+        var changed = new Dictionary<Type, HashSet<string>>();
+        LoadPrototypeDataInto(data, changed);
+        ReloadPrototypes(changed);
     }
 
     private void TryReloadLoadedPrototypeData()
@@ -107,8 +147,14 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         try
         {
             _prototypeManager.Reset();
-            if (LoadedPrototypes.Count != 0)
-                LoadPrototypeData(string.Join("\n\n", LoadedPrototypes));
+            if (LoadedPrototypes.Count == 0)
+                return;
+
+            var changed = new Dictionary<Type, HashSet<string>>();
+            foreach (var prototype in LoadedPrototypes)
+                LoadPrototypeDataInto(prototype, changed);
+
+            ReloadPrototypes(changed);
         }
         catch (Exception e)
         {

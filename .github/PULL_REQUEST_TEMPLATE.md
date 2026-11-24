@@ -15,13 +15,14 @@ Categories:
     Bugfix - Resolves an issue.
     Other - Changes to behavior that aren't new features or bug fixes.
     Internal - Notable internal refactors that improve performance/security/etc.
+    Breaking Change - Public class/method/field name or behavior changes.
 Example:
     Bugfix: AnchorEntity was not centering entities on tiles.
 -->
 
 
 ## Migrations
-<!-- List any breaking changes such as public class/method/field changes and provide instructions for fixing them. -->
+<!-- Provide instructions for mitigating breaking changes. -->
 <!-- Include migration information for any [Obsolete] code. -->
 <!-- Optionally, include information on how to take advantage of new features. -->
 <!-- Include any reference PRs in other repositories that mitigate breaking changes or utilize a new feature. -->

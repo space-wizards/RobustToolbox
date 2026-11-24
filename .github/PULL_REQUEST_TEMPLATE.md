@@ -23,5 +23,6 @@ Example:
 ## Migrations
 <!-- List any breaking changes such as public class/method/field changes and provide instructions for fixing them. -->
 <!-- Include migration information for any [Obsolete] code. -->
+<!-- Optionally, include information on how to take advantage of new features. -->
 <!-- Include any reference PRs in other repositories that mitigate breaking changes or utilize a new feature. -->
 

@@ -1013,11 +1013,12 @@ public class Generator : IIncrementalGenerator
             if (field.Attribute.ReadOnly)
                 continue;
 
-            var fieldType = field.Type.ToDisplayString();
+            var fieldType = GetNameForGenericTypeArgument(field.Type);
             if (IsMultidimensionalArray(field.Type))
                 fieldType = fieldType.Replace("*", "");
 
-            if (field.Type.NullableAnnotation == NullableAnnotation.Annotated &&
+            if (field.Type.TypeKind != TypeKind.TypeParameter &&
+                field.Type.NullableAnnotation == NullableAnnotation.Annotated &&
                 !fieldType.EndsWith("?"))
             {
                 fieldType += "?";
@@ -1164,11 +1165,12 @@ public class Generator : IIncrementalGenerator
             if (field.Attribute.ReadOnly)
                 continue;
 
-            var fieldType = field.Type.ToDisplayString();
+            var fieldType = GetNameForGenericTypeArgument(field.Type);
             if (IsMultidimensionalArray(field.Type))
                 fieldType = fieldType.Replace("*", "");
 
-            if (field.Type.NullableAnnotation == NullableAnnotation.Annotated &&
+            if (field.Type.TypeKind != TypeKind.TypeParameter &&
+                field.Type.NullableAnnotation == NullableAnnotation.Annotated &&
                 !fieldType.EndsWith("?"))
             {
                 fieldType += "?";
@@ -1250,6 +1252,10 @@ public class Generator : IIncrementalGenerator
             if (!isNullableValueType && fieldType.EndsWith("?"))
                 fieldType = fieldType.Substring(0, fieldType.Length - 1);
 
+            var fieldValue = field.Type.TypeKind == TypeKind.TypeParameter && nullConditional == "?"
+                ? $"instance == null ? null : (object?) instance.{field.Symbol.Name}"
+                : $"instance{nullConditional}.{field.Symbol.Name}";
+
             builder.AppendLine($$"""
                 if (fieldsParsed == null || !fieldsParsed.Contains("{{field.Attribute.Tag}}"))
                 {
@@ -1258,7 +1264,7 @@ public class Generator : IIncrementalGenerator
                         {{field.Attribute.Priority}},
                         {{field.Attribute.IsDataFieldAttribute.ToString().ToLowerInvariant()}},
                         {{field.Attribute.Include.ToString().ToLowerInvariant()}},
-                        instance{{nullConditional}}.{{field.Symbol.Name}},
+                        {{fieldValue}},
                         (InheritanceBehavior) {{field.Attribute.InheritanceBehavior}},
                         "{{field.Symbol.Name}}",
                         typeof({{fieldType}}),

@@ -41,7 +41,7 @@ namespace Robust.Shared.Physics.Systems
             _fixtureQuery = GetEntityQuery<FixturesComponent>();
         }
 
-        private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
+        private void OnShutdown(EntityUid uid, FixturesComponent component, ref ComponentShutdown args)
         {
             _physicsQuery.TryGetComponent(uid, out var body);
 

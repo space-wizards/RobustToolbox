@@ -1681,6 +1681,21 @@ namespace Robust.Shared
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Preload RSI images at client startup to avoid hitches at runtime.
+        /// </summary>
+        public static readonly CVarDef<bool> ResRsiPreloadingEnabled =
+            CVarDef.Create("res.rsipreloadingenabled", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Resolve sprite prototype images early.
+        /// </summary>
+        /// <remarks>
+        /// When disabled, entity sprite resources are still loaded when the sprite is added.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResSpritePreloadingEnabled =
+            CVarDef.Create("res.spritepreloadingenabled", true, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Upper limit on the size of the RSI atlas texture. A lower limit might waste less vram, but start to defeat
         /// the purpose of using an atlas if it gets too small.
         /// </summary>

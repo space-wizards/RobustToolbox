@@ -288,7 +288,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     }
 
     [SubscribeLocalEvent]
-    private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
+    private void OnAudioShutdown(EntityUid uid, AudioComponent component, ref ComponentShutdown args)
     {
         // Breaks with prediction?
         component.Source.Dispose();

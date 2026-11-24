@@ -222,8 +222,14 @@ namespace Robust.Shared.GameObjects
     /// Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
     /// the component's life, and at any time.
     /// </summary>
-    [ComponentEvent]
-    public sealed class ComponentShutdown : EntityEventArgs { }
+    [ComponentEvent, ByRefEvent]
+    public readonly struct ComponentShutdown(EntityLifeStage lifeStage)
+    {
+        /// <summary>
+        /// The entity's life stage when shutdown begins.
+        /// </summary>
+        public readonly EntityLifeStage LifeStage = lifeStage;
+    }
 
     /// <summary>
     /// The component has been removed from the entity. This is the last function

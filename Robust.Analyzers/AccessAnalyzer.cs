@@ -19,7 +19,7 @@ namespace Robust.Analyzers
             Diagnostics.IdAccess,
             "Invalid access",
             "Tried to perform {0} access to member '{1}' in type '{2}', despite {3} access. {4}.",
-            "Usage",
+            DiagnosticCategories.Design,
             DiagnosticSeverity.Error,
             true,
             "Make sure to give the accessing type the correct access permissions.");

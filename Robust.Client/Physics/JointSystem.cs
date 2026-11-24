@@ -29,7 +29,16 @@ namespace Robust.Client.Physics
                 component.Joints.Clear();
                 foreach (var (id, state) in jointState.Joints)
                 {
-                    component.Joints[id] = state.GetJoint(EntityManager, uid);
+                    var joint = state.GetJoint(EntityManager, uid);
+                    var other = joint.BodyAUid == uid ? joint.BodyBUid : joint.BodyAUid;
+                    if (TryComp<JointComponent>(other, out var otherJoints) &&
+                        otherJoints.Joints.TryGetValue(id, out var existing) &&
+                        existing.BodyAUid == joint.BodyAUid && existing.BodyBUid == joint.BodyBUid)
+                    {
+                        joint = existing;
+                        joint.ApplyState(state);
+                    }
+                    component.Joints[id] = joint;
                 }
                 return;
             }

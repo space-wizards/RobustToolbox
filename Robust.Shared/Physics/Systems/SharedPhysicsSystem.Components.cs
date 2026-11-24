@@ -333,7 +333,8 @@ public partial class SharedPhysicsSystem
         if (!PhysicsQuery.Resolve(uid, ref body))
             return;
 
-        if (!_fixturesQuery.Resolve(uid, ref manager))
+        // when handling state for a new entity it might handle physics before fixtures, so don't spam logs
+        if (!_fixturesQuery.Resolve(uid, ref manager, false))
             return;
 
         var oldMass = body._mass;

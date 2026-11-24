@@ -39,7 +39,10 @@ namespace Robust.Client.ResourceManagement
         {
             var sawmill = _logManager.GetSawmill("res.preload");
 
-            PreloadRsis(sawmill);
+            if (_configurationManager.GetCVar(CVars.ResRsiPreloadingEnabled))
+                PreloadRsis(sawmill);
+            else
+                sawmill.Debug("Skipping RSI preloading due to CVar value.");
             if (!_configurationManager.GetCVar(CVars.ResTexturePreloadingEnabled))
             {
                 sawmill.Debug($"Skipping texture preloading due to CVar value.");
@@ -82,6 +85,9 @@ namespace Robust.Client.ResourceManagement
         {
             try
 			{
+                if (!_configurationManager.GetCVar(CVars.ResSpritePreloadingEnabled))
+                    return;
+
         		foreach (var sprite in _toDeserialize)
         		{
             		LoadBaseRsi(default, sprite);

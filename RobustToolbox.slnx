@@ -9,6 +9,7 @@
   <Folder Name="/.github/workflows/">
     <File Path=".github/workflows/build-all-configurations.yml" />
     <File Path=".github/workflows/build-test.yml" />
+    <File Path=".github/workflows/codeql.yml" />
     <File Path=".github/workflows/publish-client.yml" />
     <File Path=".github/workflows/test-content.yml" />
   </Folder>
@@ -47,12 +48,6 @@
     <File Path="MSBuild/Robust.Trimming.targets" />
     <File Path="MSBuild/XamlIL.targets" />
     <File Path="MSBuild/WebView.targets" />
-  </Folder>
-  <Folder Name="/NetSerializer/">
-    <Project Path="NetSerializer/NetSerializer/NetSerializer.csproj">
-      <BuildType Solution="DebugOpt|*" Project="Debug" />
-      <BuildType Solution="Tools|*" Project="Release" />
-    </Project>
   </Folder>
   <Folder Name="/Project Files/">
     <File Path="Directory.Build.props" />

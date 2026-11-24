@@ -17,6 +17,10 @@ namespace Robust.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var playerCount = buffer.ReadInt32();
+
+            // playerCount * (sizeof(string) + sizeof(guid) + sizeof(byte))
+            buffer.AssertAtLeastSize(playerCount * (NetMessageExt.MinSizeOfString + NetMessageExt.SizeOfGuid + sizeof(byte)));
+
             Plyrs = new List<SessionState>(playerCount);
             for (var i = 0; i < playerCount; i++)
             {

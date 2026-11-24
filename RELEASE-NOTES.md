@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Allow construction a RobustRandom with a seed.
 
 ### Bugfixes
 

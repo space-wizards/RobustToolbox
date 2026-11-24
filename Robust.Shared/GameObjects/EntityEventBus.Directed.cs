@@ -114,6 +114,12 @@ namespace Robust.Shared.GameObjects
         private const int MaxEventLinkedListSize = 256;
 
         /// <summary>
+        /// Component event handlers indexed by <see cref="EventIdx"/>, then <see cref="CompIdx.Value"/>.
+        /// Built lazily per event type.
+        /// </summary>
+        private DirectedEventHandler?[]?[] _compEventHandlersById = [];
+
+        /// <summary>
         /// Constructs a new instance of <see cref="EntityEventBus"/>.
         /// </summary>
         /// <param name="entMan">The entity manager to watch for entity/component events.</param>
@@ -176,8 +182,32 @@ namespace Robust.Shared.GameObjects
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, ref TEvent args)
             where TEvent : notnull
         {
-            if (_compEventSubs[type.Value].TryGetValue(typeof(TEvent), out var handler))
+            var id = EventIdx.Of<TEvent>();
+            var byId = _compEventHandlersById;
+            var handlers = (uint) id < (uint) byId.Length ? byId[id] : null;
+            handlers ??= BuildCompEventHandlers(id, typeof(TEvent));
+
+            if ((uint) type.Value < (uint) handlers.Length && handlers[type.Value] is { } handler)
                 handler(uid, component, ref Unsafe.As<TEvent, Unit>(ref args));
+        }
+
+        private DirectedEventHandler?[] BuildCompEventHandlers(int id, Type eventType)
+        {
+            var subs = _compEventSubs;
+            var handlers = new DirectedEventHandler?[subs.Length];
+            for (var i = 0; i < subs.Length; i++)
+            {
+                if (subs[i] is { } compSubs && compSubs.TryGetValue(eventType, out var handler))
+                    handlers[i] = handler;
+            }
+
+            var byId = _compEventHandlersById;
+            if (byId.Length <= id)
+                Array.Resize(ref byId, Math.Max(id + 1, byId.Length * 2));
+
+            byId[id] = handlers;
+            _compEventHandlersById = byId;
+            return handlers;
         }
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare()
@@ -373,6 +403,7 @@ namespace Robust.Shared.GameObjects
             _compEventSubs = TrimNull(_compEventSubsUnfrozen)
                 .Select(dict => dict?.ToFrozenDictionary()!)
                 .ToArray();
+            _compEventHandlersById = [];
 
             CalcOrdering();
         }
@@ -721,6 +752,7 @@ namespace Robust.Shared.GameObjects
             _entEventTables.Clear();
             _inverseEventSubscriptions.Clear();
             _compEventSubs = default!;
+            _compEventHandlersById = [];
             _eventSubs = default!;
             _eventData = FrozenDictionary<Type, EventData>.Empty;
             foreach (var sub in _eventSubsUnfrozen)

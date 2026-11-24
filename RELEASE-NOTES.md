@@ -52,6 +52,7 @@ END TEMPLATE-->
 ### Internal
 
 * Avoid cloning appearance data on client appearance state if it's unchanged.
+* Made RaiseCompEvent 2x faster. This is primarily used internally for component state subscriptions.
 
 
 ## 297.0.0

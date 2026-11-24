@@ -52,6 +52,7 @@ END TEMPLATE-->
 ### Internal
 
 * Avoid cloning appearance data on client appearance state if it's unchanged.
+* Set TransformComponent.Children to null by default internally to save memory.
 
 
 ## 297.0.0

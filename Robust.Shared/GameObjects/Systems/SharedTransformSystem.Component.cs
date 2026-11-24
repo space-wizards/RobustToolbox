@@ -530,7 +530,7 @@ public abstract partial class SharedTransformSystem
 #endif
             }
 
-            parentXform._children.Add(uid);
+            parentXform.AddChild(uid);
         }
 
         InitializeGridUid(uid, component);
@@ -900,8 +900,8 @@ public abstract partial class SharedTransformSystem
             if (xform._parent.IsValid())
                 XformQuery.Resolve(xform._parent, ref oldParent);
 
-            oldParent?._children.Remove(uid);
-            newParent?._children.Add(uid);
+            oldParent?.RemoveChild(uid);
+            newParent?.AddChild(uid);
 
             xform._parent = value.EntityId;
 

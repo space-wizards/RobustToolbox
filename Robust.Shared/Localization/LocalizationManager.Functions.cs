@@ -375,7 +375,6 @@ namespace Robust.Shared.Localization
             return new LocValueString(GetString("zzzz-definite-if-proper", ("ent", args.Args[0])));
         }
 
-
         private void AddCtxFunction(FluentBundle ctx, string name, LocFunction function)
         {
             ctx.AddFunctionOverriding(name, (args, options) => CallFunction(function, ctx, args, options));

@@ -41,13 +41,13 @@ namespace Robust.Shared.Localization
 
             // Basic string manipulation
             AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
-            AddCtxFunction(bundle, "TO-UPPER", FuncToUpper);
-            AddCtxFunction(bundle, "TO-LOWER", FuncToLower);
+            AddCtxFunction(bundle, "UPPER", FuncUpper);
+            AddCtxFunction(bundle, "LOWER", FuncLower);
 
             // Misc
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
             AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
-            AddCtxFunction(bundle, "DEFINITE-IF-PROPER", FuncDefiniteIfProper);
+            AddCtxFunction(bundle, "A", FuncA);
 
             // Rich text
             AddCtxFunction(bundle, "ESCAPE", FuncEscape);
@@ -76,7 +76,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the string passed in, fully capitalized.
         /// </summary>
-        private ILocValue FuncToUpper(LocArgs args)
+        private ILocValue FuncUpper(LocArgs args)
         {
             var input = args.Args[0].Format(new LocContext());
             if (!String.IsNullOrEmpty(input))
@@ -87,7 +87,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the string passed in, fully in lowercase.
         /// </summary>
-        private ILocValue FuncToLower(LocArgs args)
+        private ILocValue FuncLower(LocArgs args)
         {
             var input = args.Args[0].Format(new LocContext());
             if (!String.IsNullOrEmpty(input))
@@ -370,9 +370,9 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the entity if proper (which are inherently definite), or returns the indefinite article plus the entity.
         /// </summary>
-        private ILocValue FuncDefiniteIfProper(LocArgs args)
+        private ILocValue FuncA(LocArgs args)
         {
-            return new LocValueString(GetString("zzzz-definite-if-proper", ("ent", args.Args[0])));
+            return new LocValueString(GetString("zzzz-a", ("ent", args.Args[0])));
         }
 
         private void AddCtxFunction(FluentBundle ctx, string name, LocFunction function)

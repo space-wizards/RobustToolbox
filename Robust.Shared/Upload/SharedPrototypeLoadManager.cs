@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -17,24 +17,20 @@ namespace Robust.Shared.Upload;
 /// </summary>
 public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadManager
 {
+    /// <summary>
+    ///     Transfer key used to send the prototype dump to connecting clients.
+    /// </summary>
+    internal const string TransferKeyPrototypeDump = "TransferKeyPrototypeDump";
+
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IReplayRecordingManager _replay = default!;
     [Dependency] private IPrototypeManagerInternal _prototypeManager = default!;
     [Dependency] private ILocalizationManager _localizationManager = default!;
     [Dependency] protected INetManager NetManager = default!;
+    [Dependency] protected ITransferManager TransferManager = default!;
 
     [Access(typeof(SharedPrototypeLoadManager))]
     public readonly List<string> LoadedPrototypes = new();
-
-    /// <summary>
-    ///     Default size of a single prototype dump part.
-    /// </summary>
-    public const int DefaultPrototypePartBytes = 256 * 1024;
-
-    /// <summary>
-    ///     Upper limit for <see cref="CVars.NetPrototypeDumpPartBytes"/>.
-    /// </summary>
-    public const int MaxPrototypePartBytes = 4 * 1024 * 1024;
 
     protected ISawmill Sawmill = default!;
 
@@ -44,6 +40,10 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         Sawmill = Logger.GetSawmill("adminbus");
         NetManager.RegisterNetMessage<GamePrototypeLoadMessage>(LoadPrototypeData);
         NetManager.RegisterNetMessage<GamePrototypeLoadAckMessage>(OnPrototypeLoadAck, NetMessageAccept.Server);
+        TransferManager.RegisterTransferMessage(
+            TransferKeyPrototypeDump,
+            OnPrototypeDumpReceived,
+            NetMessageAccept.Client);
     }
 
     public abstract void SendGamePrototype(string prototype);
@@ -59,56 +59,10 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     }
 
     /// <summary>
-    ///     Individual prototypes are never split across parts, and joining the returned parts with "\n\n"
-    ///     reproduces the same data as string.Join("\n\n", prototypes)
+    ///     Called on the client when a prototype dump transfer has been received.
     /// </summary>
-    internal static List<string> SplitPrototypeDump(
-        IList<string> prototypes,
-        ISawmill? sawmill = null,
-        int maxPartBytes = DefaultPrototypePartBytes)
+    protected virtual void OnPrototypeDumpReceived(TransferReceivedEvent ev)
     {
-        var parts = new List<string>();
-        var sb = new StringBuilder();
-        long partBytes = 0;
-        var partStarted = false;
-
-        foreach (var prototype in prototypes)
-        {
-            var prototypeBytes = Encoding.UTF8.GetByteCount(prototype);
-
-            // +2 accounts for the "\n\n" separator that will be inserted before this prototype.
-            if (partStarted && partBytes + 2 + prototypeBytes > maxPartBytes)
-            {
-                parts.Add(sb.ToString());
-                sb.Clear();
-                partBytes = 0;
-                partStarted = false;
-            }
-
-            if (!partStarted && prototypeBytes > maxPartBytes)
-            {
-                // Splitting inside an element would be corrupted when the client re-joins parts
-                // with "\n\n", so an oversized element is sent as a single (larger) part instead.
-                sawmill?.Warning(
-                    $"A single uploaded prototype is {prototypeBytes} bytes, exceeding the " +
-                    $"{maxPartBytes} byte part limit. Sending it as an oversized part.");
-            }
-
-            if (partStarted)
-            {
-                sb.Append("\n\n");
-                partBytes += 2;
-            }
-
-            sb.Append(prototype);
-            partBytes += prototypeBytes;
-            partStarted = true;
-        }
-
-        if (partStarted)
-            parts.Add(sb.ToString());
-
-        return parts;
     }
 
     protected virtual void LoadPrototypeData(GamePrototypeLoadMessage message)

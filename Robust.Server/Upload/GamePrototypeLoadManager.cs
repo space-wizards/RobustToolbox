@@ -1,10 +1,10 @@
 using System;
+using System.Text;
 using Robust.Server.Console;
 using Robust.Server.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Upload;
 
 namespace Robust.Server.Upload;
@@ -14,16 +14,20 @@ namespace Robust.Server.Upload;
 /// </summary>
 public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManager
 {
-    [Dependency] private IServerNetManager _netManager = default!;
+    private static readonly byte[] Separator = { (byte) '\n', (byte) '\n' };
+
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IConGroupController _controller = default!;
-    [Dependency] private IConfigurationManager _cfg = default!;
+
+    /// <summary>
+    ///     Raised after a live prototype upload has been loaded and should be sent to clients.
+    /// </summary>
+    internal event Action<string>? PrototypeLoaded;
 
     public override void SendGamePrototype(string prototype)
     {
-        var msg = new GamePrototypeLoadMessage { PrototypeData = prototype };
         if (TryLoadPrototypeData(prototype))
-            _netManager.ServerSendToAll(msg);
+            PrototypeLoaded?.Invoke(prototype);
     }
 
     protected override void LoadPrototypeData(GamePrototypeLoadMessage message)
@@ -33,8 +37,7 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         {
             if (TryLoadPrototypeData(message.PrototypeData))
             {
-                var broadcast = new GamePrototypeLoadMessage { PrototypeData = message.PrototypeData };
-                _netManager.ServerSendToAll(broadcast); // everyone load it up!
+                PrototypeLoaded?.Invoke(message.PrototypeData);
                 Sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
             }
         }
@@ -50,21 +53,29 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         if (LoadedPrototypes.Count == 0)
             return false;
 
-        var maxPartBytes = Math.Clamp(_cfg.GetCVar(CVars.NetPrototypeDumpPartBytes), 1024, MaxPrototypePartBytes);
+        SendDumpAsync(channel, LoadedPrototypes.ToArray());
+        return true;
+    }
 
-        var parts = SplitPrototypeDump(LoadedPrototypes, Sawmill, maxPartBytes);
-
-        for (var i = 0; i < parts.Count; i++)
+    private async void SendDumpAsync(INetChannel channel, string[] prototypes)
+    {
+        try
         {
-            channel.SendMessage(new GamePrototypeLoadMessage
-            {
-                PrototypeData = parts[i],
-                IsDump = true,
-                PartCount = parts.Count,
-                PartIndex = i,
-            });
-        }
+            await using var stream = TransferManager.StartTransfer(
+                channel,
+                new TransferStartInfo { MessageKey = TransferKeyPrototypeDump });
 
-        return parts.Count > 0;
+            for (var i = 0; i < prototypes.Length; i++)
+            {
+                if (i > 0)
+                    await stream.WriteAsync(Separator);
+
+                await stream.WriteAsync(Encoding.UTF8.GetBytes(prototypes[i]));
+            }
+        }
+        catch (Exception e)
+        {
+            Sawmill.Error($"Failed to send prototype dump to {channel.RemoteEndPoint}:\n{e}");
+        }
     }
 }

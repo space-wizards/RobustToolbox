@@ -5,6 +5,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 
 namespace Robust.Server.Upload;
 
@@ -25,6 +26,11 @@ internal sealed partial class UploadedContentManager
     private readonly HashSet<INetChannel> _awaitingPrototypeAck = new();
 
     /// <summary>
+    ///     Live prototype uploads that arrived while a channel was receiving a prototype dump.
+    /// </summary>
+    private readonly Dictionary<INetChannel, List<string>> _deferredPrototypes = new();
+
+    /// <summary>
     ///     How long to wait for a client to acknowledge a prototype dump before marking it ready anyway.
     /// </summary>
     private const int PrototypeAckTimeoutMs = 120000; //2 minutes
@@ -38,11 +44,13 @@ internal sealed partial class UploadedContentManager
         _netManager.Disconnect += OnDisconnected;
         _networkResourceManager.AckReceived += OnAckReceived;
         _prototypeLoadManager.LoadComplete += OnPrototypeLoadComplete;
+        _prototypeLoadManager.PrototypeLoaded += OnPrototypeLoaded;
     }
 
     private void OnDisconnected(object? sender, NetDisconnectedArgs e)
     {
         _awaitingPrototypeAck.Remove(e.Channel);
+        _deferredPrototypes.Remove(e.Channel);
     }
 
     private void OnAckReceived(INetChannel channel, int ack)
@@ -80,10 +88,31 @@ internal sealed partial class UploadedContentManager
             return;
         }
 
-        /*Wait for the client to confirm it has applied the prototypes before marking the session ready.
-        Otherwise the client could reach InGame and receive game states that reference prototypes it does not have yet.*/
+        // The dump transfer has started. Mark the channel as awaiting so live uploads that arrive
+        // while it is in flight are deferred instead of racing it.
         _awaitingPrototypeAck.Add(channel);
         Timer.Spawn(PrototypeAckTimeoutMs, () => OnPrototypeAckTimeout(channel));
+    }
+
+    private void OnPrototypeLoaded(string data)
+    {
+        foreach (var channel in _netManager.Channels)
+        {
+            if (!channel.IsHandshakeComplete)
+                continue;
+
+            if (_awaitingPrototypeAck.Contains(channel))
+            {
+                if (!_deferredPrototypes.TryGetValue(channel, out var deferred))
+                    _deferredPrototypes[channel] = deferred = new List<string>();
+
+                deferred.Add(data);
+            }
+            else
+            {
+                channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = data });
+            }
+        }
     }
 
     private void OnPrototypeLoadComplete(INetChannel channel)
@@ -94,7 +123,14 @@ internal sealed partial class UploadedContentManager
         if (!_playerManager.TryGetSessionByChannel(channel, out _))
         {
             _sawmill.Error($"Prototype ack received for {channel.RemoteEndPoint} with no session.");
+            _deferredPrototypes.Remove(channel);
             return;
+        }
+
+        if (_deferredPrototypes.Remove(channel, out var deferred))
+        {
+            foreach (var prototype in deferred)
+                channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = prototype });
         }
 
         _playerManager.MarkPlayerResourcesSent(channel);
@@ -105,12 +141,10 @@ internal sealed partial class UploadedContentManager
         if (!_awaitingPrototypeAck.Remove(channel))
             return;
 
-        if (!channel.IsConnected)
-            return;
-
         if (!_playerManager.TryGetSessionByChannel(channel, out _))
         {
             _sawmill.Error($"Prototype ack timed out for {channel.RemoteEndPoint} with no session.");
+            _deferredPrototypes.Remove(channel);
             return;
         }
 
@@ -118,6 +152,13 @@ internal sealed partial class UploadedContentManager
         _sawmill.Warning(
             $"Client {channel.RemoteEndPoint} did not acknowledge the prototype dump within " +
             $"{PrototypeAckTimeoutMs} ms; marking resources sent without confirmation.");
+
+        if (_deferredPrototypes.Remove(channel, out var deferred))
+        {
+            foreach (var prototype in deferred)
+                channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = prototype });
+        }
+
         _playerManager.MarkPlayerResourcesSent(channel);
     }
 }

@@ -20,8 +20,8 @@ Example:
 -->
 
 
-### Breaking changes
+## Migrations
 <!-- List any breaking changes such as public class/method/field changes and provide instructions for fixing them. -->
 <!-- Include migration information for any [Obsolete] code. -->
-<!-- Include any reference PRs in other repositories that mitigate the breaking changes here. -->
+<!-- Include any reference PRs in other repositories that mitigate breaking changes or utilize a new feature. -->
 

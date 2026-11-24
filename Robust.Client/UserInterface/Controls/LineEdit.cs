@@ -49,8 +49,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _mouseSelectingText;
         private float _lastMousePosition;
 
-        private TimeSpan? _lastClickTime;
-        private Vector2? _lastClickPosition;
+        private readonly TextEditShared.DoubleClickState _doubleClick = new();
 
         // Keep track of the frame on which we got focus, so we can implement SelectAllOnFocus properly.
         // Otherwise, there's no way to keep track of whether the KeyDown is the one that focused the text box,
@@ -708,13 +707,8 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
             // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels.
-            else if (args.Function == EngineKeyFunctions.UIClick && _lastClickPosition != null && _lastClickTime != null
-                     && _timing.RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(_cfgManager.GetCVar(CVars.DoubleClickDelay))
-                     && (_lastClickPosition.Value - args.PointerLocation.Position).IsShorterThan(_cfgManager.GetCVar(CVars.DoubleClickRange)))
+            else if (args.Function == EngineKeyFunctions.UIClick && _doubleClick.Check(args.PointerLocation.Position, _timing.RealTime, _cfgManager))
             {
-                _lastClickTime = _timing.RealTime;
-                _lastClickPosition = args.PointerLocation.Position;
-
                 _lastMousePosition = args.RelativePosition.X;
 
                 _selectionStart = TextEditShared.PrevWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
@@ -724,9 +718,7 @@ namespace Robust.Client.UserInterface.Controls
             }
             else if (!(SelectAllOnFocus && _focusedOnFrame == _timing.CurFrame))
             {
-                _lastClickTime = _timing.RealTime;
-                _lastClickPosition = args.PointerLocation.Position;
-
+                _doubleClick.Check(args.PointerLocation.Position, _timing.RealTime, _cfgManager);
                 _mouseSelectingText = true;
                 _lastMousePosition = args.RelativePosition.X;
 

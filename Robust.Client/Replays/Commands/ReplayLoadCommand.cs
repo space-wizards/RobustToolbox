@@ -1,8 +1,10 @@
+using System;
 using System.IO.Compression;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
+using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
@@ -20,6 +22,7 @@ public sealed partial class ReplayLoadCommand : BaseReplayCommand
     [Dependency] private IReplayLoadManager _loadMan = default!;
     [Dependency] private IBaseClient _client = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IFileDialogManager _fileDialog = default!;
 
     public override string Command => IReplayPlaybackManager.LoadCommand;
 
@@ -31,7 +34,7 @@ public sealed partial class ReplayLoadCommand : BaseReplayCommand
             return;
         }
 
-        if (args.Length != 1)
+        if (args.Length > 1)
         {
             shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
             return;
@@ -40,6 +43,12 @@ public sealed partial class ReplayLoadCommand : BaseReplayCommand
         if (_client.RunLevel != ClientRunLevel.Initialize && _client.RunLevel != ClientRunLevel.SinglePlayerGame)
         {
             shell.WriteError(Loc.GetString("cmd-replay-error-run-level"));
+            return;
+        }
+
+        if (args.Length == 0)
+        {
+            LoadFromFileDialog(shell);
             return;
         }
 
@@ -54,6 +63,38 @@ public sealed partial class ReplayLoadCommand : BaseReplayCommand
         var provider = new ReplayFileReaderZip(new ZipArchive(stream), ReplayConstants.ReplayZipFolder);
 
         _loadMan.LoadAndStartReplay(provider);
+    }
+
+    private async void LoadFromFileDialog(IConsoleShell shell)
+    {
+        try
+        {
+            var stream = await _fileDialog.OpenFile(new FileDialogFilters(new FileDialogFilters.Group("zip")));
+            if (stream == null)
+                return; // Cancelled.
+
+            // Things may have changed while the dialog was open.
+            if (PlaybackManager.Replay != null)
+            {
+                stream.Dispose();
+                shell.WriteError(LocalizationManager.GetString("cmd-replay-error-already-loaded"));
+                return;
+            }
+
+            if (_client.RunLevel != ClientRunLevel.Initialize && _client.RunLevel != ClientRunLevel.SinglePlayerGame)
+            {
+                stream.Dispose();
+                shell.WriteError(Loc.GetString("cmd-replay-error-run-level"));
+                return;
+            }
+
+            var provider = new ReplayFileReaderZip(new ZipArchive(stream), ReplayConstants.ReplayZipFolder);
+            _loadMan.LoadAndStartReplay(provider);
+        }
+        catch (Exception e)
+        {
+            shell.WriteError($"Failed to load replay: {e.Message}");
+        }
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)

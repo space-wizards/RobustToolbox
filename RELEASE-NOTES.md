@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added Reanchoring field to AnchorStateChangedEvent. Also added Reanchor arg to Unanchor if you are manually re-anchoring entities.
+* `replay_load` opens the FileDialogManager if no args are supplied.
 
 ### Bugfixes
 

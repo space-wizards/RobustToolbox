@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using NFluidsynth;
 using Robust.Shared.ContentPack;
@@ -142,6 +143,10 @@ internal sealed partial class MidiManager
         private readonly Dictionary<int, Stream> _openStreams = new();
         private int _nextStreamId = 1;
 
+        // Reading a file from packed content decompresses the whole file into memory every time, NOTICEABLY stuttering
+        // so we cache soundfonts to avoid this.
+        private readonly Dictionary<ResPath, byte[]> _contentCache = new();
+
         public ResourceLoaderCallbacks(MidiManager parent)
         {
             _parent = parent;
@@ -187,16 +192,47 @@ internal sealed partial class MidiManager
                 case PrefixUser:
                     return resourceCache.UserData.OpenRead(resourcePath);
                 case PrefixResources:
-                    return resourceCache.ContentFileRead(resourcePath);
+                    if (TryOpenContent(resourcePath, out var contentStream))
+                        return contentStream;
+
+                    throw new FileNotFoundException($"Content soundfont not found: {resourcePath}");
                 case PrefixLegacy:
                     // Try resources first, then try user data.
-                    if (resourceCache.TryContentFileRead(resourcePath, out var stream))
+                    if (TryOpenContent(resourcePath, out var stream))
                         return stream;
 
                     return resourceCache.UserData.OpenRead(resourcePath);
                 default:
                     throw new UnreachableException("Invalid prefix specified!");
             }
+        }
+
+        private bool TryOpenContent(ResPath path, [NotNullWhen(true)] out Stream? stream)
+        {
+            byte[]? data;
+
+            // Soundfonts may get loaded from different threads.
+            lock (_contentCache)
+            {
+                if (!_contentCache.TryGetValue(path, out data))
+                {
+                    if (!_parent._resourceManager.TryContentFileRead(path, out var file))
+                    {
+                        stream = null;
+                        return false;
+                    }
+
+                    using (file)
+                    {
+                        data = file.CopyToArray();
+                    }
+
+                    _contentCache[path] = data;
+                }
+            }
+
+            stream = new MemoryStream(data, writable: false);
+            return true;
         }
 
         public override unsafe int Read(IntPtr buf, long count, IntPtr sfHandle)
@@ -206,6 +242,17 @@ internal sealed partial class MidiManager
             var stream = _openStreams[(int) sfHandle];
 
             // Fluidsynth's docs state that this method should leave the buffer unmodified if it fails. (returns -1)
+            // For seekable streams we can check that up front, and read straight into
+            // Fluidsynth's buffer instead of reading into a temporary buffer.
+            if (stream.CanSeek)
+            {
+                if (stream.Length - stream.Position < length)
+                    return -1;
+
+                stream.ReadExactly(span);
+                return 0;
+            }
+
             try
             {
                 // Fluidsynth does a LOT of tiny allocations (frankly, way too much).

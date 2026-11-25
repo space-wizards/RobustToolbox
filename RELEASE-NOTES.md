@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Cache soundfonts to avoid re-parsing packaged ones and stalling the game thread.
 
 ### Other
 

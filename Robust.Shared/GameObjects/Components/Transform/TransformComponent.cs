@@ -593,16 +593,22 @@ namespace Robust.Shared.GameObjects
     public readonly struct AnchorStateChangedEvent(
         EntityUid entity,
         TransformComponent transform,
-        bool detaching = false)
+        bool detaching = false,
+        bool reanchoring = false)
     {
         public readonly TransformComponent Transform = transform;
-        public EntityUid Entity { get; } = entity;
+        public readonly EntityUid Entity = entity;
         public bool Anchored => Transform.Anchored;
 
         /// <summary>
         ///     If true, the entity is being detached to null-space
         /// </summary>
         public readonly bool Detaching = detaching;
+
+        /// <summary>
+        /// This unanchor is temporary and the entity will be re-anchored somewhere else.
+        /// </summary>
+        public readonly bool Reanchoring = reanchoring;
     }
 
     /// <summary>

@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* ContainerSystem.CleanContainer now skips deleting entities during state application.
 
 ### Internal
 

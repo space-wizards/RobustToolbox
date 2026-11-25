@@ -617,13 +617,42 @@ public abstract partial class SharedContainerSystem
     /// </summary>
     public void CleanContainer(BaseContainer container)
     {
-        foreach (var ent in container.ContainedEntities.ToArray())
-        {
-            if (Deleted(ent))
-                continue;
+        var count = container.ContainedEntities.Count;
+        if (count == 0)
+            return;
 
-            Remove(ent, container, force: true);
-            Del(ent);
+        // All this to avoid .ToArray()
+        EntityUid[]? rented = null;
+        var ents = count <= 32
+            ? stackalloc EntityUid[count]
+            : (rented = ArrayPool<EntityUid>.Shared.Rent(count)).AsSpan(0, count);
+
+        for (var i = 0; i < count; i++)
+        {
+            ents[i] = container.ContainedEntities[i];
+        }
+
+        // If we're in a state then ignore this because the container state handler handles it.
+        var skipNetworked = _net.IsClient && _timing.ApplyingState;
+
+        try
+        {
+            foreach (var ent in ents)
+            {
+                if (!TryComp(ent, out MetaDataComponent? meta) || Deleted(ent, meta))
+                    continue;
+
+                if (skipNetworked && !meta.NetEntity.IsClientSide())
+                    continue;
+
+                Remove((ent, null, meta), container, force: true);
+                Del(ent);
+            }
+        }
+        finally
+        {
+            if (rented != null)
+                ArrayPool<EntityUid>.Shared.Return(rented);
         }
     }
 

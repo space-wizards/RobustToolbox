@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* EntityQueries now contain methods to ensure and remove components, using the faster TryComps of the queries.
 * Added Reanchoring field to AnchorStateChangedEvent. Also added Reanchor arg to Unanchor if you are manually re-anchoring entities.
 
 ### Bugfixes

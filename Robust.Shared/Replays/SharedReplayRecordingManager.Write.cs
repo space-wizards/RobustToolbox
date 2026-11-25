@@ -219,6 +219,7 @@ internal abstract partial class SharedReplayRecordingManager
         ZipArchive archive,
         ZStdCompressionContext compressionContext)
     {
+        Exception? exception = null;
         try
         {
             var i = 0;
@@ -236,18 +237,28 @@ internal abstract partial class SharedReplayRecordingManager
 
                 i += 1;
             }
-
-            taskCompletionSource.TrySetResult();
         }
         catch (Exception e)
         {
-            taskCompletionSource.TrySetException(e);
+            exception = e;
         }
-        finally
+
+        // The archive must be disposed before completing the task: disposing it is what actually finishes writing the
+        // zip file and need it done before we let callers wanting on the TCS to access it.
+        try
         {
             archive.Dispose();
             compressionContext.Dispose();
         }
+        catch (Exception e)
+        {
+            exception ??= e;
+        }
+
+        if (exception != null)
+            taskCompletionSource.TrySetException(exception);
+        else
+            taskCompletionSource.TrySetResult();
     }
 #pragma warning restore RA0004
 }

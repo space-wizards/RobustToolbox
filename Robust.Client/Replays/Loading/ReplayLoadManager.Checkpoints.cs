@@ -38,6 +38,9 @@ public sealed partial class ReplayLoadManager
 
         public EntityState BakeChanges()
         {
+            // Make sure the set of networked components matches the component states we actually have.
+            netComps = GetNetComponents(netComps, Changes.Values);
+
             return new EntityState(lastChange.NetEntity,
                 Changes.Values.ToList(),
                 lastChange.EntityLastModified,
@@ -524,7 +527,44 @@ public sealed partial class ReplayLoadManager
         }
 
         DebugTools.Assert(newState.NetComponents == null || newState.NetComponents.Count == combined.Count);
-        return new EntityState(newState.NetEntity, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
+
+        // If the server didn't send networked components don't fall back to the set of components on the prototype,
+        // as that will be missing components that were added at runtime.
+        var netComps = GetNetComponents(newState.NetComponents ?? oldNetComps, combined);
+        return new EntityState(newState.NetEntity, combined, newState.EntityLastModified, netComps);
+    }
+
+    /// <summary>
+    /// Returns a set of networked component ids that exactly matches the given component states.
+    /// </summary>
+    /// <remarks>
+    /// This is just here to stop states removing and re-adding themselves immediately in replays and brick themselves like chents.
+    /// </remarks>
+    private static HashSet<ushort> GetNetComponents(HashSet<ushort>? existing, ICollection<ComponentChange> changes)
+    {
+        if (existing != null && existing.Count == changes.Count)
+        {
+            var matches = true;
+            foreach (var change in changes)
+            {
+                if (existing.Contains(change.NetID))
+                    continue;
+
+                matches = false;
+                break;
+            }
+
+            if (matches)
+                return existing;
+        }
+
+        var set = new HashSet<ushort>(changes.Count);
+        foreach (var change in changes)
+        {
+            set.Add(change.NetID);
+        }
+
+        return set;
     }
 
     private void UpdatePlayerStates(ReadOnlySpan<SessionState> span, Dictionary<NetUserId, SessionState> playerStates)

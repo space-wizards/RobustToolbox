@@ -356,6 +356,18 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
+        public void ResetOnPvsReentry(IEnumerable<NetEntity> entities)
+        {
+            foreach (var netEntity in entities)
+            {
+                if (!_processor.TryGetLastServerStates(netEntity, out var lastStates))
+                    continue;
+
+                _detachedDirtyComponents.GetOrNew(netEntity).UnionWith(lastStates.Keys);
+            }
+        }
+
+        /// <inheritdoc />
         public void ApplyGameState()
         {
             // If we have been waiting for a full state for a long time, re-request a full state.
@@ -1064,6 +1076,13 @@ namespace Robust.Client.GameStates
 
         private void ProcessStateError(EntityUid uid)
         {
+            _brokenEnts.Add(uid);
+
+            // Without a server (e.g., during replay playback) there is nobody to request a full state from, and
+            // raising OnStateError (which pops open the debug console) for every error while scrubbing is just noise.
+            if (!_network.IsConnected)
+                return;
+
             try
             {
                 OnStateError?.Invoke();
@@ -1073,7 +1092,6 @@ namespace Robust.Client.GameStates
                 _sawmill.Error($"Caught exception in a OnStateError handler for {uid}: {e}");
             }
 
-            _brokenEnts.Add(uid);
             RequestFullState();
         }
 

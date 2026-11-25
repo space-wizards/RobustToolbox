@@ -44,6 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Fix replay errors due to entity re-entry on checkpoints when scrubbing.
 * Fix chunk entity bugs around networked states.
 
 ### Other

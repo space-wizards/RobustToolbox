@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `replay.directory` CVar is now rooted by default. This only requires updating if your config has a custom non-rooted one.
 
 ### New features
 
@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix replay writing returning the TCS before writing is finished.
+* Fix chunk entity bugs around networked states.
 
 ### Other
 

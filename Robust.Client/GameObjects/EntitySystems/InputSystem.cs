@@ -9,6 +9,7 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -26,6 +27,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private IConsoleHost _conHost = default!;
         [Dependency] private IGameTiming _timing = default!;
         [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private INetManager _netManager = default!;
         [Dependency] private SharedTransformSystem _transform = default!;
 
         private ISawmill _sawmillInputContext = default!;
@@ -138,6 +140,12 @@ namespace Robust.Client.GameObjects
 
         private void DispatchInputCommand(ClientFullInputCmdMessage clientMsg, FullInputCmdMessage message)
         {
+            // Without a server (e.g. during replay playback) there is nobody to send input commands to, so this netmessage will exception constantly,
+            // and nothing will ever acknowledge them :(
+            // Here over HandleInputCommand because if another caller uses this we want to block the dispatch still.
+            if (!_netManager.IsConnected)
+                return;
+
             _stateManager.InputCommandDispatched(clientMsg, message);
             EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, message.InputSequence);
         }

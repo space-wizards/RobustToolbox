@@ -62,7 +62,6 @@ public sealed partial class ReplayLoadCommand : BaseReplayCommand
             return CompletionResult.Empty;
 
         var dir = new ResPath(_cfg.GetCVar(CVars.ReplayDirectory)) / args[0];
-        dir = dir.ToRootedPath();
         var opts = CompletionHelper.UserFilePath(dir.CanonPath, _resMan.UserData);
 
         return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-replay-load-hint"));

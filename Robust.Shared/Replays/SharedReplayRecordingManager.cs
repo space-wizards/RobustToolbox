@@ -175,7 +175,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         if (filePath.Extension != "zip")
             filePath = filePath.WithName(filePath.Filename + ".zip");
 
-        var basePath = new ResPath(NetConf.GetCVar(CVars.ReplayDirectory)).ToRootedPath();
+        var basePath = new ResPath(NetConf.GetCVar(CVars.ReplayDirectory));
         filePath = basePath / filePath;
 
         // Make sure to create parent directory.

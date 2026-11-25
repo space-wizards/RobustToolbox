@@ -56,14 +56,8 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
 
     protected override bool CanAcceptPrototype(string data)
     {
-        if (!PrototypeDumpFormat.TryGetPayloadLength(LoadedPrototypes, out var currentBytes))
-        {
-            Sawmill.Error("Loaded prototype dump exceeds the wire format length limit.");
-            return false;
-        }
-
         var limit = GetPrototypeDumpMaxBytes();
-        var size = PrototypeDumpFormat.GetPayloadSize(currentBytes, data);
+        var size = PrototypeDumpFormat.GetPayloadSize(LoadedPrototypesSize, data);
 
         if (size > limit)
         {
@@ -91,11 +85,6 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         if (prototypes.Count == 0)
             return SendDumpResult.NoData;
 
-        // Snapshot because LoadedPrototypes can change while the async send yields.
-        var snapshot = new string[prototypes.Count];
-        for (var i = 0; i < prototypes.Count; i++)
-            snapshot[i] = prototypes[i];
-
         if (!channel.IsConnected)
         {
             Sawmill.Warning(
@@ -104,12 +93,26 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
             return SendDumpResult.Failed;
         }
 
+        var snapshot = new string[prototypes.Count];
+        for (var i = 0; i < prototypes.Count; i++)
+            snapshot[i] = prototypes[i];
+
         Stream stream;
         try
         {
             stream = TransferManager.StartTransfer(
                 channel,
                 new TransferStartInfo { MessageKey = TransferKeyPrototypeDump });
+        }
+        catch (InvalidOperationException)
+        {
+            // IntegrationNetManager does not run the transfer handshake.
+            Sawmill.Debug($"Transfer not ready for {channel.RemoteEndPoint}; sending prototype dump as messages.");
+
+            foreach (var prototype in snapshot)
+                channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = prototype });
+
+            return SendDumpResult.NoData;
         }
         catch (Exception e)
         {
@@ -118,7 +121,6 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
             return SendDumpResult.Failed;
         }
 
-        // Exceptions are handled inside SendDumpAsync.
         SendDumpAsync(stream, channel, snapshot, ackKey, onProgress, sequential);
         return SendDumpResult.Sent;
     }

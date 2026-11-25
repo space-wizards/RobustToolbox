@@ -131,7 +131,6 @@ internal sealed partial class UploadedContentManager
             if (_playerManager.TryGetSessionByChannel(channel, out var session)
                 && session is CommonSession { InitialResourcesDone: false })
             {
-                // The initial dump has not started yet and will include this upload in its snapshot.
                 continue;
             }
 
@@ -153,7 +152,6 @@ internal sealed partial class UploadedContentManager
 
         if (state.Deferred is { Count: > 0 } deferred)
         {
-            // Send live uploads that arrived during the dump as a second dump and wait for its ack.
             var ackKey = _nextDumpKey++;
             var newState = new DumpState { AckKey = ackKey };
             switch (_prototypeLoadManager.SendDump(
@@ -169,8 +167,6 @@ internal sealed partial class UploadedContentManager
                     return;
                 case SendDumpResult.Failed:
                     _sawmill.Error($"Failed to send deferred prototype dump to {channel.RemoteEndPoint}.");
-                    if (channel.IsConnected)
-                        channel.Disconnect("Failed to send deferred prototype dump.");
                     return;
                 case SendDumpResult.NoData:
                     break;
@@ -200,7 +196,6 @@ internal sealed partial class UploadedContentManager
         if (!channel.IsConnected)
             return;
 
-        // Don't let a client enter Connected without applying the dump.
         _sawmill.Warning(
             $"Client {channel.RemoteEndPoint} made no prototype dump progress in time; disconnecting.");
 
@@ -219,7 +214,7 @@ internal sealed partial class UploadedContentManager
         state.Timeout = cts;
 
         var ackKey = state.AckKey;
-        var interval = Math.Clamp(timeoutMs, 1, 1000);
+        var interval = Math.Min(timeoutMs, 1000);
         Timer.SpawnRepeating(interval, () => CheckDumpTimeout(channel, ackKey), cts.Token);
     }
 
@@ -241,7 +236,7 @@ internal sealed partial class UploadedContentManager
 
     internal static int GetPrototypeAckTimeoutMs(float seconds)
     {
-        if (!float.IsFinite(seconds) || seconds <= 0f)
+        if (!(seconds > 0f))
             return 0;
 
         var ms = seconds * 1000.0;

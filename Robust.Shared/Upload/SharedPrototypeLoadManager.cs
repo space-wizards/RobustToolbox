@@ -29,6 +29,8 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     [Access(typeof(SharedPrototypeLoadManager))]
     public readonly List<string> LoadedPrototypes = new();
 
+    protected long LoadedPrototypesSize { get; private set; } = PrototypeDumpFormat.HeaderSize;
+
     protected ISawmill Sawmill = default!;
 
     public virtual void Initialize()
@@ -61,7 +63,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
 
     protected int GetPrototypeDumpMaxBytes()
     {
-        return Math.Max(0, _cfg.GetCVar(CVars.NetPrototypeDumpMaxBytes));
+        return _cfg.GetCVar(CVars.NetPrototypeDumpMaxBytes);
     }
 
     protected bool TryLoadPrototypeData(string data)
@@ -82,15 +84,12 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         }
 
         // Add to replay recording after we have loaded the file, in case it contains bad yaml that throws exceptions.
-        LoadedPrototypes.Add(data);
+        AddLoadedPrototype(data);
         _replay.RecordReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = data });
         Sawmill.Info("Loaded adminbus prototype data.");
         return true;
     }
 
-    // Client-side dump apply. Server uploads go through TryLoadPrototypeData.
-    // Deferred dumps are always sequential because their uploads may interact with already applied state.
-    // Initial dumps use batch, with duplicates within the dump falling back to per-upload reloads.
     protected bool TryApplyPrototypeDump(IReadOnlyList<string> prototypes, bool sequential)
     {
         if (prototypes.Count == 0)
@@ -112,12 +111,18 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
 
         foreach (var data in prototypes)
         {
-            LoadedPrototypes.Add(data);
+            AddLoadedPrototype(data);
             _replay.RecordReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = data });
         }
 
         Sawmill.Info("Loaded adminbus prototype dump.");
         return true;
+    }
+
+    private void AddLoadedPrototype(string data)
+    {
+        LoadedPrototypes.Add(data);
+        LoadedPrototypesSize += PrototypeDumpFormat.GetPayloadSize(0, data);
     }
 
     private void ApplyPrototypeDumpBatch(IReadOnlyList<string> prototypes)
@@ -132,8 +137,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
 
             if (MergeChanged(changed, uploadChanged, seen))
             {
-                // A later upload redefines a prototype. Batch loading loses the earlier
-                // instance that the server kept, so redo the dump upload by upload.
+                // Duplicate id: apply uploads one by one.
                 ReloadLoadedPrototypeData();
                 ApplyPrototypeUploads(prototypes);
                 return;
@@ -152,8 +156,6 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
             var uploadChanged = new Dictionary<Type, HashSet<string>>();
             LoadPrototypeDataInto(prototypes[i], uploadChanged);
 
-            // Reload intermediate uploads so later redefinitions see the same instances
-            // the server had. Validation is deferred until the final state is loaded.
             if (i < prototypes.Count - 1)
                 _prototypeManager.ReloadPrototypes(uploadChanged);
 

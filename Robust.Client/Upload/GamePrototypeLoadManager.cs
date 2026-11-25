@@ -33,9 +33,6 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         {
             await using var stream = ev.DataStream;
 
-            if (ev.Channel != ((IClientNetManager) NetManager).ServerChannel)
-                return;
-
             var header = new byte[PrototypeDumpFormat.LengthSize];
             await stream.ReadExactlyAsync(header).ConfigureAwait(false);
             var ackKey = BinaryPrimitives.ReadInt32LittleEndian(header);
@@ -47,6 +44,9 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
                 FailDump($"Invalid dump prototype count {count}");
                 return;
             }
+
+            await stream.ReadExactlyAsync(header).ConfigureAwait(false);
+            var sequential = BinaryPrimitives.ReadInt32LittleEndian(header) != 0;
 
             var prototypes = new List<string>();
             for (var i = 0; i < count; i++)
@@ -73,7 +73,7 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
                     return;
                 }
 
-                if (!TryApplyPrototypeDump(prototypes))
+                if (!TryApplyPrototypeDump(prototypes, sequential))
                 {
                     Disconnect("Failed to apply prototype dump");
                     return;

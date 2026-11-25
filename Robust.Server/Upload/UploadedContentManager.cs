@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -34,6 +36,16 @@ internal sealed partial class UploadedContentManager
         public int AckKey;
         public List<string>? Deferred;
         public CancellationTokenSource? Timeout;
+
+        private long _lastProgress;
+
+        public void OnProgress()
+        {
+            Interlocked.Exchange(ref _lastProgress, Stopwatch.GetTimestamp());
+        }
+
+        public double IdleMilliseconds =>
+            (Stopwatch.GetTimestamp() - Interlocked.Read(ref _lastProgress)) * 1000.0 / Stopwatch.Frequency;
     }
 
     public void Initialize()
@@ -85,14 +97,14 @@ internal sealed partial class UploadedContentManager
             return;
 
         var ackKey = _nextDumpKey++;
-        switch (_prototypeLoadManager.SendToNewUser(channel, ackKey))
+        var state = new DumpState { AckKey = ackKey };
+        switch (_prototypeLoadManager.SendToNewUser(channel, ackKey, state.OnProgress))
         {
             case SendDumpResult.NoData:
                 _playerManager.MarkPlayerResourcesSent(channel);
                 break;
             case SendDumpResult.Sent:
                 // Defer live uploads while the dump is in flight.
-                var state = new DumpState { AckKey = ackKey };
                 _pendingDumps[channel] = state;
                 ArmAckTimeout(channel, state);
                 break;
@@ -143,25 +155,43 @@ internal sealed partial class UploadedContentManager
         {
             // Send live uploads that arrived during the dump as a second dump and wait for its ack.
             var ackKey = _nextDumpKey++;
-            switch (_prototypeLoadManager.SendDump(channel, deferred, ackKey))
+            var newState = new DumpState { AckKey = ackKey };
+            switch (_prototypeLoadManager.SendDump(
+                channel,
+                deferred,
+                ackKey,
+                newState.OnProgress,
+                sequential: true))
             {
                 case SendDumpResult.Sent:
-                    var newState = new DumpState { AckKey = ackKey };
                     _pendingDumps[channel] = newState;
                     ArmAckTimeout(channel, newState);
                     return;
                 case SendDumpResult.Failed:
                     _sawmill.Error($"Failed to send deferred prototype dump to {channel.RemoteEndPoint}.");
+                    if (channel.IsConnected)
+                        channel.Disconnect("Failed to send deferred prototype dump.");
                     return;
+                case SendDumpResult.NoData:
+                    break;
             }
         }
 
         _playerManager.MarkPlayerResourcesSent(channel);
     }
 
-    private void OnPrototypeAckTimeout(INetChannel channel, int ackKey)
+    private void CheckDumpTimeout(INetChannel channel, int ackKey)
     {
         if (!_pendingDumps.TryGetValue(channel, out var state) || state.AckKey != ackKey)
+            return;
+
+        var timeoutMs = GetPrototypeAckTimeoutMs(_cfg.GetCVar(CVars.NetPrototypeDumpAckTimeout));
+        if (timeoutMs <= 0)
+            return;
+
+        var idleMs = state.IdleMilliseconds;
+
+        if (idleMs < timeoutMs)
             return;
 
         _pendingDumps.Remove(channel);
@@ -170,30 +200,27 @@ internal sealed partial class UploadedContentManager
         if (!channel.IsConnected)
             return;
 
-        if (!_playerManager.TryGetSessionByChannel(channel, out _))
-        {
-            _sawmill.Error($"Prototype ack timed out for {channel.RemoteEndPoint} with no session; disconnecting.");
-            channel.Disconnect("No session for prototype ack.");
-            return;
-        }
-
         // Don't let a client enter Connected without applying the dump.
         _sawmill.Warning(
-            $"Client {channel.RemoteEndPoint} did not acknowledge the prototype dump in time; disconnecting.");
+            $"Client {channel.RemoteEndPoint} made no prototype dump progress in time; disconnecting.");
 
         channel.Disconnect("Prototype dump acknowledgement timed out.");
     }
 
     private void ArmAckTimeout(INetChannel channel, DumpState state)
     {
-        CancelAckTimeout(state);
+        state.OnProgress();
 
         var timeoutMs = GetPrototypeAckTimeoutMs(_cfg.GetCVar(CVars.NetPrototypeDumpAckTimeout));
+        if (timeoutMs <= 0)
+            return;
+
         var cts = new CancellationTokenSource();
         state.Timeout = cts;
 
         var ackKey = state.AckKey;
-        Timer.Spawn(timeoutMs, () => OnPrototypeAckTimeout(channel, ackKey), cts.Token);
+        var interval = Math.Clamp(timeoutMs, 1, 1000);
+        Timer.SpawnRepeating(interval, () => CheckDumpTimeout(channel, ackKey), cts.Token);
     }
 
     private static void CancelAckTimeout(DumpState state)

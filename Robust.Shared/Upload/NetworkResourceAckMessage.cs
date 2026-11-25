@@ -5,7 +5,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Upload;
 
 /// <summary>
-/// Sent client -> server to acknowledge completion of an upload or prototype dump.
+///     Sent client -> server to acknowledge completion of a resource transfer or prototype dump.
 /// </summary>
 internal sealed class NetworkResourceAckMessage : NetMessage
 {

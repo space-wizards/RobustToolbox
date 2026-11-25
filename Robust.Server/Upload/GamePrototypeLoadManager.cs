@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Transfer;
@@ -20,12 +21,13 @@ internal enum SendDumpResult
 }
 
 /// <summary>
-///     Manages sending runtime-loaded prototypes from game staff to clients.
+///     Handles server-side prototype uploads, limits, and dumps sent to clients.
 /// </summary>
 public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManager
 {
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IConGroupController _controller = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
 
     internal event Action<string>? PrototypeLoaded;
 
@@ -74,12 +76,17 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         return true;
     }
 
-    internal SendDumpResult SendToNewUser(INetChannel channel, int ackKey)
+    internal SendDumpResult SendToNewUser(INetChannel channel, int ackKey, Action? onProgress = null)
     {
-        return SendDump(channel, LoadedPrototypes, ackKey);
+        return SendDump(channel, LoadedPrototypes, ackKey, onProgress);
     }
 
-    internal SendDumpResult SendDump(INetChannel channel, IReadOnlyList<string> prototypes, int ackKey)
+    internal SendDumpResult SendDump(
+        INetChannel channel,
+        IReadOnlyList<string> prototypes,
+        int ackKey,
+        Action? onProgress = null,
+        bool sequential = false)
     {
         if (prototypes.Count == 0)
             return SendDumpResult.NoData;
@@ -112,12 +119,21 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         }
 
         // Exceptions are handled inside SendDumpAsync.
-        SendDumpAsync(stream, channel, snapshot, ackKey);
+        SendDumpAsync(stream, channel, snapshot, ackKey, onProgress, sequential);
         return SendDumpResult.Sent;
     }
 
-    private async void SendDumpAsync(Stream stream, INetChannel channel, string[] prototypes, int ackKey)
+    private async void SendDumpAsync(
+        Stream stream,
+        INetChannel channel,
+        string[] prototypes,
+        int ackKey,
+        Action? onProgress,
+        bool sequential)
     {
+        const int progressChunkSize = 16 * 1024;
+        var remoteEndPoint = channel.RemoteEndPoint;
+
         try
         {
             await using (stream)
@@ -125,23 +141,40 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
                 var header = new byte[PrototypeDumpFormat.LengthSize];
                 BinaryPrimitives.WriteInt32LittleEndian(header, ackKey);
                 await stream.WriteAsync(header).ConfigureAwait(false);
+                onProgress?.Invoke();
 
                 BinaryPrimitives.WriteInt32LittleEndian(header, prototypes.Length);
                 await stream.WriteAsync(header).ConfigureAwait(false);
+                onProgress?.Invoke();
+
+                BinaryPrimitives.WriteInt32LittleEndian(header, sequential ? 1 : 0);
+                await stream.WriteAsync(header).ConfigureAwait(false);
+                onProgress?.Invoke();
 
                 foreach (var prototype in prototypes)
                 {
                     var bytes = Encoding.UTF8.GetBytes(prototype);
                     BinaryPrimitives.WriteInt32LittleEndian(header, bytes.Length);
                     await stream.WriteAsync(header).ConfigureAwait(false);
-                    await stream.WriteAsync(bytes).ConfigureAwait(false);
+                    onProgress?.Invoke();
+
+                    for (var offset = 0; offset < bytes.Length; offset += progressChunkSize)
+                    {
+                        var count = Math.Min(progressChunkSize, bytes.Length - offset);
+                        await stream.WriteAsync(bytes.AsMemory(offset, count)).ConfigureAwait(false);
+                        onProgress?.Invoke();
+                    }
                 }
             }
         }
         catch (Exception e)
         {
-            Sawmill.Error($"Failed to send prototype dump to {channel.RemoteEndPoint}:\n{e}");
-            channel.Disconnect("Failed to send prototype dump.");
+            Sawmill.Error($"Failed to send prototype dump to {remoteEndPoint}:\n{e}");
+            _taskManager.RunOnMainThread(() =>
+            {
+                if (channel.IsConnected)
+                    channel.Disconnect("Failed to send prototype dump.");
+            });
         }
     }
 }

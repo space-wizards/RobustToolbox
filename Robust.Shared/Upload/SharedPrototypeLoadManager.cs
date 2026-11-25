@@ -13,7 +13,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 namespace Robust.Shared.Upload;
 
 /// <summary>
-///     Manages sending runtime-loaded prototypes from game staff to clients.
+///     Manages runtime-loaded prototype uploads and their distribution.
 /// </summary>
 public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadManager
 {
@@ -89,19 +89,19 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     }
 
     // Client-side dump apply. Server uploads go through TryLoadPrototypeData.
-    protected bool TryApplyPrototypeDump(IReadOnlyList<string> prototypes)
+    // Deferred dumps are always sequential because their uploads may interact with already applied state.
+    // Initial dumps use batch, with duplicates within the dump falling back to per-upload reloads.
+    protected bool TryApplyPrototypeDump(IReadOnlyList<string> prototypes, bool sequential)
     {
         if (prototypes.Count == 0)
             return true;
 
-        var changed = new Dictionary<Type, HashSet<string>>();
-
         try
         {
-            foreach (var data in prototypes)
-                LoadPrototypeDataInto(data, changed);
-
-            ReloadPrototypes(changed);
+            if (sequential)
+                ApplyPrototypeUploads(prototypes);
+            else
+                ApplyPrototypeDumpBatch(prototypes);
         }
         catch (Exception e)
         {
@@ -118,6 +118,73 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
 
         Sawmill.Info("Loaded adminbus prototype dump.");
         return true;
+    }
+
+    private void ApplyPrototypeDumpBatch(IReadOnlyList<string> prototypes)
+    {
+        var changed = new Dictionary<Type, HashSet<string>>();
+        var seen = new HashSet<(Type Kind, string Id)>();
+
+        foreach (var data in prototypes)
+        {
+            var uploadChanged = new Dictionary<Type, HashSet<string>>();
+            LoadPrototypeDataInto(data, uploadChanged);
+
+            if (MergeChanged(changed, uploadChanged, seen))
+            {
+                // A later upload redefines a prototype. Batch loading loses the earlier
+                // instance that the server kept, so redo the dump upload by upload.
+                ReloadLoadedPrototypeData();
+                ApplyPrototypeUploads(prototypes);
+                return;
+            }
+        }
+
+        ReloadPrototypes(changed);
+    }
+
+    private void ApplyPrototypeUploads(IReadOnlyList<string> prototypes)
+    {
+        var changed = new Dictionary<Type, HashSet<string>>();
+
+        for (var i = 0; i < prototypes.Count; i++)
+        {
+            var uploadChanged = new Dictionary<Type, HashSet<string>>();
+            LoadPrototypeDataInto(prototypes[i], uploadChanged);
+
+            // Reload intermediate uploads so later redefinitions see the same instances
+            // the server had. Validation is deferred until the final state is loaded.
+            if (i < prototypes.Count - 1)
+                _prototypeManager.ReloadPrototypes(uploadChanged);
+
+            MergeChanged(changed, uploadChanged);
+        }
+
+        ReloadPrototypes(changed);
+    }
+
+    private static bool MergeChanged(
+        Dictionary<Type, HashSet<string>> changed,
+        Dictionary<Type, HashSet<string>> uploadChanged,
+        HashSet<(Type Kind, string Id)>? seen = null)
+    {
+        var duplicate = false;
+
+        foreach (var (kind, ids) in uploadChanged)
+        {
+            if (!changed.TryGetValue(kind, out var changedIds))
+                changed[kind] = changedIds = new HashSet<string>();
+
+            foreach (var id in ids)
+            {
+                changedIds.Add(id);
+
+                if (seen != null && !seen.Add((kind, id)))
+                    duplicate = true;
+            }
+        }
+
+        return duplicate;
     }
 
     private void LoadPrototypeDataInto(string data, Dictionary<Type, HashSet<string>> changed)
@@ -146,20 +213,21 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
     {
         try
         {
-            _prototypeManager.Reset();
-            if (LoadedPrototypes.Count == 0)
-                return;
-
-            var changed = new Dictionary<Type, HashSet<string>>();
-            foreach (var prototype in LoadedPrototypes)
-                LoadPrototypeDataInto(prototype, changed);
-
-            ReloadPrototypes(changed);
+            ReloadLoadedPrototypeData();
         }
         catch (Exception e)
         {
             Sawmill.Error($"Failed to reload accepted prototype data.\n{e}");
         }
+    }
+
+    private void ReloadLoadedPrototypeData()
+    {
+        _prototypeManager.Reset();
+        if (LoadedPrototypes.Count == 0)
+            return;
+
+        ApplyPrototypeUploads(LoadedPrototypes);
     }
 
     private void OnStartReplayRecording(MappingDataNode metadata, List<object> events)

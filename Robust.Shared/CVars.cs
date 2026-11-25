@@ -165,13 +165,13 @@ namespace Robust.Shared
             CVarDef.Create("net.fragment_group_timeout", 30.0f, CVar.ARCHIVE);
 
         /// <summary>
-        /// How many seconds the server waits for a client to acknowledge a prototype dump before
-        /// disconnecting the client.
+        ///     How many seconds a prototype dump may make no progress (transfer or acknowledgement)
+        ///     before the client is disconnected. Zero or negative disables the timeout.
         /// </summary>
         public static readonly CVarDef<float> NetPrototypeDumpAckTimeout =
             CVarDef.Create("net.prototype_dump_ack_timeout", 120.0f, CVar.ARCHIVE | CVar.SERVERONLY);
 
-        public const int NetPrototypeDumpMaxBytesDefault = 64 * 1024 * 1024;
+        public const int NetPrototypeDumpMaxBytesDefault = 32 * 1024 * 1024;
 
         /// <summary>
         ///     Maximum total size in bytes of the prototype dump. Uploads that would exceed it are rejected.

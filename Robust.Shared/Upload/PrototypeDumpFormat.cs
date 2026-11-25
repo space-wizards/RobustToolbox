@@ -6,7 +6,7 @@ namespace Robust.Shared.Upload;
 
 /// <summary>
 ///     Wire format for prototype dumps sent over <see cref="ITransferManager"/>.
-///     The stream starts with a little-endian ack key and prototype count,
+///     The stream starts with a little-endian ack key, prototype count and sequential flag,
 ///     followed by length-prefixed prototypes.
 /// </summary>
 internal static class PrototypeDumpFormat
@@ -20,7 +20,7 @@ internal static class PrototypeDumpFormat
 
     public static bool TryGetPayloadLength(IReadOnlyList<string> prototypes, out int length)
     {
-        long total = LengthSize * 2;
+        long total = LengthSize * 3;
         for (var i = 0; i < prototypes.Count; i++)
         {
             total += LengthSize + Encoding.UTF8.GetByteCount(prototypes[i]);

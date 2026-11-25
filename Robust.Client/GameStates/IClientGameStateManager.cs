@@ -163,5 +163,10 @@ namespace Robust.Client.GameStates
         /// Clears the PVS detach queue.
         /// </summary>
         void ClearDetachQueue();
+
+        /// <summary>
+        /// Forces every networked component of the given detached entities to be reset to the last server state when they next re-enter PVS.
+        /// </summary>
+        void ResetOnPvsReentry(IEnumerable<NetEntity> entities);
     }
 }

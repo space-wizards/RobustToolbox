@@ -67,6 +67,8 @@ internal sealed partial class ReplayPlaybackManager
         _gameState.ClearDetachQueue();
         EnsureDetachedExist(checkpoint);
         _gameState.DetachImmediate(checkpoint.Detached);
+        _gameState.ResetOnPvsReentry(checkpoint.Detached);
+
         BeforeApplyState?.Invoke((checkpoint.State, next));
         _gameState.ApplyGameState(checkpoint.State, next);
     }

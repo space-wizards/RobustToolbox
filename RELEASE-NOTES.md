@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix replay errors due to entity re-entry on checkpoints when scrubbing.
 
 ### Other
 

@@ -105,7 +105,15 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public GameTick LastLerp = GameTick.Zero;
 
-        [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
+        [ViewVariables] internal HashSet<EntityUid> _children => _childrenSet ?? EmptyChildren;
+
+        private HashSet<EntityUid>? _childrenSet;
+
+        private static readonly HashSet<EntityUid> EmptyChildren = new();
+
+        internal bool AddChild(EntityUid child) => (_childrenSet ??= new()).Add(child);
+
+        internal bool RemoveChild(EntityUid child) => _childrenSet?.Remove(child) ?? false;
 
         /// <summary>
         ///     Returns the index of the map which this object is on

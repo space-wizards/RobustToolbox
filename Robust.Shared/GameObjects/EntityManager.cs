@@ -612,7 +612,7 @@ namespace Robust.Shared.GameObjects
                     // This is seemingly pretty error prone ATM, and I'm not even sure if it should be supported?
 
                     // Just in case it HAS somehow been added, make sure we remove it.
-                    if (TransformQuery.TryComp(xform.ParentUid, out parentXform) && parentXform._children.Remove(e))
+                    if (TransformQuery.TryComp(xform.ParentUid, out parentXform) && parentXform.RemoveChild(e))
                         DebugTools.Assert($"Child entity {ToPrettyString(e)} was added to the parent's child set prior to being initialized?");
 
                     parentXform = null;
@@ -657,7 +657,7 @@ namespace Robust.Shared.GameObjects
                 if (!MetaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
                 {
                     _sawmill.Error($"A deleted entity was still the transform child of another entity. Parent: {ToPrettyString(uid, metadata)}.");
-                    xform._children.Remove(child);
+                    xform.RemoveChild(child);
                     continue;
                 }
 

@@ -38,6 +38,7 @@ namespace Robust.Shared.Network.Messages
             RequestId = buffer.ReadUInt32();
             SessionId = buffer.ReadUInt32();
             var length = buffer.ReadInt32();
+            buffer.AssertAtLeastSize(length);
             using var stream = RobustMemoryManager.GetMemoryStream(length);
             buffer.ReadAlignedMemory(stream, length);
             RequestMeta = serializer.Deserialize<ViewVariablesRequest>(stream);

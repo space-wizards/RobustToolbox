@@ -35,6 +35,7 @@ public partial class RobustIntegrationTest
         {
             var options = new ClientIntegrationOptions
             {
+                PreloadResources = Settings.PreloadClientResources,
                 ContentAssemblies = Manager.ClientAssemblies,
                 OverrideLogHandler = () => ClientLogHandler
             };

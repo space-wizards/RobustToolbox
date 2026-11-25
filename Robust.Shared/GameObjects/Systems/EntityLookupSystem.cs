@@ -157,7 +157,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         RemComp(uid, component);
     }
 
-    private void OnBroadphaseShutdown(EntityUid uid, BroadphaseComponent component, ComponentShutdown args)
+    private void OnBroadphaseShutdown(EntityUid uid, BroadphaseComponent component, ref ComponentShutdown args)
     {
         var xform = _xformQuery.GetComponent(uid);
         ClearBroadphaseProxies(component.StaticTree);

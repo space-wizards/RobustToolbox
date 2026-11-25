@@ -623,8 +623,9 @@ namespace Robust.Client.Graphics.Clyde
                 // Nop.
             }
 
-            public void MaximizeOnMonitor(IClydeMonitor monitor)
+            public void Maximize()
             {
+                // Nop.
             }
 
             public void Dispose()

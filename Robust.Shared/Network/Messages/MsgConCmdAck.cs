@@ -18,6 +18,7 @@ namespace Robust.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             int length = buffer.ReadVariableInt32();
+            buffer.AssertAtLeastSize(length);
             using var stream = RobustMemoryManager.GetMemoryStream(length);
             buffer.ReadAlignedMemory(stream, length);
             Text = serializer.Deserialize<FormattedMessage>(stream);

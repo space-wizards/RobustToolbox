@@ -34,7 +34,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
         Diagnostics.IdEntitySystemSubscriptionConversionPossible,
         "Convert to attribute-based subscription",
         "Event subscription using {0} can be converted to use {1}",
-        "Usage",
+        DiagnosticCategories.Style,
         DiagnosticSeverity.Info,
         true
     );

@@ -70,6 +70,8 @@ public sealed class PoolTestLogHandler : ILogHandler
         var seconds = _stopwatch.Elapsed.TotalSeconds;
         var rendered = message.RenderMessage();
         var line = $"{_prefix}{seconds:F3}s [{name}] {sawmillName}: {rendered}";
+        if (message.Exception != null)
+            line += Environment.NewLine + message.Exception;
 
         testContext.WriteLine(line);
 
@@ -77,7 +79,7 @@ public sealed class PoolTestLogHandler : ILogHandler
             return;
 
         testContext.Flush();
-        _failingLogs.Add($"{line} Exception: {message.Exception}");
+        _failingLogs.Add(line);
     }
 
     public void ClearContext()

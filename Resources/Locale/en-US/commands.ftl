@@ -31,7 +31,7 @@ cmd-help-help = Usage: {$command} [command name]
 cmd-help-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
 cmd-help-unknown = Unknown command: { $command }
 cmd-help-top = { $command } - { $description }
-cmd-help-invalid-args = Invalid amount of arguments.
+cmd-help-invalid-args = Invalid number of arguments.
 cmd-help-arg-cmdname = [command name]
 
 ## 'cvar' command
@@ -56,7 +56,7 @@ cmd-cvar_subs-invalid-args = Must provide exactly one argument.
 cmd-cvar_subs-arg-name = <name>
 
 ## 'list' command
-cmd-list-desc = Lists available commands, with optional search filter.
+cmd-list-desc = Lists available commands, with an optional search filter.
 cmd-list-help = Usage: {$command} [filter]
     Lists all available commands. If an argument is provided, it will be used to filter commands by name.
 
@@ -150,7 +150,7 @@ cmd-monitor-plus-all-hint = Shows all monitors
 ## 'setambientlight' command
 cmd-set-ambient-light-desc = Allows you to set the ambient light for the specified map, in SRGB.
 cmd-set-ambient-light-help = Usage: {$command} [mapid] [r g b a]
-cmd-set-ambient-light-parse = Unable to parse args as a byte values for a color.
+cmd-set-ambient-light-parse = Unable to parse arguments as byte values for a color.
 
 ## Mapping commands
 
@@ -183,7 +183,7 @@ cmd-hint-savebp-id = <Grid EntityID>
 
 cmd-flushcookies-desc = Flush CEF cookie storage to disk.
 cmd-flushcookies-help = Usage: {$command}
-    This ensure cookies are properly saved to disk in the event of unclean shutdowns.
+    This ensures cookies are properly saved to disk in the event of unclean shutdowns.
     Note that the actual operation is asynchronous.
 
 cmd-ldrsc-desc = Pre-caches a resource.
@@ -420,7 +420,7 @@ cmd-tpto-desc = Teleports the current player or the specified players/entities t
 cmd-tpto-help = Usage: {$command} <username|uid> [username|NetEntity]...
 cmd-tpto-destination-hint = destination (NetEntity or username)
 cmd-tpto-victim-hint = entity to teleport (NetEntity or username)
-cmd-tpto-parse-error = Cant resolve entity or player: {$str}
+cmd-tpto-parse-error = Can't resolve entity or player: {$str}
 
 cmd-listplayers-desc = Lists all players currently connected.
 cmd-listplayers-help = Usage: {$command}
@@ -468,7 +468,7 @@ cmd-showpos-help = Usage: {$command}
 cmd-showrot-desc = Show the rotation of all entities on the screen.
 cmd-showrot-help = Usage: {$command}
 
-cmd-showvel-desc = Show the local velocity of all entites on the screen.
+cmd-showvel-desc = Show the local velocity of all entities on the screen.
 cmd-showvel-help = Usage: {$command}
 
 cmd-showangvel-desc = Show the angular velocity of all entities on the screen.

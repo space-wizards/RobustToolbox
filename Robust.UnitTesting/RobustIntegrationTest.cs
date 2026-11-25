@@ -1129,7 +1129,9 @@ namespace Robust.UnitTesting
                     (CVars.DiscordEnabled.Name, "false"),
 
                     // Avoid preloading textures.
-                    (CVars.ResTexturePreloadingEnabled.Name, "false"),
+                    (CVars.ResTexturePreloadingEnabled.Name, (ClientOptions?.PreloadResources == true).ToString()),
+                    (CVars.ResRsiPreloadingEnabled.Name, (ClientOptions?.PreloadResources == true).ToString()),
+                    (CVars.ResSpritePreloadingEnabled.Name, (ClientOptions?.PreloadResources == true).ToString()),
 
                     (CVars.SysGCCollectStart.Name, "false"),
 
@@ -1304,6 +1306,11 @@ namespace Robust.UnitTesting
         [Virtual]
         public class ClientIntegrationOptions : IntegrationOptions
         {
+            /// <summary>
+            /// Opt into image and prototype sprite preloading.
+            /// </summary>
+            public bool PreloadResources { get; set; }
+
             public virtual GameControllerOptions Options { get; set; } = new()
             {
                 LoadContentResources = false,

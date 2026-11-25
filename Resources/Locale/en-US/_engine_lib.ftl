@@ -1,4 +1,4 @@
-﻿# Used internally by the THE() function.
+# Used internally by the THE() function.
 zzzz-the = { PROPER($ent) ->
     *[false] the { $ent }
      [true] { $ent }
@@ -80,4 +80,10 @@ zzzz-conjugate-have = { GENDER($ent) ->
 zzzz-conjugate-basic = { GENDER($ent) ->
     [epicene] { $first }
    *[other] { $second }
+   }
+
+# Used internally by the A() function.
+zzzz-a = { PROPER($ent) ->
+   *[false] { INDEFINITE($ent) } { $ent }
+    [true] { $ent }
    }

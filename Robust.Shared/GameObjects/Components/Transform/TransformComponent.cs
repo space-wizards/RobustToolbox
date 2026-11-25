@@ -105,7 +105,15 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public GameTick LastLerp = GameTick.Zero;
 
-        [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
+        [ViewVariables] internal HashSet<EntityUid> _children => _childrenSet ?? EmptyChildren;
+
+        private HashSet<EntityUid>? _childrenSet;
+
+        private static readonly HashSet<EntityUid> EmptyChildren = new();
+
+        internal bool AddChild(EntityUid child) => (_childrenSet ??= new()).Add(child);
+
+        internal bool RemoveChild(EntityUid child) => _childrenSet?.Remove(child) ?? false;
 
         /// <summary>
         ///     Returns the index of the map which this object is on
@@ -585,16 +593,22 @@ namespace Robust.Shared.GameObjects
     public readonly struct AnchorStateChangedEvent(
         EntityUid entity,
         TransformComponent transform,
-        bool detaching = false)
+        bool detaching = false,
+        bool reanchoring = false)
     {
         public readonly TransformComponent Transform = transform;
-        public EntityUid Entity { get; } = entity;
+        public readonly EntityUid Entity = entity;
         public bool Anchored => Transform.Anchored;
 
         /// <summary>
         ///     If true, the entity is being detached to null-space
         /// </summary>
         public readonly bool Detaching = detaching;
+
+        /// <summary>
+        /// This unanchor is temporary and the entity will be re-anchored somewhere else.
+        /// </summary>
+        public readonly bool Reanchoring = reanchoring;
     }
 
     /// <summary>

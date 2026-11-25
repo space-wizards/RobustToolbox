@@ -31,7 +31,7 @@ public abstract partial class SharedAudioSystem
         _auxiliaries[component.Preset] = uid;
     }
 
-    private void OnPresetShutdown(EntityUid uid, AudioPresetComponent component, ComponentShutdown args)
+    private void OnPresetShutdown(EntityUid uid, AudioPresetComponent component, ref ComponentShutdown args)
     {
         _auxiliaries.Remove(component.Preset);
     }

@@ -129,6 +129,10 @@ internal partial class Clyde
                     WinThreadWinSetWindowed(cmd);
                     break;
 
+                case CmdWinMaximize cmd:
+                    WinThreadWinMaximize(cmd);
+                    break;
+
                 case CmdTextInputSetRect cmd:
                     WinThreadSetTextInputRect(cmd);
                     break;
@@ -331,6 +335,11 @@ internal partial class Clyde
             public int Height;
             public int PosX;
             public int PosY;
+        }
+
+        private sealed class CmdWinMaximize : CmdBase
+        {
+            public nint Window;
         }
 
         // IME

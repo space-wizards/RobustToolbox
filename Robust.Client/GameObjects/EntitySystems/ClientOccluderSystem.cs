@@ -99,7 +99,7 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
         QueueSharedEdgeUpdate(uid, comp, args.Component);
     }
 
-    private void OnShutdown(EntityUid uid, OccluderComponent comp, ComponentShutdown args)
+    private void OnShutdown(EntityUid uid, OccluderComponent comp, ref ComponentShutdown args)
     {
         if (!Terminating(uid))
             QueueSharedEdgeUpdate(uid, comp);

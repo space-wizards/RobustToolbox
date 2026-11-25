@@ -2214,7 +2214,7 @@ namespace Robust.Shared.GameObjects
 
         private TComp1 AddComp(EntityUid uid) // Convenience function for query methods, shouldn't be used by consumers since they can use proper AddComponent.
         {
-            var comp = _entMan.ComponentFactory.GetComponent(typeof(TComp1));
+            var comp = _entMan.ComponentFactory.GetComponent(CompIdx.Index<TComp1>());
             _entMan.AddComponent(uid, comp);
             return (TComp1)comp;
         }

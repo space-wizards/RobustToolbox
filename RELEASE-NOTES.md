@@ -44,7 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix chunk entity bugs around networked states.
 
 ### Other
 

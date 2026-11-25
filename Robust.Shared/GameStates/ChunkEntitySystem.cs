@@ -9,6 +9,7 @@ using Robust.Shared.Map.Events;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -35,6 +36,7 @@ public abstract partial class ChunkEntitySystem : EntitySystem
     [Dependency] private EntityQuery<TransformComponent> _xformQuery;
     [Dependency] private EntityQuery<ChunkContainerComponent> _containerQuery;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private INetManager _net = default!;
     [Dependency] private MetaDataSystem _metaData = default!;
 
     /// <summary>
@@ -54,6 +56,7 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         SubscribeLocalEvent<ChunkEntityComponent, EntityTerminatingEvent>(OnChunkTerminating);
         SubscribeLocalEvent<ChunkEntityComponent, AfterAutoHandleStateEvent>(OnChunkHandleState);
         SubscribeLocalEvent<ChunkContainerComponent, MapInitEvent>(OnContainerMapInit);
+        SubscribeLocalEvent<ChunkContainerComponent, AfterAutoHandleStateEvent>(OnContainerHandleState);
         SubscribeLocalEvent<ChunkContainerComponent, EntityPausedEvent>(OnRootPaused);
         SubscribeLocalEvent<ChunkContainerComponent, EntityUnpausedEvent>(OnRootUnpaused);
         SubscribeLocalEvent<BeforeSerializationEvent>(OnBeforeSerialization);
@@ -236,6 +239,17 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         _tempUids.Clear();
     }
 
+    private void OnContainerHandleState(Entity<ChunkContainerComponent> ent, ref AfterAutoHandleStateEvent args)
+    {
+        // IDEK what I'm doing with these anymore but the split between predicted chents and server ones is spirallin.
+        // The issue is we can't just use normal entity lifepaths as some stuff depends on this and can't exactly predict it normally.
+        ent.Comp.ChunkEntities.Clear();
+        foreach (var chunk in ent.Comp.Chunks.Values)
+        {
+            ent.Comp.ChunkEntities.Add(chunk.Owner);
+        }
+    }
+
     private void OnRootPaused(Entity<ChunkContainerComponent> ent, ref EntityPausedEvent args)
     {
         SyncRootChunks(ent.Comp);
@@ -360,6 +374,10 @@ public abstract partial class ChunkEntitySystem : EntitySystem
 
         if (!_mapQuery.HasComp(comp.Root) && !_gridQuery.HasComp(comp.Root))
         {
+            // AfterAutoHandle will try to add the chunk again if we're adding to an existing entity.
+            if (_timing.ApplyingState || IsNetworkedOnClient(uid, meta))
+                return;
+
             Del(uid, meta);
             return;
         }
@@ -402,6 +420,11 @@ public abstract partial class ChunkEntitySystem : EntitySystem
 
         var ev = new ChunkEntityAddedEvent(uid, key.Root, key.Chunk);
         RaiseLocalEvent(ref ev);
+    }
+
+    private bool IsNetworkedOnClient(EntityUid uid, MetaDataComponent meta)
+    {
+        return _net.IsClient && !meta.NetEntity.IsClientSide();
     }
 
     private bool IsAvailable(Entity<ChunkEntityComponent> chunk)

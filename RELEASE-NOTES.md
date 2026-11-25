@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix replay writing returning the TCS before writing is finished.
 
 ### Other
 

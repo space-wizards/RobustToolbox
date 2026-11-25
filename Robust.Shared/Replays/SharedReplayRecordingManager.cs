@@ -316,6 +316,10 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         _recState.WriteCommandChannel.Complete();
         _recState.Done = true;
 
+        // Keep track of the worker task until it has finished writing out the remaining data, so that WaitWriteTasks()
+        // and IsWriting() actually wait for the replay file to be complete.
+        _finalizingWriteTasks.Add(_recState.WriteTask);
+
         _recState = null;
     }
 

@@ -213,20 +213,6 @@ namespace Robust.Shared.GameObjects
 
             try
             {
-                // TODO: please for the love of god remove these initialization order hacks.
-
-                // Init transform first, we always have it.
-                var transform = TransformQuery.GetComponent(uid);
-                if (transform.LifeStage == ComponentLifeStage.Initialized)
-                    LifeStartup(uid, transform, CompIdx.Index<TransformComponent>());
-
-                // Init physics second if it exists.
-                if (_physicsQuery.TryComp(uid, out var phys) && phys.LifeStage == ComponentLifeStage.Initialized)
-                {
-                    LifeStartup(uid, phys, CompIdx.Index<PhysicsComponent>());
-                }
-
-                // Do rest of components.
                 foreach (var comp in comps)
                 {
                     if (comp is { LifeStage: ComponentLifeStage.Initialized })

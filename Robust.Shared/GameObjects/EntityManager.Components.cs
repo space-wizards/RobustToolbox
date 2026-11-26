@@ -1290,7 +1290,12 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
-            return new EntityQuery<TCompShared>(this, comps);
+
+            SparseJaggedArray<IComponent>? jaggedArray = null;
+            if (CompIdx.GetDense<TComp>())
+                jaggedArray = _entTraitJaggedArray[DenseComponent<TComp>.Index];
+
+            return new EntityQuery<TCompShared>(this, comps, jaggedArray);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)

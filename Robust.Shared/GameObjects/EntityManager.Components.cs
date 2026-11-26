@@ -52,6 +52,11 @@ namespace Robust.Shared.GameObjects
         private UniqueIndexHkm<EntityUid, IComponent> _entCompIndex =
             new(ComponentCollectionCapacity);
 
+        /// <summary>
+        /// Dense storage index for each <see cref="CompIdx"/>.
+        /// </summary>
+        private int[] _denseIndexByComp = [];
+
         /// <inheritdoc />
         public event Action<AddedComponentEventArgs>? ComponentAdded;
 
@@ -86,6 +91,26 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        private void SetDenseIndex(CompIdx idx, int denseIndex)
+        {
+            var old = _denseIndexByComp.Length;
+            if (old <= idx.Value)
+            {
+                Array.Resize(ref _denseIndexByComp, Math.Max(idx.Value + 1, old * 2));
+                _denseIndexByComp.AsSpan(old).Fill(-1);
+            }
+
+            _denseIndexByComp[idx.Value] = denseIndex;
+        }
+
+        /// <summary>
+        /// Gets the dense storage index for a component type, or -1 if it isn't stored densely.
+        /// </summary>
+        internal int GetDenseIndex(CompIdx idx)
+        {
+            return (uint) idx.Value < (uint) _denseIndexByComp.Length ? _denseIndexByComp[idx.Value] : -1;
+        }
+
         private void RegisterComponents(IEnumerable<ComponentRegistration> components)
         {
             var traitDict = _entTraitDict.ToDictionary();
@@ -102,6 +127,8 @@ namespace Robust.Shared.GameObjects
                 var field = type.GetField(nameof(DenseComponent<>.Index), BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
                 if (field is not int denseIndex)
                     throw new UnreachableException($"Couldn't get index for archetypal component type {reg.Type}");
+
+                SetDenseIndex(reg.Idx, denseIndex);
 
                 var newSize = denseIndex + 1;
                 if (_entTraitJaggedArray.Length <= newSize)
@@ -410,9 +437,11 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (CompIdx.GetDense<T>())
+            // Use the registration rather than T, as T may just be IComponent (prototype / map loading).
+            var denseIndex = GetDenseIndex(reg.Idx);
+            if (denseIndex >= 0)
             {
-                var array = _entTraitJaggedArray[DenseComponent<T>.Index];
+                var array = _entTraitJaggedArray[denseIndex];
                 array.EnsureCapacity(uid.Id);
                 array.Add(uid.Id, component);
             }
@@ -805,9 +834,10 @@ namespace Robust.Shared.GameObjects
 
             _entTraitArray[idx.Value].Remove(entityUid);
 
-            if (idx.Dense)
+            var denseIndex = GetDenseIndex(idx);
+            if (denseIndex >= 0)
             {
-                var array = _entTraitJaggedArray[idx.DenseIndex];
+                var array = _entTraitJaggedArray[denseIndex];
                 array.Remove(entityUid.Id);
             }
 

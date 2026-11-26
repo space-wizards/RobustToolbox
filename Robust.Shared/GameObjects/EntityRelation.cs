@@ -17,9 +17,11 @@ public partial record struct EntityRelation
     public EntityUid? Entity;
 
     /// <summary>
-    /// Internal constructor. Use it only if you know what you're doing!
+    /// Constructs an <see cref="EntityRelation"/> instance.
+    /// Do not assign the constructed value to component fields
+    /// without ensuring that the entity exists and has <see cref="EntityRelationsComponent"/>.
     /// </summary>
-    internal EntityRelation(EntityUid? entity)
+    public EntityRelation(EntityUid? entity)
     {
         Entity = entity;
     }

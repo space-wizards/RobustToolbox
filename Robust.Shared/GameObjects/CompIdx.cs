@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
@@ -54,6 +55,14 @@ public readonly struct CompIdx : IEquatable<CompIdx>
     }
 
     private static int _CompIdxMaster = -1;
+
+    static CompIdx()
+    {
+        // MetaData, Transform and Physics take the first indices just so we guarantee they start first.
+        _ = Store<MetaDataComponent>.Index;
+        _ = Store<TransformComponent>.Index;
+        _ = Store<PhysicsComponent>.Index;
+    }
 
     private static class Store<T>
     {

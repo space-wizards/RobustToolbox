@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,8 +50,6 @@ namespace Robust.Shared.GameObjects
 
         private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
 
-        private UniqueIndexHkm<EntityUid, IComponent> _entCompIndex =
-            new(ComponentCollectionCapacity);
 
         /// <summary>
         /// Dense storage index for each <see cref="CompIdx"/>.
@@ -78,7 +77,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void ClearComponents()
         {
-            _entCompIndex.Clear();
             _deleteSet.Clear();
             foreach (var dict in _entTraitDict.Values)
             {
@@ -175,19 +173,23 @@ namespace Robust.Shared.GameObjects
 
             // Initialize() can modify the collection of components. Copy them.
             FixedArray32<IComponent?> compsFixed = default;
-
-            var comps = compsFixed.AsSpan;
-            CopyComponentsInto(ref comps, uid);
-
-            foreach (var comp in comps)
+            var comps = CopyComponents(uid, compsFixed.AsSpan, out var rented);
+            try
             {
-                if (comp is {LifeStage: ComponentLifeStage.Added})
-                    LifeInitialize(uid, comp, _componentFactory.GetIndex(comp.GetType()));
+                foreach (var comp in comps)
+                {
+                    if (comp is {LifeStage: ComponentLifeStage.Added})
+                        LifeInitialize(uid, comp, _componentFactory.GetIndex(comp.GetType()));
+                }
+            }
+            finally
+            {
+                ReturnComponents(rented);
             }
 
 #if DEBUG
             // Second integrity check in case of.
-            foreach (var t in _entCompIndex[uid])
+            foreach (var t in GetComponentsSnapshot(uid))
             {
                 if (!t.Deleted && !t.Initialized)
                 {
@@ -207,28 +209,33 @@ namespace Robust.Shared.GameObjects
             // Startup() can modify _components
             // This code can only handle additions to the list. Is there a better way? Probably not.
             FixedArray32<IComponent?> compsFixed = default;
+            var comps = CopyComponents(uid, compsFixed.AsSpan, out var rented);
 
-            var comps = compsFixed.AsSpan;
-            CopyComponentsInto(ref comps, uid);
-
-            // TODO: please for the love of god remove these initialization order hacks.
-
-            // Init transform first, we always have it.
-            var transform = TransformQuery.GetComponent(uid);
-            if (transform.LifeStage == ComponentLifeStage.Initialized)
-                LifeStartup(uid, transform, CompIdx.Index<TransformComponent>());
-
-            // Init physics second if it exists.
-            if (_physicsQuery.TryComp(uid, out var phys) && phys.LifeStage == ComponentLifeStage.Initialized)
+            try
             {
-                LifeStartup(uid, phys, CompIdx.Index<PhysicsComponent>());
+                // TODO: please for the love of god remove these initialization order hacks.
+
+                // Init transform first, we always have it.
+                var transform = TransformQuery.GetComponent(uid);
+                if (transform.LifeStage == ComponentLifeStage.Initialized)
+                    LifeStartup(uid, transform, CompIdx.Index<TransformComponent>());
+
+                // Init physics second if it exists.
+                if (_physicsQuery.TryComp(uid, out var phys) && phys.LifeStage == ComponentLifeStage.Initialized)
+                {
+                    LifeStartup(uid, phys, CompIdx.Index<PhysicsComponent>());
+                }
+
+                // Do rest of components.
+                foreach (var comp in comps)
+                {
+                    if (comp is { LifeStage: ComponentLifeStage.Initialized })
+                        LifeStartup(uid, comp, _componentFactory.GetIndex(comp.GetType()));
+                }
             }
-
-            // Do rest of components.
-            foreach (var comp in comps)
+            finally
             {
-                if (comp is { LifeStage: ComponentLifeStage.Initialized })
-                    LifeStartup(uid, comp, _componentFactory.GetIndex(comp.GetType()));
+                ReturnComponents(rented);
             }
         }
 
@@ -446,8 +453,6 @@ namespace Robust.Shared.GameObjects
                 array.Add(uid.Id, component);
             }
 
-            // actually ADD the component
-            _entCompIndex.Add(uid, component);
 
             // add the component to the netId grid
             if (reg.NetID != null && component.NetSyncEnabled)
@@ -615,10 +620,21 @@ namespace Robust.Shared.GameObjects
             if (!MetaQuery.Resolve(uid, ref meta))
                 return;
 
-            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
+            // Reverse CompIdx order.
+            FixedArray32<IComponent?> compsFixed = default;
+            var comps = CopyComponents(uid, compsFixed.AsSpan, out var rented);
+            try
             {
-                var idx = _componentFactory.GetIndex(comp.GetType());
-                RemoveComponentImmediate(uid, comp, idx, false, meta);
+                for (var i = comps.Length - 1; i >= 0; i--)
+                {
+                    var comp = comps[i]!;
+                    var idx = _componentFactory.GetIndex(comp.GetType());
+                    RemoveComponentImmediate(uid, comp, idx, false, meta);
+                }
+            }
+            finally
+            {
+                ReturnComponents(rented);
             }
         }
 
@@ -628,20 +644,30 @@ namespace Robust.Shared.GameObjects
             if (!MetaQuery.Resolve(uid, ref meta))
                 return;
 
-            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
+            // Reverse CompIdx order.
+            FixedArray32<IComponent?> compsFixed = default;
+            var comps = CopyComponents(uid, compsFixed.AsSpan, out var rented);
+            try
             {
-                try
+                for (var i = comps.Length - 1; i >= 0; i--)
                 {
-                    var idx = _componentFactory.GetIndex(comp.GetType());
-                    RemoveComponentImmediate(uid, comp, idx, true, meta);
-                }
-                catch (Exception)
-                {
-                    _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
+                    var comp = comps[i]!;
+                    try
+                    {
+                        var idx = _componentFactory.GetIndex(comp.GetType());
+                        RemoveComponentImmediate(uid, comp, idx, true, meta);
+                    }
+                    catch (Exception)
+                    {
+                        _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
+                    }
                 }
             }
+            finally
+            {
+                ReturnComponents(rented);
+            }
 
-            _entCompIndex.Remove(uid);
         }
 
         private void RemoveComponentDeferred(
@@ -841,9 +867,6 @@ namespace Robust.Shared.GameObjects
                 array.Remove(entityUid.Id);
             }
 
-            // TODO if terminating the entity, maybe defer this?
-            // _entCompIndex.Remove(uid) gets called later on anyways.
-            _entCompIndex.Remove(entityUid, component);
 
             DebugTools.Assert(_netMan.IsClient // Client side prediction can set LastComponentRemoved to some future tick,
                               || metadata.EntityLastModifiedTick >= metadata.LastComponentRemoved);
@@ -1339,7 +1362,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
             // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var comp in _entCompIndex[uid].ToArray())
+            foreach (var comp in GetComponentsSnapshot(uid))
             {
                 if (comp.Deleted) continue;
 
@@ -1350,39 +1373,53 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Internal variant of <see cref="GetComponents"/> that directly returns the actual component set.
         /// </summary>
-        internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
+        internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => GetComponentsSnapshot(uid);
 
         /// <inheritdoc />
         [Pure]
         public int ComponentCount(EntityUid uid)
         {
-            var comps = _entCompIndex[uid];
-            return comps.Count;
+            // Includes components mid-removal, as the old index did.
+            var archetype = GetArchetypeIndex(uid);
+            return archetype == NoArchetype ? 0 : _archetypes[archetype].Components.Length;
         }
 
         /// <summary>
-        /// Copy the components for an entity into the given span,
-        /// or re-allocate the span as an array if there's not enough space.º
+        /// Copies the entity's components (in <see cref="CompIdx"/> order, so MetaData, Transform, Physics first) into
+        /// <paramref name="buffer"/>, or into an array rented from <see cref="ArrayPool{T}"/> if they don't fit.
+        /// Always pass <paramref name="rented"/> to <see cref="ReturnComponents"/> afterwards.
         /// </summary>
-        private void CopyComponentsInto(ref Span<IComponent?> comps, EntityUid uid)
+        private Span<IComponent?> CopyComponents(EntityUid uid, Span<IComponent?> buffer, out IComponent?[]? rented)
         {
-            var set = _entCompIndex[uid];
-            if (set.Count > comps.Length)
+            rented = null;
+            var archetype = GetArchetypeIndex(uid);
+            if (archetype == NoArchetype)
+                return buffer[..0];
+
+            var types = _archetypes[archetype].Components;
+            if (types.Length > buffer.Length)
+                buffer = rented = ArrayPool<IComponent?>.Shared.Rent(types.Length);
+
+            var count = 0;
+            foreach (var idx in types)
             {
-                comps = new IComponent?[set.Count];
+                if (_entTraitArray[idx.Value].TryGetValue(uid, out var comp))
+                    buffer[count++] = comp;
             }
 
-            var i = 0;
-            foreach (var c in set)
-            {
-                comps[i++] = c;
-            }
+            return buffer[..count];
+        }
+
+        private static void ReturnComponents(IComponent?[]? rented)
+        {
+            if (rented != null)
+                ArrayPool<IComponent?>.Shared.Return(rented, clearArray: true);
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            var comps = _entCompIndex[uid].ToArray();
+            var comps = GetComponentsSnapshot(uid);
             foreach (var comp in comps)
             {
                 if (comp.Deleted || comp is not T tComp) continue;

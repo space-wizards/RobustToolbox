@@ -49,8 +49,8 @@ public sealed class ColorableSlider : Slider
             return null;
         }
 
-        string backBox = StylePropertyBackground;
-        string fillBox = StylePropertyFill;
+        var backBox = StylePropertyBackground;
+        var fillBox = StylePropertyFill;
 
         switch (Part)
         {

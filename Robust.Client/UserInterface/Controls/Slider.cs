@@ -185,7 +185,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected virtual void UpdateStyleBoxes()
         {
-            StyleBox? GetStyleBox(string name)
+            StyleBox? GetStyleBox(StyleProp<StyleBox> name)
             {
                 if (TryGetStyleProperty<StyleBox>(name, out var box))
                 {

@@ -1371,8 +1371,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        /// Copies the entity's components (in <see cref="CompIdx"/> order, so MetaData, Transform, Physics first) into
-        /// <paramref name="buffer"/>, or into an array rented from <see cref="ArrayPool{T}"/> if they don't fit.
+        /// Copies the entity's components in <see cref="CompIdx"/> order.
         /// Always pass <paramref name="rented"/> to <see cref="ReturnComponents"/> afterwards.
         /// </summary>
         private Span<IComponent?> CopyComponents(EntityUid uid, Span<IComponent?> buffer, out IComponent?[]? rented)

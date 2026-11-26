@@ -98,9 +98,18 @@ namespace Robust.Client.UserInterface
     {
         private readonly List<StyleProperty> _props = new();
 
-        public MutableSelector Prop(string key, object value)
+        [Obsolete("Use typed StyleProp<T> instead of untyped string name.")]
+        public MutableSelector Prop<T>(string key, T value)
         {
             _props.Add(new StyleProperty(key, value));
+            return this;
+        }
+
+        public MutableSelector Prop<T>(StyleProp<T> styleProp, T value)
+        {
+#pragma warning disable CS0618 // This avoids the boxing of IStyleProp
+            _props.Add(new StyleProperty(styleProp.Name, value));
+#pragma warning restore CS0618
             return this;
         }
 
@@ -302,14 +311,27 @@ namespace Robust.Client.UserInterface
     /// </summary>
     public readonly struct StyleProperty
     {
-        public StyleProperty(string name, object value)
+        [Obsolete("Use MutableSelectors instead")]
+        public StyleProperty(string name, object? value)
         {
             Name = name;
             Value = value;
         }
 
         public string Name { get; }
-        public object Value { get; }
+        public object? Value { get; }
+    }
+
+    public interface IStyleProp
+    {
+        public string Name { get; }
+    }
+
+    // ReSharper disable once UnusedTypeParameter
+    public readonly struct StyleProp<T>(string name) : IStyleProp
+    {
+        public string Name { get; } = name;
+        public static implicit operator StyleProp<T>(string name) => new(name);
     }
 
     public abstract class Selector

@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -52,7 +54,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private readonly Dictionary<string, object> _styleProperties = new();
+        private readonly Dictionary<string, object?> _styleProperties = new();
         private StyleClassCollection _styleClasses;
         private readonly HashSet<string> _stylePseudoClass = new();
 
@@ -267,21 +269,38 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        [Obsolete("Use typed StyleProp<T> instead of untyped string name.")]
         public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
         {
-            if (_styleProperties.TryGetValue(param, out var val) && val is T cast)
+            return TryGetStyleProperty(new StyleProp<T>(param), out value);
+        }
+
+        public bool TryGetStyleProperty<T>(StyleProp<T> styleProp, [MaybeNullWhen(false)] out T value)
+        {
+            if (_styleProperties.TryGetValue(styleProp.Name, out var val))
             {
-                value = cast;
-                return true;
+                DebugTools.Assert(val is T, $"StyleProp {styleProp.Name} expected {typeof(T).Name}, actual {val.GetType()}");
+
+                if (val is T cast)
+                {
+                    value = cast;
+                    return true;
+                }
             }
 
             value = default;
             return false;
         }
 
+        [Obsolete("Use typed StyleProp<T> instead of untyped string name.")]
         public T StylePropertyDefault<T>(string param, T defaultValue)
         {
-            if (TryGetStyleProperty<T>(param, out var value))
+            return StylePropertyDefault(new StyleProp<T>(param), defaultValue);
+        }
+
+        public T StylePropertyDefault<T>(StyleProp<T> styleProp, T defaultValue)
+        {
+            if (TryGetStyleProperty(styleProp, out var value))
                 return value;
 
             return defaultValue;

@@ -11,6 +11,8 @@ namespace Robust.Shared.GameObjects;
 public readonly struct CompIdx : IEquatable<CompIdx>
 {
     internal readonly int Value;
+    internal readonly bool Dense;
+    internal readonly int DenseIndex;
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
@@ -41,17 +43,34 @@ public readonly struct CompIdx : IEquatable<CompIdx>
         return ref array[idx.Value];
     }
 
+    internal static bool GetDense<T>()
+    {
+        return Store<T>.Index.Dense;
+    }
+
+    internal static void SetDense<T>(bool dense, int index)
+    {
+        Store<T>.Index = new CompIdx(Store<T>.Index.Value, dense, index);
+    }
+
     private static int _CompIdxMaster = -1;
 
     private static class Store<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
+        public static CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
     }
 
     internal CompIdx(int value)
     {
         Value = value;
+    }
+
+    internal CompIdx(int value, bool dense, int denseIndex)
+    {
+        Value = value;
+        Dense = dense;
+        DenseIndex = denseIndex;
     }
 
     public bool Equals(CompIdx other)

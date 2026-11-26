@@ -39,6 +39,8 @@ public sealed partial class TextEdit : Control
     [Dependency] private IClipboardManager _clipboard = null!;
 
     // @formatter:off
+    public static readonly StyleProp<Font> StylePropertyFont = "font";
+    public static readonly StyleProp<Color> StylePropertyFontColor = "font-color";
     public static readonly StyleProp<Color> StylePropertyCursorColor = "cursor-color";
     public static readonly StyleProp<Color> StylePropertySelectionColor = "selection-color";
     public const string StylePseudoClassNotEditable = "notEditable";
@@ -834,13 +836,13 @@ public sealed partial class TextEdit : Control
     [Pure]
     private Font GetFont()
     {
-        return StylePropertyDefault("font", UserInterfaceManager.ThemeDefaults.DefaultFont);
+        return StylePropertyDefault(StylePropertyFont, UserInterfaceManager.ThemeDefaults.DefaultFont);
     }
 
     [Pure]
     private Color GetFontColor()
     {
-        return StylePropertyDefault("font-color", Color.White);
+        return StylePropertyDefault(StylePropertyFontColor, Color.White);
     }
 
     internal void QueueLineBreakUpdate()

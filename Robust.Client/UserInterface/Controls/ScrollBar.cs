@@ -189,7 +189,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private StyleBox? _getGrabberStyleBox()
         {
-            if (TryGetStyleProperty<StyleBox>(StylePropertyGrabber, out var styleBox))
+            if (TryGetStyleProperty(StylePropertyGrabber, out var styleBox))
             {
                 return styleBox;
             }
@@ -200,7 +200,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private StyleBox? _getTrackStyleBox()
         {
-            return StylePropertyDefault<StyleBox?>(StylePropertyTrack, null);
+            return StylePropertyDefault(StylePropertyTrack, null);
         }
 
         [System.Diagnostics.Contracts.Pure]

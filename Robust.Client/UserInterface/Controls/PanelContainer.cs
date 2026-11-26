@@ -54,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
                 return PanelOverride;
             }
 
-            TryGetStyleProperty<StyleBox>(StylePropertyPanel, out var box);
+            TryGetStyleProperty(StylePropertyPanel, out var box);
             return box;
         }
     }

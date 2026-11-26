@@ -31,7 +31,7 @@ namespace Robust.Client.UserInterface.Controls
                     return StyleBoxOverride;
                 }
 
-                if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
+                if (TryGetStyleProperty(StylePropertyStyleBox, out var box))
                 {
                     return box;
                 }

@@ -27,6 +27,8 @@ namespace Robust.Client.UserInterface.Controls
         private const float MouseScrollDelay = 0.001f;
 
         public static readonly StyleProp<StyleBox> StylePropertyStyleBox = "stylebox";
+        public static readonly StyleProp<Color> StylePropertyFontColor = "font-color";
+        public static readonly StyleProp<Font> StylePropertyFont= "font";
         public static readonly StyleProp<Color> StylePropertyCursorColor = "cursor-color";
         public static readonly StyleProp<Color> StylePropertySelectionColor = "selection-color";
         public const string StyleClassLineEditNotEditable = "notEditable";
@@ -904,7 +906,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(StylePropertyFont, out var font))
             {
                 return font;
             }
@@ -920,7 +922,7 @@ namespace Robust.Client.UserInterface.Controls
                 return StyleBoxOverride;
             }
 
-            if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
+            if (TryGetStyleProperty(StylePropertyStyleBox, out var box))
             {
                 return box;
             }
@@ -931,7 +933,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Color _getFontColor()
         {
-            if (TryGetStyleProperty("font-color", out Color color))
+            if (TryGetStyleProperty(StylePropertyFontColor, out Color color))
             {
                 return color;
             }

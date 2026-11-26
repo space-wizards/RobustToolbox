@@ -17,6 +17,9 @@ namespace Robust.Client.UserInterface.Controls
     {
         [Dependency] private MarkupTagManager _tagManager = default!;
 
+        public static readonly StyleProp<float> StylePropertyLineHeightScale = nameof(LineHeightScale);
+        public static readonly StyleProp<Font> StylePropertyFont = "font";
+
         private RichTextEntry? _entry;
         private float _lineHeightScale = 1;
         private bool _lineHeightOverride;
@@ -33,7 +36,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (!_lineHeightOverride && TryGetStyleProperty(nameof(LineHeightScale), out float value))
+                if (!_lineHeightOverride && TryGetStyleProperty(StylePropertyLineHeightScale, out float value))
                     return value;
 
                 return _lineHeightScale;
@@ -175,11 +178,11 @@ namespace Robust.Client.UserInterface.Controls
                     return _actualFontOutline;
 
                 var thickness = OutlineThicknessOverride;
-                if (!thickness.HasValue && TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
+                if (!thickness.HasValue && TryGetStyleProperty(Label.StylePropertyFontOutlineThickness, out var styleThickness))
                     thickness = styleThickness;
 
                 var color = OutlineColorOverride;
-                if (!color.HasValue && TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
+                if (!color.HasValue && TryGetStyleProperty(Label.StylePropertyFontOutlineColor, out var styleColor))
                     color = styleColor;
 
                 _actualFontOutline = TextOutline.FromOverrides(thickness, color);
@@ -222,7 +225,7 @@ namespace Robust.Client.UserInterface.Controls
             if (_fontCacheValid)
                 return _actualFont!;
 
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(StylePropertyFont, out var font))
             {
                 _actualFont = font;
                 _fontCacheValid = true;

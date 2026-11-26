@@ -63,7 +63,7 @@ namespace Robust.Client.UserInterface.Controls
                 return BackgroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty<StyleBox>(StylePropertyBackground, out var ret);
+            TryGetStyleProperty(StylePropertyBackground, out var ret);
             return ret;
         }
 
@@ -75,7 +75,7 @@ namespace Robust.Client.UserInterface.Controls
                 return ForegroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty<StyleBox>(StylePropertyForeground, out var ret);
+            TryGetStyleProperty(StylePropertyForeground, out var ret);
             return ret;
         }
 

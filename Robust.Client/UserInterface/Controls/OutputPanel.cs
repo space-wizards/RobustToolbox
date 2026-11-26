@@ -18,6 +18,7 @@ namespace Robust.Client.UserInterface.Controls
     public partial class OutputPanel : Control
     {
         public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
+        public static readonly StyleProp<Font> StylePropertyFont = "font";
 
         [Dependency] private MarkupTagManager _tagManager = default!;
 
@@ -298,7 +299,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(StylePropertyFont, out var font))
             {
                 return font;
             }
@@ -314,7 +315,7 @@ namespace Robust.Client.UserInterface.Controls
                 return StyleBoxOverride;
             }
 
-            TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box);
+            TryGetStyleProperty(StylePropertyStyleBox, out var box);
             return box;
         }
 

@@ -187,7 +187,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             StyleBox? GetStyleBox(StyleProp<StyleBox> name)
             {
-                if (TryGetStyleProperty<StyleBox>(name, out var box))
+                if (TryGetStyleProperty(name, out var box))
                 {
                     return box;
                 }

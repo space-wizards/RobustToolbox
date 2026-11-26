@@ -39,9 +39,9 @@ public sealed class ColorableSlider : Slider
 
     protected override void UpdateStyleBoxes()
     {
-        StyleBox? GetStyleBox(string name)
+        StyleBox? GetStyleBox(StyleProp<StyleBox> name)
         {
-            if (TryGetStyleProperty<StyleBox>(name, out var box))
+            if (TryGetStyleProperty(name, out var box))
             {
                 return box;
             }

@@ -16,7 +16,8 @@ cmd-replay-stop-desc = Stop and unload a replay.
 cmd-replay-stop-help = replay_stop
 
 cmd-replay-load-desc = Load and start a replay.
-cmd-replay-load-help = replay_load <replay folder>
+cmd-replay-load-help = replay_load [replay file]
+    Opens a file dialog if no file is given.
 cmd-replay-load-hint = Replay folder
 
 cmd-replay-skip-desc = Skip forwards or backwards in time.

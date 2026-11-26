@@ -9,8 +9,8 @@ namespace Robust.Client.UserInterface.Controls
 {
     public abstract class ScrollBar : Range
     {
-        public const string StylePropertyTrack = "track";
-        public const string StylePropertyGrabber = "grabber";
+        public static readonly StyleProp<StyleBox?> StylePropertyTrack = "track";
+        public static readonly StyleProp<StyleBox> StylePropertyGrabber = "grabber";
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassGrabbed = "grabbed";
 

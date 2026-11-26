@@ -39,8 +39,8 @@ public sealed partial class TextEdit : Control
     [Dependency] private IClipboardManager _clipboard = null!;
 
     // @formatter:off
-    public const string StylePropertyCursorColor = "cursor-color";
-    public const string StylePropertySelectionColor = "selection-color";
+    public static readonly StyleProp<Color> StylePropertyCursorColor = "cursor-color";
+    public static readonly StyleProp<Color> StylePropertySelectionColor = "selection-color";
     public const string StylePseudoClassNotEditable = "notEditable";
     public const string StylePseudoClassPlaceholder = "placeholder";
     // @formatter:on

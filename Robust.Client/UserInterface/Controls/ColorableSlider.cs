@@ -6,8 +6,8 @@ namespace Robust.Client.UserInterface.Controls;
 
 public sealed class ColorableSlider : Slider
 {
-    public const string StylePropertyFillWhite = "fillWhite"; // needs to be filled with white
-    public const string StylePropertyBackgroundWhite = "backgroundWhite"; // also needs to be filled with white
+    public static readonly StyleProp<StyleBox> StylePropertyFillWhite = "fillWhite"; // needs to be filled with white
+    public static readonly StyleProp<StyleBox> StylePropertyBackgroundWhite = "backgroundWhite"; // also needs to be filled with white
 
     public Color Color { get; private set; } = Color.White;
     public PartSelector Part

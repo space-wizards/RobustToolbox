@@ -11,10 +11,10 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class Slider : Range
     {
-        public const string StylePropertyBackground = "background";
-        public const string StylePropertyForeground = "foreground";
-        public const string StylePropertyFill = "fill";
-        public const string StylePropertyGrabber = "grabber";
+        public static readonly StyleProp<StyleBox> StylePropertyBackground = "background";
+        public static readonly StyleProp<StyleBox> StylePropertyForeground = "foreground";
+        public static readonly StyleProp<StyleBox> StylePropertyFill = "fill";
+        public static readonly StyleProp<StyleBox> StylePropertyGrabber = "grabber";
 
         public event Action<Slider>? OnGrabbed;
         public event Action<Slider>? OnReleased;

@@ -16,11 +16,11 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class Label : Control
     {
-        public const string StylePropertyFontColor = "font-color";
-        public const string StylePropertyFont = "font";
-        public const string StylePropertyFontOutlineThickness = "font-outline-thickness";
-        public const string StylePropertyFontOutlineColor = "font-outline-color";
-        public const string StylePropertyAlignMode = "alignMode";
+        public static readonly StyleProp<Color> StylePropertyFontColor = "font-color";
+        public static readonly StyleProp<Font> StylePropertyFont = "font";
+        public static readonly StyleProp<float> StylePropertyFontOutlineThickness = "font-outline-thickness";
+        public static readonly StyleProp<Color> StylePropertyFontOutlineColor = "font-outline-color";
+        public static readonly StyleProp<AlignMode> StylePropertyAlignMode = "alignMode";
 
         private int _cachedTextHeight;
         private readonly List<int> _cachedTextWidths = new();

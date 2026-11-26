@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -10,7 +11,7 @@ namespace Robust.Client.UserInterface
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control
     {
-        public const string StylePropertyModulateSelf = "modulate-self";
+        public static readonly StyleProp<Color> StylePropertyModulateSelf = "modulate-self";
 
         /// <summary>
         ///     Overrides the style sheet used for this control and its descendants.

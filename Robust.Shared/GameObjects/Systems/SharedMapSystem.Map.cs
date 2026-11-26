@@ -220,7 +220,7 @@ public abstract partial class SharedMapSystem
         SetPaused(uid, true);
     }
 
-    private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
+    private void OnMapRemoved(EntityUid uid, MapComponent component, ref ComponentShutdown args)
     {
         DebugTools.Assert(component.MapId != MapId.Nullspace);
         Maps.Remove(component.MapId);
@@ -310,7 +310,7 @@ public abstract partial class SharedMapSystem
             QueueDel(uid);
     }
 
-    public IEnumerable<MapId> GetAllMapIds()
+    public Dictionary<MapId, EntityUid>.KeyCollection GetAllMapIds()
     {
         return Maps.Keys;
     }

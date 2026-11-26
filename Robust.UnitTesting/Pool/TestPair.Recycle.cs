@@ -35,7 +35,7 @@ public partial class TestPair<TServer, TClient>
         var usageTime = Watch.Elapsed;
         Watch.Restart();
         await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Test gave back pair {Id} in {usageTime.TotalMilliseconds} ms");
-        Kill();
+        await KillAsync();
         var disposeTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Disposed pair {Id} in {disposeTime.TotalMilliseconds} ms");
         ReportErrorLogs();
@@ -56,6 +56,11 @@ public partial class TestPair<TServer, TClient>
         }
     }
 
+    /// <summary>
+    /// Override if you wish to specify custom conditions to validate the pair can be recycled safely.
+    /// </summary>
+    protected virtual Task ValidateCleanup() => Task.CompletedTask;
+
     private async Task OnCleanDispose()
     {
         await Server.WaitIdleAsync();
@@ -70,6 +75,7 @@ public partial class TestPair<TServer, TClient>
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Test borrowed pair {Id} for {usageTime.TotalMilliseconds} ms");
         // Let any last minute failures the test cause happen.
         await ReallyBeIdle();
+        await ValidateCleanup();
         if (!Settings.Destructive)
         {
             if (Client.IsAlive == false)
@@ -81,31 +87,19 @@ public partial class TestPair<TServer, TClient>
 
         if (Settings.MustNotBeReused)
         {
-            Kill();
-            await ReallyBeIdle();
+            await KillAsync();
+            ReportErrorLogs();
             await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Clean disposed in {Watch.Elapsed.TotalMilliseconds} ms");
             return;
         }
 
-        try
-        {
-            var sRuntimeLog = Server.Resolve<IRuntimeLog>();
-            if (sRuntimeLog.ExceptionCount > 0)
-                throw new Exception($"{nameof(CleanReturnAsync)}: Server logged exceptions");
-            var cRuntimeLog = Client.Resolve<IRuntimeLog>();
-            if (cRuntimeLog.ExceptionCount > 0)
-                throw new Exception($"{nameof(CleanReturnAsync)}: Client logged exceptions");
-
-            ReportErrorLogs();
-        }
-        catch (Exception)
-        {
-            Kill();
-            await ReallyBeIdle();
-            await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Dirty disposed in {Watch.Elapsed.TotalMilliseconds} ms");
-            Assert.Warn("Test was dirty-disposed.");
-            throw;
-        }
+        ReportErrorLogs();
+        var sRuntimeLog = Server.Resolve<IRuntimeLog>();
+        if (sRuntimeLog.ExceptionCount > 0)
+            throw new Exception($"{nameof(CleanReturnAsync)}: Server logged exceptions");
+        var cRuntimeLog = Client.Resolve<IRuntimeLog>();
+        if (cRuntimeLog.ExceptionCount > 0)
+            throw new Exception($"{nameof(CleanReturnAsync)}: Client logged exceptions");
 
         var returnTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: PoolManager took {returnTime.TotalMilliseconds} ms to put pair {Id} back into the pool");
@@ -123,6 +117,19 @@ public partial class TestPair<TServer, TClient>
         try
         {
             await OnCleanDispose();
+        }
+        catch
+        {
+            // Preserve the original failure if shutdown also fails.
+            try
+            {
+                await KillAsync();
+            }
+            catch (Exception cleanup)
+            {
+                await TestContext.Out.WriteLineAsync($"Pair shutdown: {cleanup}");
+            }
+            throw;
         }
         finally
         {

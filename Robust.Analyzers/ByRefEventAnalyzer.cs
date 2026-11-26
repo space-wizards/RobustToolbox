@@ -18,7 +18,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdByRefEventSubscribedByValue,
         "By-ref event subscribed to by value",
         "Tried to subscribe to a by-ref event '{0}' by value",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Make sure that methods subscribing to a ref event have the ref keyword for the event argument."
@@ -28,7 +28,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdByRefEventRaisedByValue,
         "By-ref event raised by value",
         "Tried to raise a by-ref event '{0}' by value",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Make sure to use the ref keyword when raising ref events."
@@ -38,7 +38,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdValueEventRaisedByRef,
         "Value event raised by-ref",
         "Tried to raise a value event '{0}' by-ref",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Make sure to not use the ref keyword when raising value events."
@@ -56,6 +56,10 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(compilationContext =>
         {
+            var byRefAttribute = compilationContext.Compilation.GetTypeByMetadataName(ByRefAttribute);
+            if (byRefAttribute == null)
+                return;
+
             var raiseMethods = compilationContext.Compilation
                 .GetTypeByMetadataName("Robust.Shared.GameObjects.EntitySystem")?
                 .GetMembers()
@@ -77,14 +81,15 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
             var raiseMethodsArray = raiseMethods.ToArray();
 
             compilationContext.RegisterOperationAction(
-                ctx => CheckEventRaise(ctx, raiseMethodsArray),
+                ctx => CheckEventRaise(ctx, raiseMethodsArray, byRefAttribute),
                 OperationKind.Invocation);
         });
     }
 
     private static void CheckEventRaise(
         OperationAnalysisContext context,
-        IReadOnlyCollection<IMethodSymbol> raiseMethods)
+        IReadOnlyCollection<IMethodSymbol> raiseMethods,
+        INamedTypeSymbol byRefAttribute)
     {
         if (context.Operation is not IInvocationOperation operation)
             return;
@@ -125,10 +130,6 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         {
             return;
         }
-
-        var byRefAttribute = context.Compilation.GetTypeByMetadataName(ByRefAttribute);
-        if (byRefAttribute == null)
-            return;
 
         var isByRefEventType = eventParameter.Type
             .GetAttributes()

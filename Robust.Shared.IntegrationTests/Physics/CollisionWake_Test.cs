@@ -41,7 +41,6 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitIdleAsync();
 
             var entManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
             var transformSystem = entManager.System<SharedTransformSystem>();
 
@@ -56,16 +55,16 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapSystem.CreateMap(out mapId);
-                grid = mapManager.CreateGridEntity(mapId);
+                grid = mapSystem.CreateGridEntity(mapId);
                 mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
-                entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
+                entityOne = entManager.Spawn("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
                 entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne.Value);
                 xform = entManager.GetComponent<TransformComponent>(entityOne.Value);
                 mapSystem.TryGetMap(mapId, out var mapUid);
                 Assert.That(xform.ParentUid == mapUid);
 
-                entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
+                entityTwo = entManager.SpawnAttachedTo("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
                 entityTwoPhysics = entManager.GetComponent<PhysicsComponent>(entityTwo.Value);
                 Assert.That(entManager.GetComponent<TransformComponent>(entityTwo.Value).ParentUid == grid.Owner);
 

@@ -21,16 +21,15 @@ internal sealed class MapGridMap_Tests
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
 
         var mapId = sim.CreateMap().MapId;
         List<Entity<MapGridComponent>> grids = [];
-        mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered, ref grids);
+        mapSystem.FindGridsIntersecting(mapId, Box2.UnitCentered, ref grids);
         Assert.That(grids, Is.Empty);
 
         entManager.AddComponent<MapGridComponent>(mapSystem.GetMapOrInvalid(mapId));
-        mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered, ref grids);
+        mapSystem.FindGridsIntersecting(mapId, Box2.UnitCentered, ref grids);
         Assert.That(grids, Has.Count.EqualTo(1));
     }
 
@@ -43,11 +42,10 @@ internal sealed class MapGridMap_Tests
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
 
         var mapId = sim.CreateMap().MapId;
-        mapManager.CreateGridEntity(mapId);
+        mapSystem.CreateGridEntity(mapId);
 
         Assert.DoesNotThrow(() =>
         {

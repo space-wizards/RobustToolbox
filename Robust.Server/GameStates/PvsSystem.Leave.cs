@@ -54,14 +54,24 @@ internal sealed partial class PvsSystem
             if (data.LastSeen == toTick)
                 continue;
 
-            session.LeftView.Add(IndexToNetEntity(intPtr));
+            ref var meta = ref _metadataMemory.GetRef(intPtr.Index);
+            if (meta.IsChunkEntity)
+                session.LeftViewChunkEntities.Add(IndexToNetEntity(intPtr));
+            else
+                session.LeftView.Add(IndexToNetEntity(intPtr));
+
             data.LastLeftView = toTick;
         }
 
-        if (session.LeftView.Count == 0)
+        if (session.LeftView.Count == 0 && session.LeftViewChunkEntities.Count == 0)
             return;
 
-        var pvsMessage = new MsgStateLeavePvs {Entities = session.LeftView, Tick = toTick};
+        var pvsMessage = new MsgStateLeavePvs
+        {
+            Entities = session.LeftView,
+            ChunkEntities = session.LeftViewChunkEntities,
+            Tick = toTick,
+        };
 
         // PVS benchmarks use dummy sessions.
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
@@ -69,6 +79,7 @@ internal sealed partial class PvsSystem
             _netMan.ServerSendMessage(pvsMessage, session.Channel);
 
         session.LeftView.Clear();
+        session.LeftViewChunkEntities.Clear();
     }
 
     private record struct PvsLeaveJob(PvsSystem _pvs) : IParallelRobustJob

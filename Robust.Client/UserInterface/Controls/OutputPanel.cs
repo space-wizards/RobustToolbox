@@ -80,6 +80,14 @@ namespace Robust.Client.UserInterface.Controls
             };
         }
 
+        protected override void ChildAdded(Control newChild)
+        {
+            base.ChildAdded(newChild);
+
+            _scrollBar?.SetPositionLast();
+            _scrollDownButton?.SetPositionLast();
+        }
+
         public int EntryCount => _entries.Count;
 
         public StyleBox? StyleBoxOverride
@@ -173,6 +181,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
             entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
+            _entries[index].RemoveControls();
             _entries[index] = entry;
 
             AddNewItemHeight(font, in entry);
@@ -216,7 +225,7 @@ namespace Robust.Client.UserInterface.Controls
             // A stack for format tags.
             // This stack contains the format tag to RETURN TO when popped off.
             // So when a new color tag gets hit this stack gets the previous color pushed on.
-            var context = new MarkupDrawingContext(2);
+            var context = new MarkupDrawingContext(this, 2);
 
             foreach (ref var entry in _entries)
             {

@@ -3,6 +3,8 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -22,6 +24,7 @@ namespace Robust.UnitTesting.Client.UserInterface
         {
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             _userInterfaceManager.InitializeTesting();
+            IoCManager.Resolve<IXamlProxyManager>().Initialize();
         }
 
         [Test]
@@ -241,6 +244,225 @@ namespace Robust.UnitTesting.Client.UserInterface
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
             control.Orphan();
+        }
+
+        /// <summary>
+        ///     Assert that windows correctly re-position themselves if their parent is re-sized.
+        /// </summary>
+        [Test]
+        public void TestWindowTracksRelativePositionOnResize()
+        {
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 100, 100));
+
+            var window = new TestWindow
+            {
+                SetSize = new Vector2(20, 20),
+            };
+
+            _userInterfaceManager.WindowRoot.AddChild(window);
+
+            var initialPos = new Vector2(40, 40);
+
+            LayoutContainer.SetPosition(window, initialPos);
+            Assert.That(window.Position, Is.EqualTo(initialPos));
+
+            _userInterfaceManager.WindowRoot.InvalidateArrange();
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 200, 200));
+
+            // 40,40 x 2 + 10
+            Assert.That(window.Position, Is.EqualTo(new Vector2(90, 90)));
+
+            window.Orphan();
+        }
+
+        /// <summary>
+        ///     Assert that window open/close state and events behave consistently.
+        /// </summary>
+        [Test]
+        public void TestWindowOpenCloseLifecycle()
+        {
+            var window = new DefaultWindow();
+            var closeCount = 0;
+            window.OnClose += () => closeCount++;
+
+            Assert.That(window.IsOpen, Is.False);
+            Assert.That(window.Parent, Is.Null);
+
+            window.Close();
+            Assert.That(closeCount, Is.EqualTo(0));
+
+            window.Open();
+            Assert.Multiple(() =>
+            {
+                Assert.That(window.IsOpen, Is.True);
+                Assert.That(window.Parent, Is.SameAs(_userInterfaceManager.WindowRoot));
+                Assert.That(_userInterfaceManager.WindowRoot.Children, Does.Contain(window));
+            });
+
+            window.Close();
+            Assert.Multiple(() =>
+            {
+                Assert.That(window.IsOpen, Is.False);
+                Assert.That(window.Parent, Is.Null);
+                Assert.That(closeCount, Is.EqualTo(1));
+            });
+
+            window.Close();
+            Assert.That(closeCount, Is.EqualTo(1));
+        }
+
+        /// <summary>
+        ///     Assert that a DefaultWindow close button still works after the window exits the UI tree and is reopened.
+        /// </summary>
+        [Test]
+        public void TestWindowCloseButtonWorksAfterReopen()
+        {
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 100, 100));
+
+            var window = new DefaultWindow();
+            var closeButton = UiTestHelpers.FindDescendant<TextureButton>(
+                window,
+                control => control.HasStyleClass(DefaultWindow.StyleClassWindowCloseButton));
+
+            closeButton.MinSize = new Vector2(10, 10);
+
+            var closeCount = 0;
+            window.OnClose += () => closeCount++;
+
+            window.Open();
+            Assert.That(window.IsOpen, Is.True);
+
+            UiTestHelpers.ClickButton(closeButton);
+            Assert.Multiple(() =>
+            {
+                Assert.That(window.IsOpen, Is.False);
+                Assert.That(closeCount, Is.EqualTo(1));
+            });
+
+            window.Open();
+            Assert.That(window.IsOpen, Is.True);
+
+            UiTestHelpers.ClickButton(closeButton);
+            Assert.Multiple(() =>
+            {
+                Assert.That(window.IsOpen, Is.False);
+                Assert.That(closeCount, Is.EqualTo(2));
+            });
+        }
+
+        /// <summary>
+        ///     Assert that windows can be moved by dragging them.
+        /// </summary>
+        [Test]
+        public void TestWindowCanBeMovedByDragging()
+        {
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 100, 100));
+
+            var window = new TestWindow
+            {
+                SetSize = new Vector2(40, 40),
+                MouseFilter = Control.MouseFilterMode.Stop,
+            };
+
+            _userInterfaceManager.WindowRoot.AddChild(window);
+            window.Arrange(UIBox2.FromDimensions(new Vector2(20, 20), new Vector2(40, 40)));
+
+            window.TestKeyBindDown(CreateGuiEvent(BoundKeyState.Down, new Vector2(30, 30), new Vector2(10, 10)));
+            window.TestMouseMove(CreateMouseMoveEvent(window, new Vector2(60, 60)));
+            window.TestKeyBindUp(CreateGuiEvent(BoundKeyState.Up, new Vector2(60, 60), new Vector2(40, 40)));
+
+            Assert.That(window.Position, Is.EqualTo(new Vector2(50, 50)));
+
+            window.Orphan();
+        }
+
+        /// <summary>
+        ///     Assert that resizable windows can be resized by dragging their bottom-right corner.
+        /// </summary>
+        [Test]
+        public void TestWindowCanBeResizedByDragging()
+        {
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 100, 100));
+
+            var window = new TestWindow
+            {
+                SetSize = new Vector2(40, 40),
+                MinSize = new Vector2(10, 10),
+                MouseFilter = Control.MouseFilterMode.Stop,
+            };
+
+            _userInterfaceManager.WindowRoot.AddChild(window);
+            window.Arrange(UIBox2.FromDimensions(new Vector2(20, 20), new Vector2(40, 40)));
+
+            window.TestKeyBindDown(CreateGuiEvent(BoundKeyState.Down, new Vector2(59, 59), new Vector2(39, 39)));
+            window.TestMouseMove(CreateMouseMoveEvent(window, new Vector2(79, 84)));
+            window.TestKeyBindUp(CreateGuiEvent(BoundKeyState.Up, new Vector2(79, 84), new Vector2(59, 64)));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(window.Position, Is.EqualTo(new Vector2(20, 20)));
+                Assert.That(window.SetSize, Is.EqualTo(new Vector2(60, 65)));
+            });
+
+            window.Orphan();
+        }
+
+        private static GUIBoundKeyEventArgs CreateGuiEvent(
+            BoundKeyState state,
+            Vector2 globalPosition,
+            Vector2 relativePosition)
+        {
+            return new GUIBoundKeyEventArgs(
+                EngineKeyFunctions.UIClick,
+                state,
+                new ScreenCoordinates(globalPosition, WindowId.Main),
+                true,
+                relativePosition,
+                relativePosition);
+        }
+
+        private static GUIMouseMoveEventArgs CreateMouseMoveEvent(Control control, Vector2 globalPosition)
+        {
+            return new GUIMouseMoveEventArgs(
+                Vector2.Zero,
+                control,
+                globalPosition,
+                new ScreenCoordinates(globalPosition, WindowId.Main),
+                globalPosition - control.Position,
+                globalPosition - control.PixelPosition);
+        }
+
+        private sealed class TestWindow : BaseWindow
+        {
+            public void TestKeyBindDown(GUIBoundKeyEventArgs args)
+            {
+                KeyBindDown(args);
+            }
+
+            public void TestKeyBindUp(GUIBoundKeyEventArgs args)
+            {
+                KeyBindUp(args);
+            }
+
+            public void TestMouseMove(GUIMouseMoveEventArgs args)
+            {
+                MouseMove(args);
+            }
+
+            protected override DragMode GetDragModeFor(Vector2 relativeMousePos)
+            {
+                if (Resizable &&
+                    relativeMousePos.X > Size.X - 5 &&
+                    relativeMousePos.Y > Size.Y - 5)
+                {
+                    return DragMode.Bottom | DragMode.Right;
+                }
+
+                if (relativeMousePos.Y < 20)
+                    return DragMode.Move;
+
+                return DragMode.None;
+            }
         }
     }
 }

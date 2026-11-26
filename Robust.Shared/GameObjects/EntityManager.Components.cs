@@ -432,11 +432,15 @@ namespace Robust.Shared.GameObjects
             if (component is IComponentDelta delta)
             {
                 var curTick = _gameTiming.CurTick;
+                delta.LastUnclassifiedDirty = curTick;
                 delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
+                DebugTools.Assert(
+                    delta.LastModifiedFields.Length == reg.NetworkedFields.Length,
+                    $"Component {reg.Name} has {delta.LastModifiedFields.Length} modified field slots, expected {reg.NetworkedFields.Length}.");
                 Array.Fill(delta.LastModifiedFields, curTick);
             }
 
-            component.Networked = reg.NetID != null;
+            component.Networked = reg.Networked;
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
@@ -522,7 +526,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentDeferred(comp, uid, false);
+            RemoveComponentDeferred(comp, uid, false, null);
             return true;
         }
 
@@ -536,20 +540,28 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentDeferred(comp, uid, false);
+            RemoveComponentDeferred(comp, uid, false, meta);
             return true;
         }
 
         /// <inheritdoc />
         public void RemoveComponentDeferred(EntityUid owner, IComponent component)
         {
-            RemoveComponentDeferred(component, owner, false);
+            RemoveComponentDeferred(component, owner, false, null);
         }
 
         /// <inheritdoc />
         public void RemoveComponentDeferred(EntityUid owner, Component component)
         {
-            RemoveComponentDeferred(component, owner, false);
+            RemoveComponentDeferred(component, owner, false, null);
+        }
+
+        /// <summary>
+        /// Returns whether a component is being removed or is queued for deferred removal.
+        /// </summary>
+        internal bool IsComponentPendingRemoval(IComponent component)
+        {
+            return component.LifeStage >= ComponentLifeStage.Stopping || _deleteSet.Contains(component);
         }
 
         private static IEnumerable<IComponent> InSafeOrder(IEnumerable<IComponent> comps, bool forCreation = false)
@@ -603,7 +615,11 @@ namespace Robust.Shared.GameObjects
             _entCompIndex.Remove(uid);
         }
 
-        private void RemoveComponentDeferred(IComponent component, EntityUid uid, bool terminating)
+        private void RemoveComponentDeferred(
+            IComponent component,
+            EntityUid uid,
+            bool terminating,
+            MetaDataComponent? meta)
         {
             if (component == null)
                 throw new ArgumentNullException(nameof(component));
@@ -637,7 +653,10 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(component.LifeStage >= ComponentLifeStage.Added);
 
             if (component.LifeStage is >= ComponentLifeStage.Initialized and < ComponentLifeStage.Stopping)
-                LifeShutdown(uid, component, _componentFactory.GetIndex(component.GetType()));
+            {
+                meta ??= MetaQuery.GetComponentInternal(uid);
+                LifeShutdown(uid, component, meta, _componentFactory.GetIndex(component.GetType()));
+            }
             else if (component.LifeStage == ComponentLifeStage.Added)
             {
                 // The component was added, but never initialized or started. It's kinda weird to add and then
@@ -683,10 +702,6 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-#if EXCEPTION_TOLERANCE
-            try
-            {
-#endif
             // these two components are required on all entities and cannot be removed.
             if (!terminating && component is TransformComponent or MetaDataComponent)
             {
@@ -694,8 +709,17 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            if (!MetaQuery.ResolveInternal(uid, ref meta))
+            {
+                return;
+            }
+
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
             if (component.Running)
-                LifeShutdown(uid, component, idx);
+                LifeShutdown(uid, component, meta, idx);
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
                 LifeRemoveFromEntity(uid, component, idx); // Sets delete
@@ -720,6 +744,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 var uid = component.Owner;
                 var idx = _componentFactory.GetIndex(component.GetType());
+                var meta = MetaQuery.GetComponent(uid);
 
 #if EXCEPTION_TOLERANCE
             try
@@ -730,7 +755,7 @@ namespace Robust.Shared.GameObjects
                 {
                     // TODO add options to cancel deferred deletion?
                     _sawmill.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
-                    LifeShutdown(uid, component, idx);
+                    LifeShutdown(uid, component, meta, idx);
                 }
 
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
@@ -744,7 +769,6 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                var meta = MetaQuery.GetComponent(uid);
                 DeleteComponent(uid, component, idx, false, meta);
             }
 
@@ -756,11 +780,8 @@ namespace Robust.Shared.GameObjects
             IComponent component,
             CompIdx idx,
             bool terminating,
-            MetaDataComponent? metadata)
+            MetaDataComponent metadata)
         {
-            if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
-                return;
-
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, entityUid), false, metadata, idx);
             ComponentRemoved?.Invoke(eventArgs);
             EventBusInternal.OnComponentRemoved(eventArgs);
@@ -768,7 +789,7 @@ namespace Robust.Shared.GameObjects
             if (!terminating)
             {
                 var reg = _componentFactory.GetRegistration(component);
-                DebugTools.Assert(component.Networked == (reg.NetID != null));
+                DebugTools.Assert(component.Networked == reg.Networked);
                 if (reg.NetID != null)
                 {
                     if (!metadata.NetComponents.Remove(reg.NetID.Value))
@@ -1260,6 +1281,18 @@ namespace Robust.Shared.GameObjects
             return new EntityQuery<TComp1>(this, comps, jaggedArray);
         }
 
+        // this literally just exists to handle SharedLightComponent and is pretty hacky
+        // just move point light to shared and kill this.
+        // TODO LIGHT
+        internal EntityQuery<TCompShared> GetEntityQuery<TCompShared, TComp>()
+            where TCompShared : IComponent
+            where TComp : TCompShared
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
+            return new EntityQuery<TCompShared>(this, comps);
+        }
+
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             var comps = _entTraitDict[type];
@@ -1285,6 +1318,7 @@ namespace Robust.Shared.GameObjects
         internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
 
         /// <inheritdoc />
+        [Pure]
         public int ComponentCount(EntityUid uid)
         {
             var comps = _entCompIndex[uid];
@@ -2183,6 +2217,98 @@ namespace Robust.Shared.GameObjects
             return GetComponent(uid);
         }
 
+        /// <summary>
+        /// This method will always return <typeparamref name="TComp1"/> for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <returns>The component in question</returns>
+        public TComp1 EnsureComp(EntityUid uid)
+        {
+            if (TryComp(uid, out var component))
+            {
+                // Check for deferred component removal.
+                if (component.LifeStage <= ComponentLifeStage.Running)
+                    return component;
+
+                _entMan.RemoveComponent(uid, component);
+            }
+
+            return AddComp(uid);
+        }
+
+        /// <summary>
+        /// This method will always return <typeparamref name="TComp1"/> for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <param name="comp">The output component after being ensured.</param>
+        /// <returns>True if the component already existed</returns>
+        public bool EnsureComp(EntityUid uid, out TComp1 comp)
+        {
+            if (TryComp(uid, out var currentComp))
+            {
+                // Check for deferred component removal.
+                if (currentComp.LifeStage <= ComponentLifeStage.Running)
+                {
+                    comp = currentComp;
+                    return true;
+                }
+
+                _entMan.RemoveComponent(uid, currentComp);
+            }
+
+            comp = AddComp(uid);
+            return false;
+        }
+
+        /// <summary>
+        /// This method will always return <typeparamref name="TComp1"/> for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="ent">Entity to modify.</param>
+        /// <returns>True if the component already existed</returns>
+        public bool EnsureComp(ref Entity<TComp1?> ent)
+        {
+            if (ent.Comp == null)
+                return EnsureComp(ent.Owner, out ent.Comp);
+
+            DebugTools.AssertOwner(ent, ent.Comp);
+
+            // Check for deferred component removal.
+            if (ent.Comp.LifeStage <= ComponentLifeStage.Running)
+                return true;
+
+            _entMan.RemoveComponent(ent, ent.Comp); // The non-query version doesn't do this for some reason, don't ask me why.
+            ent.Comp = AddComp(ent);
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the component with the specified reference type,
+        /// Without needing to have the component itself.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        public bool RemComp(EntityUid uid)
+        {
+            if (!TryComp(uid, out var comp))
+                return false;
+
+            _entMan.RemoveComponent(uid, comp);
+            return true;
+        }
+
+        /// <summary>
+        /// Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
+        /// Without needing to have the component itself.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        public bool RemCompDeferred(EntityUid uid)
+        {
+            if (!TryComp(uid, out var comp))
+                return false;
+
+            _entMan.RemoveComponentDeferred(uid, comp);
+            return true;
+        }
+
         #region Internal
 
         /// <summary>
@@ -2264,7 +2390,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        /// Elides the component.Deleted check of <see cref="Resolve"/>
+        /// Elides the component.Deleted check of <see cref="Resolve(EntityUid,ref TComp1,bool)"/>
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -2309,6 +2435,13 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+
+        private TComp1 AddComp(EntityUid uid) // Convenience function for query methods, shouldn't be used by consumers since they can use proper AddComponent.
+        {
+            var comp = _entMan.ComponentFactory.GetComponent(CompIdx.Index<TComp1>());
+            _entMan.AddComponent(uid, comp);
+            return (TComp1)comp;
+        }
     }
 
     #region ComponentRegistry Query
@@ -2526,6 +2659,28 @@ namespace Robust.Shared.GameObjects
         {
             _traitDict.Dispose();
         }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1> _enumerator = enumerator;
+
+            public Entity<TComp1> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp))
+                    return false;
+
+                Current = (id, comp);
+                return true;
+            }
+        }
     }
 
     /// <inheritdoc cref="EntityQueryEnumerator{TComp1}"/>
@@ -2600,6 +2755,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1, TComp2> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1, TComp2> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2))
+                    return false;
+
+                Current = (id, comp1, comp2);
+                return true;
+            }
         }
     }
 
@@ -2693,6 +2870,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1, TComp2, TComp3> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1, TComp2, TComp3> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3);
+                return true;
+            }
         }
     }
 
@@ -2803,6 +3002,28 @@ namespace Robust.Shared.GameObjects
         {
             _traitDict.Dispose();
         }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3, TComp4> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3, out var comp4))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3, comp4);
+                return true;
+            }
+        }
     }
 
     #endregion
@@ -2888,6 +3109,28 @@ namespace Robust.Shared.GameObjects
         {
             _traitDict.Dispose();
         }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1> _enumerator = enumerator;
+
+            public Entity<TComp1> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp))
+                    return false;
+
+                Current = (id, comp);
+                return true;
+            }
+        }
     }
 
     /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
@@ -2953,6 +3196,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1, TComp2> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1, TComp2> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2))
+                    return false;
+
+                Current = (id, comp1, comp2);
+                return true;
+            }
         }
     }
 
@@ -3036,6 +3301,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1, TComp2, TComp3> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1, TComp2, TComp3> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3);
+                return true;
+            }
         }
     }
 
@@ -3134,6 +3421,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3, TComp4> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3, out var comp4))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3, comp4);
+                return true;
+            }
         }
     }
 

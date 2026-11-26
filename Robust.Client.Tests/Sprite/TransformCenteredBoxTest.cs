@@ -25,11 +25,9 @@ public sealed class TransformCenteredBoxTest
     {
         var result = Clyde.TransformCenteredBox(args.box, args.angle, args.offset, args.scale);
         var expected = Matrix3x2.CreateRotation(args.angle).TransformBox(args.box).Translated(args.offset);
-        expected = new(
-            expected.Left * args.scale.X,
-            expected.Top * args.scale.Y,
-            expected.Right * args.scale.X,
-            expected.Bottom * args.scale.Y);
+        expected = Box2.FromTwoPoints(
+            new Vector2(expected.Left * args.scale.X, expected.Top * args.scale.Y),
+            new Vector2(expected.Right * args.scale.X, expected.Bottom * args.scale.Y));
         Assert.That(result, Is.Approximately(expected));
     }
 }

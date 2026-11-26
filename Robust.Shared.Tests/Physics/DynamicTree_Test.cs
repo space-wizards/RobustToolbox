@@ -60,11 +60,12 @@ namespace Robust.Shared.Tests.Physics
         [Test]
         public void AddAndGrow()
         {
-            var dt = new DynamicTree<int>((in int x) => aabbs1[x], capacity: 16, growthFunc: x => x += 2);
+            const int proxyCapacity = 16;
+            var dt = new DynamicTree<int>((in int x) => aabbs1[x], capacity: proxyCapacity, growthFunc: x => x += 2);
 
             var initCap = dt.Capacity;
 
-            Assert.That(initCap, Is.EqualTo(16));
+            Assert.That(initCap, Is.EqualTo(2 * proxyCapacity - 1));
 
             Assert.Multiple(() =>
             {
@@ -191,6 +192,38 @@ namespace Robust.Shared.Tests.Physics
                 {
                     Assert.That(dt.Remove(i), $"Remove {i}");
                 }
+            });
+        }
+
+        [Test]
+        public void ClearRemovesAllEntries()
+        {
+            var aabbs = new[]
+            {
+                ((Box2) default).Enlarged(1),
+                new Box2(float.NaN, float.NaN, float.NaN, float.NaN),
+            };
+
+            var dt = new DynamicTree<int>((in int x) => aabbs[x], capacity: 16, growthFunc: x => x += 2);
+
+            Assert.That(dt.Add(0), Is.True);
+            Assert.That(dt.Add(1), Is.True);
+            Assert.That(dt.Count, Is.EqualTo(2));
+
+            dt.Clear();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(dt.Count, Is.Zero);
+                Assert.That(dt.Contains(0), Is.False);
+                Assert.That(dt.Contains(1), Is.False);
+                Assert.That(dt, Is.Empty);
+            });
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(dt.Add(0), Is.True);
+                Assert.That(dt.Add(1), Is.True);
             });
         }
 

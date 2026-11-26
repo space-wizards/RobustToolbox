@@ -40,14 +40,13 @@ internal sealed class GridMerge_Tests
     public void Merge(Vector2i offset, Angle angle, Box2 bounds)
     {
         var sim = GetSim();
-        var mapManager = sim.Resolve<IMapManager>();
         var entMan = sim.Resolve<IEntityManager>();
         var mapSystem = entMan.System<SharedMapSystem>();
         var gridFixtures = entMan.System<GridFixtureSystem>();
 
         var mapId = sim.CreateMap().MapId;
-        var grid1 = mapManager.CreateGridEntity(mapId);
-        var grid2 = mapManager.CreateGridEntity(mapId);
+        var grid1 = mapSystem.CreateGridEntity(mapId);
+        var grid2 = mapSystem.CreateGridEntity(mapId);
         var tiles = new List<(Vector2i, Tile)>();
 
         for (var y = 0; y < 3; y++)
@@ -58,11 +57,11 @@ internal sealed class GridMerge_Tests
         mapSystem.SetTiles(grid1, tiles);
         mapSystem.SetTiles(grid2, tiles);
 
-        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
+        Assert.That(mapSystem.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
         gridFixtures.Merge(grid1.Owner, grid2.Owner, offset, angle, grid1.Comp, grid2.Comp);
 
-        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(mapSystem.GetAllGrids(mapId).Count(), Is.EqualTo(1));
 
         Assert.That(grid1.Comp.LocalAABB, Is.EqualTo(bounds));
     }

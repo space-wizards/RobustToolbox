@@ -22,6 +22,7 @@ internal sealed class MsgTransferData : NetMessage
         if (length > BaseTransferImpl.BufferSize)
             throw new Exception("Buffer size is too large");
 
+        buffer.AssertAtLeastSize(length);
         var arr = ArrayPool<byte>.Shared.Rent(length);
         buffer.ReadBytes(arr, 0, length);
 

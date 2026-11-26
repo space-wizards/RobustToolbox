@@ -30,6 +30,9 @@ namespace Robust.Shared.Utility
         [Pure]
         public static string AsString(this YamlNode node)
         {
+            if (node is YamlMappingNode mappingNode)
+                return mappingNode.ToString();
+
             return ((YamlScalarNode) node).Value ?? "";
         }
 

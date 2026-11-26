@@ -98,6 +98,64 @@ namespace Robust.Shared.Maths.Tests
         }
 
         [Test]
+        public void Box2InvalidConstruction()
+        {
+#if DEBUG
+            Assert.That(() => new UIBox2(3, 4, -1, -2), Throws.Exception);
+            Assert.That(() => new UIBox2(new Vector2(3, 4), new Vector2(-1, -2)), Throws.Exception);
+#else
+            var expected = new UIBox2(3, 4, 3, 4);
+
+            Assert.That(new UIBox2(3, 4, -1, -2), Is.EqualTo(expected));
+            Assert.That(new UIBox2(new Vector2(3, 4), new Vector2(-1, -2)), Is.EqualTo(expected));
+#endif
+        }
+
+        [Test]
+        public void Box2InvalidProperties()
+        {
+#if DEBUG
+            var box = new UIBox2(-1, -2, 3, 4);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(() => box.Left = 4, Throws.Exception);
+                Assert.That(() => box.Top = 5, Throws.Exception);
+                Assert.That(() => box.Right = -2, Throws.Exception);
+                Assert.That(() => box.Bottom = -3, Throws.Exception);
+                Assert.That(() => box.TopLeft = new Vector2(4, 0), Throws.Exception);
+                Assert.That(() => box.BottomRight = new Vector2(0, -3), Throws.Exception);
+            }
+#else
+            var expected = new UIBox2(-1, -2, 3, 4);
+
+            var left = expected;
+            left.Left = 4;
+            Assert.That(left, Is.EqualTo(new UIBox2(3, -2, 3, 4)));
+
+            var top = expected;
+            top.Top = 5;
+            Assert.That(top, Is.EqualTo(new UIBox2(-1, 4, 3, 4)));
+
+            var right = expected;
+            right.Right = -2;
+            Assert.That(right, Is.EqualTo(new UIBox2(-1, -2, -1, 4)));
+
+            var bottom = expected;
+            bottom.Bottom = -3;
+            Assert.That(bottom, Is.EqualTo(new UIBox2(-1, -2, 3, -2)));
+
+            var topLeft = expected;
+            topLeft.TopLeft = new Vector2(4, 0);
+            Assert.That(topLeft, Is.EqualTo(new UIBox2(3, 0, 3, 4)));
+
+            var bottomRight = expected;
+            bottomRight.BottomRight = new Vector2(0, -3);
+            Assert.That(bottomRight, Is.EqualTo(new UIBox2(-1, -2, 0, -2)));
+#endif
+        }
+
+        [Test]
         public void Box2CornerVectorProperties([ValueSource(nameof(Sources))] (float, float, float, float) test)
         {
             var (left, top, right, bottom) = test;
@@ -329,7 +387,7 @@ namespace Robust.Shared.Maths.Tests
             var (left, top, right, bottom) = test;
 
             var controlBox = new UIBox2(left, top, right, bottom);
-            var differentBox = new UIBox2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var differentBox = new UIBox2(-MathF.PI, -MathF.PI, MathF.PI, MathF.PI);
             var sameBox = new UIBox2(left, top, right, bottom);
             Object sameBoxAsObject = sameBox;
             UIBox2? nullBox = null;
@@ -351,7 +409,7 @@ namespace Robust.Shared.Maths.Tests
             var (left, top, right, bottom) = test;
 
             var controlBox = new UIBox2(left, top, right, bottom);
-            var differentBox = new UIBox2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var differentBox = new UIBox2(-MathF.PI, -MathF.PI, MathF.PI, MathF.PI);
             var sameBox = new UIBox2(left, top, right, bottom);
 
 #pragma warning disable CS1718 // Comparison made to same variable
@@ -368,7 +426,7 @@ namespace Robust.Shared.Maths.Tests
             var (left, top, right, bottom) = test;
 
             var controlBox = new UIBox2(left, top, right, bottom);
-            var differentBox = new UIBox2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var differentBox = new UIBox2(-MathF.PI, -MathF.PI, MathF.PI, MathF.PI);
             var sameBox = new UIBox2(left, top, right, bottom);
 
 #pragma warning disable CS1718 // Comparison made to same variable

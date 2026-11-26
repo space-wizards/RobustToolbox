@@ -234,7 +234,7 @@ namespace Robust.UnitTesting
                 }
             }
 
-            private async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserData userData, LoginType loginType)
+            internal async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserData userData, LoginType loginType)
             {
                 var args = new NetConnectingArgs(userData, ip, loginType);
                 foreach (var conn in _connectingEvent)

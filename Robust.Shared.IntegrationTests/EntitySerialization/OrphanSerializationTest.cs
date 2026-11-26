@@ -49,9 +49,9 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             mapSys.CreateMap(out mapId);
-            var entAUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var entBUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var childUid = entMan.SpawnEntity(null, new EntityCoordinates(entBUid, 0, 0));
+            var entAUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapId));
+            var entBUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapId));
+            var childUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(entBUid, 0, 0));
             entA = Get(entAUid, entMan);
             entB = Get(entBUid, entMan);
             child = Get(childUid, entMan);
@@ -129,7 +129,6 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
         var mapSys = server.System<SharedMapSystem>();
         var loader = server.System<MapLoaderSystem>();
         var xform = server.System<SharedTransformSystem>();
-        var mapMan = server.ResolveDependency<IMapManager>();
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var pathA = new ResPath($"{nameof(TestOrphanedGridSerialization)}_A.yml");
         var pathB = new ResPath($"{nameof(TestOrphanedGridSerialization)}_B.yml");
@@ -150,16 +149,16 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
             var mapUid = mapSys.CreateMap(out mapId);
             map = Get(mapUid, entMan);
 
-            var gridAUid = mapMan.CreateGridEntity(mapId);
+            var gridAUid = mapSys.CreateGridEntity(mapId);
             mapSys.SetTile(gridAUid, Vector2i.Zero, new Tile(tDef.TileId));
             gridA = Get(gridAUid, entMan);
             xform.SetLocalPosition(gridA.Owner, new(100, 100));
 
-            var gridBUid = mapMan.CreateGridEntity(mapId);
+            var gridBUid = mapSys.CreateGridEntity(mapId);
             mapSys.SetTile(gridBUid, Vector2i.Zero, new Tile(tDef.TileId));
             gridB = Get(gridBUid, entMan);
 
-            var childUid = entMan.SpawnEntity(null, new EntityCoordinates(gridBUid, 0.5f, 0.5f));
+            var childUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridBUid, 0.5f, 0.5f));
             child = Get(childUid, entMan);
 
             map.Comp2.Id = nameof(map);

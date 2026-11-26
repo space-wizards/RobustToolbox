@@ -718,7 +718,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed partial class ChunkInfoCommand : LocalizedEntityCommands
     {
-        [Dependency] private IMapManager _map = default!;
         [Dependency] private IEyeManager _eye = default!;
         [Dependency] private IInputManager _input = default!;
         [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -729,7 +728,7 @@ namespace Robust.Client.Console.Commands
         {
             var mousePos = _eye.PixelToMap(_input.MouseScreenPosition);
 
-            if (!_map.TryFindGridAt(mousePos, out var gridUid, out var grid))
+            if (!_mapSystem.TryFindGridAt(mousePos, out var gridUid, out var grid))
             {
                 shell.WriteLine("No grid under your mouse cursor.");
                 return;

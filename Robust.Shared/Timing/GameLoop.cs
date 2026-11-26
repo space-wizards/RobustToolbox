@@ -310,7 +310,7 @@ namespace Robust.Shared.Timing
                 try
 #endif
                 {
-                    using (_prof.Group("Render"))
+                    using (_prof.Frame("Render"))
                     {
                         Render?.Invoke(this, realFrameEvent);
                     }
@@ -325,9 +325,13 @@ namespace Robust.Shared.Timing
                 {
                     using var gc = _prof.Group("GC Overview");
 
-                    _prof.WriteValue("Gen 0 Count", ProfData.Int32(GC.CollectionCount(0) - profFrameGcGen0));
-                    _prof.WriteValue("Gen 1 Count", ProfData.Int32(GC.CollectionCount(1) - profFrameGcGen1));
-                    _prof.WriteValue("Gen 2 Count", ProfData.Int32(GC.CollectionCount(2) - profFrameGcGen2));
+                    var gcGen0 = GC.CollectionCount(0);
+                    var gcGen1 = GC.CollectionCount(1);
+                    var gcGen2 = GC.CollectionCount(2);
+                    _prof.WriteValue("Gen 0 Count", ProfData.Int32(gcGen0 - profFrameGcGen0));
+                    _prof.WriteValue("Gen 1 Count", ProfData.Int32(gcGen1 - profFrameGcGen1));
+                    _prof.WriteValue("Gen 2 Count", ProfData.Int32(gcGen2 - profFrameGcGen2));
+                    _prof.EmitMemoryPlots(gcGen0, gcGen1, gcGen2);
                 }
 
                 _prof.WriteGroupEnd(profFrameGroupStart, "Frame", profFrameSw);

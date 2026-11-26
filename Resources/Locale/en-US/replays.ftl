@@ -33,6 +33,8 @@ cmd-replay-error-no-replay = Not currently playing a replay.
 cmd-replay-error-already-loaded = A replay is already loaded.
 cmd-replay-error-run-level = You cannot load a replay while connected to a server.
 
+cmd-replay-toggleui-desc = Toggles the replay control UI.
+
 # Recording commands
 
 cmd-replay-recording-start-desc = Starts a replay recording, optionally with some time limit.

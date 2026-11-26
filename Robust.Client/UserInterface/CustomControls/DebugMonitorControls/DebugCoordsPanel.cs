@@ -19,7 +19,6 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
         [Dependency] private IInputManager _inputManager = default!;
         [Dependency] private IEntityManager _entityManager = default!;
         [Dependency] private IClyde _displayManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IBaseClient _baseClient = default!;
 
         private readonly StringBuilder _textBuilder = new();
@@ -76,7 +75,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
                     var mapSystem = _entityManager.System<SharedMapSystem>();
                     var xformSystem = _entityManager.System<SharedTransformSystem>();
 
-                    if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGridUid, out var mouseGrid))
+                    if (mapSystem.TryFindGridAt(mouseWorldMap, out var mouseGridUid, out var mouseGrid))
                     {
                         mouseGridPos = mapSystem.MapToGrid(mouseGridUid, mouseWorldMap);
                         tile = mapSystem.GetTileRef(mouseGridUid, mouseGrid, mouseGridPos);
@@ -86,7 +85,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
                         mouseGridPos = new EntityCoordinates(mapSystem.GetMapOrInvalid(mouseWorldMap.MapId),
                             mouseWorldMap.Position);
                         tile = new TileRef(EntityUid.Invalid,
-                            mouseGridPos.ToVector2i(_entityManager, _mapManager, xformSystem), Tile.Empty);
+                            mouseGridPos.ToVector2i(_entityManager, xformSystem), Tile.Empty);
                     }
                 }
             }

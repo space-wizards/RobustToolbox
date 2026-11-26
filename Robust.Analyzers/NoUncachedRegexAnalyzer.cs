@@ -16,7 +16,7 @@ public sealed class NoUncachedRegexAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUncachedRegex,
         "Use of uncached static Regex function",
         "Usage of a static Regex function that takes in a pattern string. This can cause constant re-parsing of the pattern.",
-        "Usage",
+        DiagnosticCategories.Performance,
         DiagnosticSeverity.Warning,
         true);
 
@@ -37,10 +37,19 @@ public sealed class NoUncachedRegexAnalyzer : DiagnosticAnalyzer
     {
         context.EnableConcurrentExecution();
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.RegisterOperationAction(CheckInvocation, OperationKind.Invocation);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var regexType = compilationContext.Compilation.GetTypeByMetadataName(RegexType);
+            if (regexType is null)
+                return;
+
+            compilationContext.RegisterOperationAction(
+                operationContext => CheckInvocation(operationContext, regexType),
+                OperationKind.Invocation);
+        });
     }
 
-    private static void CheckInvocation(OperationAnalysisContext context)
+    private static void CheckInvocation(OperationAnalysisContext context, INamedTypeSymbol regexType)
     {
         if (context.Operation is not IInvocationOperation invocation)
             return;
@@ -54,7 +63,6 @@ public sealed class NoUncachedRegexAnalyzer : DiagnosticAnalyzer
         if (targetMethod.ContainingType.Name != "Regex")
             return;
 
-        var regexType = context.Compilation.GetTypeByMetadataName(RegexType);
         if (!SymbolEqualityComparer.Default.Equals(regexType, targetMethod.ContainingType))
             return;
 

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -16,6 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 [TypeSerializer]
 public sealed class DictionarySerializer<TKey, TValue> :
+    BaseTypeSerializer,
     ITypeSerializer<Dictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode>,
@@ -78,7 +77,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        var mappingNode = new MappingDataNode();
+        var mappingNode = new MappingDataNode(value.Count);
         foreach (var (key, val) in value)
         {
             // TODO SERIALIZATION
@@ -123,7 +122,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
+        return InterfaceWrite(serializationManager, value, alwaysWrite, context);
     }
 
     #endregion
@@ -134,7 +133,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         MappingDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context,
         ISerializationManager.InstantiationDelegate<Dictionary<TKey, TValue>>? instanceProvider)
     {
-        var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>();
+        var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>(node.Children.Count);
 
         var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)
@@ -153,8 +152,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-            sawmill.Warning(
+            Log.Warning(
                 $"Provided value to a Read-call for a {nameof(FrozenDictionary<TKey, TValue>)}. Ignoring...");
         }
 
@@ -181,12 +179,11 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-            sawmill.Warning(
+            Log.Warning(
                 $"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
         }
 
-        var dict = new Dictionary<TKey, TValue>();
+        var dict = new Dictionary<TKey, TValue>(node.Children.Count);
 
         var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)

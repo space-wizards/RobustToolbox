@@ -91,7 +91,7 @@ public sealed partial class ReplayLoadManager
         // TODO add progress bar / loading stage for this?
         await callback(0, total, LoadingState.Initializing, true);
         var nextIndex = checkpoint.Index + 1;
-        var next =  nextIndex < data.States.Count ? data.States[nextIndex] : null;
+        var next =  nextIndex < data.Count ? data.GetState(nextIndex) : null;
         _gameState.ClearDetachQueue();
         _gameState.ApplyGameState(checkpoint.State, next);
 

@@ -64,7 +64,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             InitCompletions();
 
-            CommandBar.OnTextChanged += OnCommandChanged;
             CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnHistoryChanged += OnHistoryChanged;
@@ -140,8 +139,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 CompletionCommandEntered();
             }
-
-            // commandChanged = true;
         }
 
         private void OnHistoryChanged()
@@ -205,11 +202,6 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             CompletionKeyDown(args);
-        }
-
-        private void OnCommandChanged(LineEdit.LineEditEventArgs args)
-        {
-            // commandChanged = true;
         }
 
         private async void _loadHistoryFromDisk()

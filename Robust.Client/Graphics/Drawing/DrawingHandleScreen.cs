@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Robust.Client.GameObjects;
@@ -113,8 +114,9 @@ namespace Robust.Client.Graphics
 
             for (var i = 0; i <= segments; i++)
             {
-                var angle = i / (float) segments * MathHelper.TwoPi;
-                var pos = new Vector2(MathF.Sin(angle), MathF.Cos(angle));
+                var angle = i / (float) segments * Math.Tau;
+                var (sin, cos) = Math.SinCos(angle);
+                var pos = new Vector2((float) sin, (float) cos);
 
                 buffer[i] = position + pos * radius;
             }
@@ -154,11 +156,29 @@ namespace Robust.Client.Graphics
         public Vector2 DrawString(Font font, Vector2 pos, string str)
             => DrawString(font, pos, str, Color.White);
 
-        public Vector2 DrawString(Font font, Vector2 pos, ReadOnlySpan<char> str, float scale, Color color)
+        public Vector2 DrawString(Font font, Vector2 pos, ReadOnlySpan<char> str, float scale, Color color, TextOutline? outline = null)
         {
             var advanceTotal = Vector2.Zero;
             var baseLine = new Vector2(pos.X, font.GetAscent(scale) + pos.Y);
             var lineHeight = font.GetLineHeight(scale);
+
+            if (outline is { } outlineSettings)
+            {
+                foreach (var rune in str.EnumerateRunes())
+                {
+                    if (rune == new Rune('\n'))
+                    {
+                        baseLine.X = pos.X;
+                        baseLine.Y += lineHeight;
+                        continue;
+                    }
+
+                    var advance = font.DrawCharOutline(this, rune, baseLine, scale, outlineSettings);
+                    baseLine.X += advance;
+                }
+
+                baseLine = new Vector2(pos.X, font.GetAscent(scale) + pos.Y);
+            }
 
             foreach (var rune in str.EnumerateRunes())
             {
@@ -172,7 +192,7 @@ namespace Robust.Client.Graphics
 
                 var advance = font.DrawChar(this, rune, baseLine, scale, color);
                 advanceTotal.X += advance;
-                baseLine += new Vector2(advance, 0);
+                baseLine.X += advance;
             }
 
             return advanceTotal;
@@ -224,6 +244,7 @@ namespace Robust.Client.Graphics
         /// <param name="xform">The entity's transform component.
         /// Only required if <see cref="overrideDirection"/> is null.</param>
         /// <param name="xformSystem">The transform system</param>
+        /// <param name="postShaders">The post-shader passes to apply to this draw.</param>
         public abstract void DrawEntity(EntityUid entity,
             Vector2 position,
             Vector2 scale,
@@ -232,6 +253,7 @@ namespace Robust.Client.Graphics
             Shared.Maths.Direction? overrideDirection = null,
             SpriteComponent? sprite = null,
             TransformComponent? xform = null,
-            SharedTransformSystem? xformSystem = null);
+            SharedTransformSystem? xformSystem = null,
+            IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null);
     }
 }

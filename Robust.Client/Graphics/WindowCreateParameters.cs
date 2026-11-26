@@ -11,6 +11,7 @@ namespace Robust.Client.Graphics
         public bool Visible = true;
         public IClydeMonitor? Monitor;
         public bool Fullscreen;
+        internal bool Main;
 
         /// <summary>
         /// The window that will "own" this window.

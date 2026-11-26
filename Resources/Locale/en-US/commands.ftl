@@ -16,6 +16,7 @@ cmd-parse-failure-grid = {$arg} is not a valid grid.
 cmd-parse-failure-cultureinfo = "{$arg}" is not valid CultureInfo.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 cmd-parse-failure-session = There is no session with username: {$username}
+cmd-parse-failure-session-guid = There is no session with the GUID: {$guid}
 
 cmd-error-file-not-found = Could not find file: {$file}.
 cmd-error-dir-not-found = Could not find directory: {$dir}.
@@ -30,7 +31,7 @@ cmd-help-help = Usage: {$command} [command name]
 cmd-help-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
 cmd-help-unknown = Unknown command: { $command }
 cmd-help-top = { $command } - { $description }
-cmd-help-invalid-args = Invalid amount of arguments.
+cmd-help-invalid-args = Invalid number of arguments.
 cmd-help-arg-cmdname = [command name]
 
 ## 'cvar' command
@@ -55,7 +56,7 @@ cmd-cvar_subs-invalid-args = Must provide exactly one argument.
 cmd-cvar_subs-arg-name = <name>
 
 ## 'list' command
-cmd-list-desc = Lists available commands, with optional search filter.
+cmd-list-desc = Lists available commands, with an optional search filter.
 cmd-list-help = Usage: {$command} [filter]
     Lists all available commands. If an argument is provided, it will be used to filter commands by name.
 
@@ -149,7 +150,7 @@ cmd-monitor-plus-all-hint = Shows all monitors
 ## 'setambientlight' command
 cmd-set-ambient-light-desc = Allows you to set the ambient light for the specified map, in SRGB.
 cmd-set-ambient-light-help = Usage: {$command} [mapid] [r g b a]
-cmd-set-ambient-light-parse = Unable to parse args as a byte values for a color.
+cmd-set-ambient-light-parse = Unable to parse arguments as byte values for a color.
 
 ## Mapping commands
 
@@ -182,7 +183,7 @@ cmd-hint-savebp-id = <Grid EntityID>
 
 cmd-flushcookies-desc = Flush CEF cookie storage to disk.
 cmd-flushcookies-help = Usage: {$command}
-    This ensure cookies are properly saved to disk in the event of unclean shutdowns.
+    This ensures cookies are properly saved to disk in the event of unclean shutdowns.
     Note that the actual operation is asynchronous.
 
 cmd-ldrsc-desc = Pre-caches a resource.
@@ -234,6 +235,22 @@ cmd-togglelightbuf-help = Usage: {$command}
 
 cmd-chunkinfo-desc = Gets info about a chunk under your mouse cursor.
 cmd-chunkinfo-help = Usage: {$command}
+
+cmd-chunkentities-desc = Lists chunk entities in the client viewport OR in the specified range.
+cmd-chunkentities-help = Usage: {$command} [<root entity> <x> <y> <range>]
+cmd-chunkentities-error-invalid-root = Invalid root entity: {$root}
+cmd-chunkentities-error-parse = x, y, and range must be numbers.
+cmd-chunkentities-error-nullspace = Current eye is in nullspace.
+cmd-chunkentities-error-no-map = No map entity for current eye map {$map}.
+cmd-chunkentities-range-header = Chunk entities for {$root} around ({$x}, {$y}) range {$range}:
+cmd-chunkentities-viewport-header = Chunk entities in client viewport on map {$map} ({$viewport}):
+cmd-chunkentities-total = Total: {$count}
+cmd-chunkentities-root-count = Root {$root}: {$count}
+cmd-chunkentities-entry = {$netEntity} uid={$uid} root={$root} chunk={$chunk} comps={$componentCount} {$name}
+cmd-chunkentities-arg-root = <root entity>
+cmd-chunkentities-arg-x = <x>
+cmd-chunkentities-arg-y = <y>
+cmd-chunkentities-arg-range = <range>
 
 cmd-rldshader-desc = Reloads all shaders.
 cmd-rldshader-help = Usage: {$command}
@@ -306,6 +323,15 @@ cmd-addmap-help = Usage: {$command} <mapID> [pre-init]
 cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = Usage: {$command} <mapId>
 
+cmd-pausemap-desc = Pauses a map, pausing all simulation processing on it.
+cmd-pausemap-help = Usage: pausemap <map ID>
+
+cmd-unpausemap-desc = Unpauses a map, resuming all simulation processing on it.
+cmd-unpausemap-help = Usage: unpausemap <map ID>
+
+cmd-querymappaused-desc = Check whether a map is paused or not.
+cmd-querymappaused-help = Usage: querymappaused <map ID>
+
 cmd-savegrid-desc = Serializes a grid to disk.
 cmd-savegrid-help = Usage: {$command} <gridID> <Path>
 
@@ -377,7 +403,8 @@ cmd-restart-desc = Gracefully restarts the server (not just the round).
 cmd-restart-help = Usage: {$command}
 
 cmd-shutdown-desc = Gracefully shuts down the server.
-cmd-shutdown-help = Usage: {$command}
+cmd-shutdown-help = Usage: {$command} [<Reason>]
+cmd-shutdown-hint-1 = Reason
 
 cmd-saveconfig-desc = Saves the server configuration to the config file.
 cmd-saveconfig-help = Usage: {$command}
@@ -393,7 +420,7 @@ cmd-tpto-desc = Teleports the current player or the specified players/entities t
 cmd-tpto-help = Usage: {$command} <username|uid> [username|NetEntity]...
 cmd-tpto-destination-hint = destination (NetEntity or username)
 cmd-tpto-victim-hint = entity to teleport (NetEntity or username)
-cmd-tpto-parse-error = Cant resolve entity or player: {$str}
+cmd-tpto-parse-error = Can't resolve entity or player: {$str}
 
 cmd-listplayers-desc = Lists all players currently connected.
 cmd-listplayers-help = Usage: {$command}
@@ -441,7 +468,7 @@ cmd-showpos-help = Usage: {$command}
 cmd-showrot-desc = Show the rotation of all entities on the screen.
 cmd-showrot-help = Usage: {$command}
 
-cmd-showvel-desc = Show the local velocity of all entites on the screen.
+cmd-showvel-desc = Show the local velocity of all entities on the screen.
 cmd-showvel-help = Usage: {$command}
 
 cmd-showangvel-desc = Show the angular velocity of all entities on the screen.

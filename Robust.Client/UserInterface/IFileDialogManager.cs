@@ -72,7 +72,8 @@ public interface IFileDialogManager
         FileDialogFilters? filters = null,
         bool truncate = true,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare share = FileShare.None);
+        FileShare share = FileShare.None,
+        bool appendExtension = false);
 }
 
 /// <summary>
@@ -80,6 +81,6 @@ public interface IFileDialogManager
 /// </summary>
 internal interface IFileDialogManagerImplementation
 {
-    Task<string?> OpenFile(FileDialogFilters? filters);
-    Task<string?> SaveFile(FileDialogFilters? filters);
+    Task<(string?, int)> OpenFile(FileDialogFilters? filters);
+    Task<(string?, int)> SaveFile(FileDialogFilters? filters);
 }

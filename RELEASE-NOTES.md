@@ -53,6 +53,7 @@ END TEMPLATE-->
 ### Other
 
 * ContainerSystem.CleanContainer now skips deleting entities during state application.
+* Marginally speedup eventbus subscriptions by using the concrete implementation and not interface.
 
 ### Internal
 

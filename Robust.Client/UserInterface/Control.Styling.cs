@@ -280,13 +280,19 @@ namespace Robust.Client.UserInterface
         {
             if (_styleProperties.TryGetValue(styleProp.Name, out var val))
             {
-                DebugTools.Assert(val is T, $"StyleProp {styleProp.Name} expected {typeof(T).Name}, actual {val.GetType()}");
-
                 if (val is T cast)
                 {
                     value = cast;
                     return true;
                 }
+
+                if (val == null && typeof(T).IsNullable())
+                {
+                    value = default!;
+                    return true;
+                }
+
+                DebugTools.Assert($"StyleProp {styleProp.Name} expected {typeof(T).Name}, actual {val?.GetType().Name ?? "null"}");
             }
 
             value = default;

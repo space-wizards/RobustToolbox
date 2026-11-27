@@ -187,7 +187,7 @@ public sealed partial class DistanceJoint : Joint, IEquatable<DistanceJoint>
             if (MathHelper.CloseTo(value, _minLength)) return;
 
             _lowerImpulse = 0.0f;
-            _minLength = Math.Clamp(value, PhysicsConstants.LinearSlop, MaxLength);
+            _minLength = Math.Clamp(value, PhysicsConstants.LinearSlop, Math.Max(MaxLength, PhysicsConstants.LinearSlop));
             Dirty();
         }
     }

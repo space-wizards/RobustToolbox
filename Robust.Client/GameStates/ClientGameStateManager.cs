@@ -56,6 +56,7 @@ namespace Robust.Client.GameStates
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
         private readonly HashSet<EntityUid> _sorted = new();
         private readonly List<NetEntity> _created = new();
+        private readonly List<EntityUid> _reenteredPvs = new();
         private readonly List<NetEntity> _detached = new();
         private readonly HashSet<EntityUid> _detachBatch = new();
         private readonly List<(NetEntity NetEntity, Entity<MetaDataComponent> Entity)> _detachEntities = new();
@@ -1046,6 +1047,23 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            // Raised after all states and broadphase updates so handlers get the final entities.
+            var ev = new ReenteredPvsEvent();
+
+            foreach (var uid in _reenteredPvs)
+            {
+                try
+                {
+                    _entities.EventBus.RaiseLocalEvent(uid, ref ev);
+                }
+                catch (Exception e)
+                {
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)} caught exception while raising {nameof(ReenteredPvsEvent)} on {_entities.ToPrettyString(uid)}!");
+                }
+            }
+
+            _reenteredPvs.Clear();
+
             var delSpan = curState.EntityDeletions.Span;
             if (delSpan.Length > 0)
             {
@@ -1134,6 +1152,8 @@ namespace Robust.Client.GameStates
 
             if (!data.EnteringPvs)
                 return;
+
+            _reenteredPvs.Add(data.Uid);
 
             // Now that things like collision data, fixtures, and positions have been updated, we queue a
             // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,

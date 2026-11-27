@@ -41,9 +41,11 @@ END TEMPLATE-->
 
 * EntityQueries now contain methods to ensure and remove components, using the faster TryComps of the queries.
 * Added Reanchoring field to AnchorStateChangedEvent. Also added Reanchor arg to Unanchor if you are manually re-anchoring entities.
+* Added client-side `ReenteredPvsEvent` raised directed on entities after they re-enter PVS.
 
 ### Bugfixes
 
+* Fix appearance updates that were pending when an entity left PVS never running after it re-entered.
 * Fix input exceptions on replays.
 * Fix replay errors due to entity re-entry on checkpoints when scrubbing.
 * Fix chunk entity bugs around networked states.

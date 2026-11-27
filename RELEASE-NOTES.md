@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* UriOpener will now prompt the user to accept opening prior to committing to open the Uri.
 
 ### New features
 

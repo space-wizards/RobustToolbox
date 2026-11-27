@@ -7,7 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class PanelContainer : Container
     {
-        public const string StylePropertyPanel = "panel";
+        public static readonly StyleProp<StyleBox> StylePropertyPanel = "panel";
 
         public StyleBox? PanelOverride { get; set; }
 
@@ -54,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
                 return PanelOverride;
             }
 
-            TryGetStyleProperty<StyleBox>(StylePropertyPanel, out var box);
+            TryGetStyleProperty(StylePropertyPanel, out var box);
             return box;
         }
     }

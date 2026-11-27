@@ -221,16 +221,16 @@ public sealed class DefaultStylesheet
                     ContentMarginTopOverride = 3,
                 })
                 // default font color
-                .Prop("font-color", Color.White)
-                .Prop("cursor-color", Color.White),
+                .Prop(LineEdit.StylePropertyFontColor, Color.White)
+                .Prop(LineEdit.StylePropertyCursorColor, Color.White),
 
             // LineEdit non-editable text color
             Element<LineEdit>().Class(LineEdit.StyleClassLineEditNotEditable)
-                .Prop("font-color", theme.ResolveColorOrSpecified("lineEditUneditableText", Color.FromHex("#444444"))),
+                .Prop(LineEdit.StylePropertyFontColor, theme.ResolveColorOrSpecified("lineEditUneditableText", Color.FromHex("#444444"))),
 
             // LineEdit placeholder text color
             Element<LineEdit>().Pseudo(LineEdit.StylePseudoClassPlaceholder)
-                .Prop("font-color",  theme.ResolveColorOrSpecified("lineEditPlaceholderText", Color.FromHex("#7d7d7d"))),
+                .Prop(LineEdit.StylePropertyFontColor,  theme.ResolveColorOrSpecified("lineEditPlaceholderText", Color.FromHex("#7d7d7d"))),
 
             /*
              * TabContainer
@@ -268,7 +268,7 @@ public sealed class DefaultStylesheet
                     ContentMarginRightOverride = 5,
                     ContentMarginTopOverride = 3,
                 })
-                .Prop("font", notoSansFont12),
+                .Prop(TabContainer.StylePropertyFont, notoSansFont12),
         });
     }
 }

@@ -16,11 +16,11 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class Label : Control
     {
-        public const string StylePropertyFontColor = "font-color";
-        public const string StylePropertyFont = "font";
-        public const string StylePropertyFontOutlineThickness = "font-outline-thickness";
-        public const string StylePropertyFontOutlineColor = "font-outline-color";
-        public const string StylePropertyAlignMode = "alignMode";
+        public static readonly StyleProp<Color> StylePropertyFontColor = "font-color";
+        public static readonly StyleProp<Font> StylePropertyFont = "font";
+        public static readonly StyleProp<float> StylePropertyFontOutlineThickness = "font-outline-thickness";
+        public static readonly StyleProp<Color> StylePropertyFontOutlineColor = "font-outline-color";
+        public static readonly StyleProp<AlignMode> StylePropertyAlignMode = "alignMode";
 
         private int _cachedTextHeight;
         private readonly List<int> _cachedTextWidths = new();
@@ -109,7 +109,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (_alignCacheValid)
                     return _actualAlign;
 
-                if (TryGetStyleProperty<AlignMode>(StylePropertyAlignMode, out var alignMode))
+                if (TryGetStyleProperty(StylePropertyAlignMode, out var alignMode))
                 {
                     _actualAlign = alignMode;
                     _alignCacheValid = true;
@@ -158,7 +158,7 @@ namespace Robust.Client.UserInterface.Controls
                     return _actualFont;
                 }
 
-                if (TryGetStyleProperty<Font>(StylePropertyFont, out var font))
+                if (TryGetStyleProperty(StylePropertyFont, out var font))
                 {
                     _actualFont = font;
                     _fontCacheValid = true;
@@ -182,7 +182,7 @@ namespace Robust.Client.UserInterface.Controls
                     return FontColorOverride.Value;
                 }
 
-                if (TryGetStyleProperty<Color>(StylePropertyFontColor, out var color))
+                if (TryGetStyleProperty(StylePropertyFontColor, out var color))
                 {
                     return color;
                 }
@@ -233,11 +233,11 @@ namespace Robust.Client.UserInterface.Controls
                     return _actualFontOutline;
 
                 var thickness = OutlineThicknessOverride;
-                if (!thickness.HasValue && TryGetStyleProperty<float>(StylePropertyFontOutlineThickness, out var styleThickness))
+                if (!thickness.HasValue && TryGetStyleProperty(StylePropertyFontOutlineThickness, out var styleThickness))
                     thickness = styleThickness;
 
                 var color = OutlineColorOverride;
-                if (!color.HasValue && TryGetStyleProperty<Color>(StylePropertyFontOutlineColor, out var styleColor))
+                if (!color.HasValue && TryGetStyleProperty(StylePropertyFontOutlineColor, out var styleColor))
                     color = styleColor;
 
                 _actualFontOutline = TextOutline.FromOverrides(thickness, color);

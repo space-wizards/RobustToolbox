@@ -8,7 +8,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class ContainerButton : BaseButton
     {
-        public const string StylePropertyStyleBox = "stylebox";
+        public static readonly StyleProp<StyleBox> StylePropertyStyleBox = "stylebox";
         public const string StyleClassButton = "button";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassPressed = "pressed";
@@ -31,7 +31,7 @@ namespace Robust.Client.UserInterface.Controls
                     return StyleBoxOverride;
                 }
 
-                if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
+                if (TryGetStyleProperty(StylePropertyStyleBox, out var box))
                 {
                     return box;
                 }

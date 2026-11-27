@@ -1,6 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -8,7 +11,7 @@ namespace Robust.Client.UserInterface
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control
     {
-        public const string StylePropertyModulateSelf = "modulate-self";
+        public static readonly StyleProp<Color> StylePropertyModulateSelf = "modulate-self";
 
         /// <summary>
         ///     Overrides the style sheet used for this control and its descendants.
@@ -52,7 +55,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private readonly Dictionary<string, object> _styleProperties = new();
+        private readonly Dictionary<string, object?> _styleProperties = new();
         private StyleClassCollection _styleClasses;
         private readonly HashSet<string> _stylePseudoClass = new();
 
@@ -267,21 +270,65 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        [Obsolete("Use typed StyleProp<T> instead of untyped string name.")]
         public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
         {
-            if (_styleProperties.TryGetValue(param, out var val) && val is T cast)
+            return TryGetStyleProperty(new StyleProp<T>(param), out value);
+        }
+
+        /// <summary>
+        /// Tries to get the style property based on the StyleProp key and attempts to output the value.
+        /// </summary>
+        /// <param name="styleProp">Style property key/name</param>
+        /// <param name="value">The value at that key, if it exists</param>
+        /// <typeparam name="T">Type of the StyleProp</typeparam>
+        /// <returns>True if a compatible value is found (including null for non-reference types), false if not</returns>
+        /// <remarks>
+        /// Throws on DEBUG when reading an incompatible value.
+        /// </remarks>
+        public bool TryGetStyleProperty<T>(StyleProp<T> styleProp, [MaybeNullWhen(false)] out T value)
+        {
+            if (_styleProperties.TryGetValue(styleProp.Name, out var val))
             {
-                value = cast;
-                return true;
+                if (val is T cast)
+                {
+                    value = cast;
+                    return true;
+                }
+
+                // There seems to be no easy way to tell that given T is a reference type, if it is null or not.
+                if (val == null && typeof(T).IsNullable())
+                {
+                    value = default!;
+                    return true;
+                }
+
+                DebugTools.Assert($"StyleProp {styleProp.Name} expected {typeof(T).Name}, actual {val?.GetType().Name ?? "null"}");
             }
 
             value = default;
             return false;
         }
 
+        [Obsolete("Use typed StyleProp<T> instead of untyped string name.")]
         public T StylePropertyDefault<T>(string param, T defaultValue)
         {
-            if (TryGetStyleProperty<T>(param, out var value))
+            return StylePropertyDefault(new StyleProp<T>(param), defaultValue);
+        }
+
+        /// <summary>
+        /// Tries to get the style property based on the StyleProp key, or gets the default if not found.
+        /// </summary>
+        /// <param name="styleProp">Style property key/name</param>
+        /// <param name="defaultValue">The default/fallback value if no value was found at the key</param>
+        /// <typeparam name="T">Type of the StyleProp</typeparam>
+        /// <returns>The StyleProp's value (if it was compatible, meaning possibly null for non-reference types), or defaultValue</returns>
+        /// <remarks>
+        /// Throws on DEBUG when reading an incompatible value.
+        /// </remarks>
+        public T StylePropertyDefault<T>(StyleProp<T> styleProp, T defaultValue)
+        {
+            if (TryGetStyleProperty(styleProp, out var value))
                 return value;
 
             return defaultValue;

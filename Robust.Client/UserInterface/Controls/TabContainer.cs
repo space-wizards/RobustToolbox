@@ -15,11 +15,12 @@ namespace Robust.Client.UserInterface.Controls
         public static readonly AttachedProperty<bool> TabVisibleProperty = AttachedProperty<bool>.Create("TabVisible", typeof(TabContainer), true);
         public static readonly AttachedProperty<string?> TabTitleProperty = AttachedProperty<string?>.CreateNull("TabTitle", typeof(TabContainer));
 
-        public const string StylePropertyTabStyleBox = "tab-stylebox";
-        public const string StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
-        public const string stylePropertyTabFontColor = "tab-font-color";
-        public const string StylePropertyTabFontColorInactive = "tab-font-color-inactive";
-        public const string StylePropertyPanelStyleBox = "panel-stylebox";
+        public static readonly StyleProp<Font> StylePropertyFont = "font";
+        public static readonly StyleProp<StyleBox> StylePropertyTabStyleBox = "tab-stylebox";
+        public static readonly StyleProp<StyleBox> StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
+        public static readonly StyleProp<Color> stylePropertyTabFontColor = "tab-font-color";
+        public static readonly StyleProp<Color> StylePropertyTabFontColorInactive = "tab-font-color-inactive";
+        public static readonly StyleProp<StyleBox> StylePropertyPanelStyleBox = "panel-stylebox";
 
         private int _currentTab;
         private bool _tabsVisible = true;
@@ -374,14 +375,14 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private StyleBox? _getTabBoxActive()
         {
-            TryGetStyleProperty<StyleBox>(StylePropertyTabStyleBox, out var box);
+            TryGetStyleProperty(StylePropertyTabStyleBox, out var box);
             return box;
         }
 
         [System.Diagnostics.Contracts.Pure]
         private StyleBox? _getTabBoxInactive()
         {
-            TryGetStyleProperty<StyleBox>(StylePropertyTabStyleBoxInactive, out var box);
+            TryGetStyleProperty(StylePropertyTabStyleBoxInactive, out var box);
             return box;
         }
 
@@ -417,14 +418,14 @@ namespace Robust.Client.UserInterface.Controls
             if (PanelStyleBoxOverride != null)
                 return PanelStyleBoxOverride;
 
-            TryGetStyleProperty<StyleBox>(StylePropertyPanelStyleBox, out var box);
+            TryGetStyleProperty(StylePropertyPanelStyleBox, out var box);
             return box;
         }
 
         [System.Diagnostics.Contracts.Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(StylePropertyFont, out var font))
             {
                 return font;
             }

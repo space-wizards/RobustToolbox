@@ -10,8 +10,9 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class Tree : Control
     {
-        public const string StylePropertyItemBoxSelected = "item-selected";
-        public const string StylePropertyBackground = "background";
+        public static readonly StyleProp<Font> StylePropertyFont = "font";
+        public static readonly StyleProp<StyleBox> StylePropertyItemBoxSelected = "item-selected";
+        public static readonly StyleProp<StyleBox> StylePropertyBackground = "background";
 
         private readonly List<Item> _itemList = new();
 
@@ -303,7 +304,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private Font? _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(StylePropertyFont, out var font))
             {
                 return font;
             }
@@ -313,7 +314,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private StyleBox? _getBackground()
         {
-            if (TryGetStyleProperty<StyleBox>(StylePropertyBackground, out var box))
+            if (TryGetStyleProperty(StylePropertyBackground, out var box))
             {
                 return box;
             }
@@ -323,7 +324,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private StyleBox? _getItemSelectedStyle()
         {
-            if (TryGetStyleProperty<StyleBox>(StylePropertyItemBoxSelected, out var box))
+            if (TryGetStyleProperty(StylePropertyItemBoxSelected, out var box))
             {
                 return box;
             }

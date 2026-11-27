@@ -28,10 +28,12 @@ namespace Robust.Client.UserInterface.Controls
         public event Action<ItemListDeselectedEventArgs>? OnItemDeselected;
         public event Action<ItemListHoverEventArgs>? OnItemHover;
 
-        public const string StylePropertyBackground = "itemlist-background";
-        public const string StylePropertyItemBackground = "item-background";
-        public const string StylePropertySelectedItemBackground = "selected-item-background";
-        public const string StylePropertyDisabledItemBackground = "disabled-item-background";
+        public static readonly StyleProp<Font> StylePropertyFont = "font";
+        public static readonly StyleProp<Color> StylePropertyFontColor = "font-color";
+        public static readonly StyleProp<StyleBox> StylePropertyBackground = "itemlist-background";
+        public static readonly StyleProp<StyleBox> StylePropertyItemBackground = "item-background";
+        public static readonly StyleProp<StyleBox> StylePropertySelectedItemBackground = "selected-item-background";
+        public static readonly StyleProp<StyleBox> StylePropertyDisabledItemBackground = "disabled-item-background";
 
         /// <summary>
         /// Gets or sets the ItemSeparation of individual list items
@@ -367,7 +369,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty<Font>("font", out var font))
+                if (TryGetStyleProperty(StylePropertyFont, out var font))
                 {
                     return font;
                 }
@@ -380,7 +382,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty("font-color", out Color fontColor))
+                if (TryGetStyleProperty(StylePropertyFontColor, out var fontColor))
                 {
                     return fontColor;
                 }
@@ -393,7 +395,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty<StyleBox>(StylePropertyBackground, out var bg))
+                if (TryGetStyleProperty(StylePropertyBackground, out var bg))
                 {
                     return bg;
                 }
@@ -405,7 +407,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty<StyleBox>(StylePropertyItemBackground, out var bg))
+                if (TryGetStyleProperty(StylePropertyItemBackground, out var bg))
                 {
                     return bg;
                 }
@@ -418,7 +420,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty<StyleBox>(StylePropertySelectedItemBackground, out var bg))
+                if (TryGetStyleProperty(StylePropertySelectedItemBackground, out var bg))
                 {
                     return bg;
                 }
@@ -431,7 +433,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty<StyleBox>(StylePropertyDisabledItemBackground, out var bg))
+                if (TryGetStyleProperty(StylePropertyDisabledItemBackground, out var bg))
                 {
                     return bg;
                 }

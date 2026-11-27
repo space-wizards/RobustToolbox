@@ -174,6 +174,9 @@ public sealed class StylesheetTest : RobustUnitTest
         Assert.That(control.TryGetStyleProperty(foobar, out var value), Is.True);
         Assert.That(value, Is.Null);
 
-        Assert.That(control.TryGetStyleProperty(foobar2, out _), Is.False);
+        // Unfortunately, there's no easy way to tell if the type T is nullable or not for reference types.
+        // Instead, this is only really useful for compile-time checking for .Prop(), and not much else.
+        Assert.That(control.TryGetStyleProperty(foobar2, out _), Is.True);
+        Assert.That(value, Is.Null);
     }
 }

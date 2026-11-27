@@ -1937,9 +1937,9 @@ namespace Robust.Shared
          */
 
         /// <summary>
-        /// A relative path pointing to a folder within the server data directory where all replays will be stored.
+        /// A rooted path pointing to a folder within the user data directory where all replays will be stored.
         /// </summary>
-        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays",
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "/replays",
             CVar.ARCHIVE);
 
         /// <summary>

@@ -95,13 +95,7 @@ public sealed class MarkupDrawingContext
         return _owner?.TryGetStyleProperty(param, out value) ?? false;
     }
 
-    /// <summary>
-    /// Tries to get the provided style property from the <see cref="_owner"/>.
-    /// </summary>
-    /// <param name="param">Style property key</param>
-    /// <param name="value">Style property value</param>
-    /// <typeparam name="T">Type of the style property value</typeparam>
-    /// <returns>True if found with type <see cref="T"/>, false if not (or false if there is no <see cref="_owner"/>)</returns>
+    /// <inheritdoc cref="Control.TryGetStyleProperty{T}(StyleProp{T}, out T)"/>
     [PublicAPI]
     public bool TryGetStyleProperty<T>(StyleProp<T> param, [MaybeNullWhen(false)] out T value)
     {

@@ -107,7 +107,7 @@ namespace Robust.Client.UserInterface
 
         public MutableSelector Prop<T>(StyleProp<T> styleProp, T value)
         {
-#pragma warning disable CS0618 // This avoids the boxing of IStyleProp
+#pragma warning disable CS0618
             _props.Add(new StyleProperty(styleProp.Name, value));
 #pragma warning restore CS0618
             return this;
@@ -322,15 +322,22 @@ namespace Robust.Client.UserInterface
         public object? Value { get; }
     }
 
-    public interface IStyleProp
+    /// <summary>
+    /// A style property key.
+    /// </summary>
+    /// <param name="name">The name/key of the property</param>
+    /// <typeparam name="T">Type of the style property</typeparam>
+    /// <remarks>
+    /// Style Properties are matched by the string <see cref="StyleProp{T}.Name"/>. The same keys access the same
+    /// value on the same control, which can cause issues if the types are not the same (including nullability).
+    /// </remarks>
+    public readonly struct StyleProp<T>(string name)
     {
-        public string Name { get; }
-    }
-
-    // ReSharper disable once UnusedTypeParameter
-    public readonly struct StyleProp<T>(string name) : IStyleProp
-    {
+        /// <summary>
+        /// The non-unique name/key that the value is to be associated with.
+        /// </summary>
         public string Name { get; } = name;
+
         public static implicit operator StyleProp<T>(string name) => new(name);
     }
 

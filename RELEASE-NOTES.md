@@ -60,6 +60,7 @@ END TEMPLATE-->
 
 ### Internal
 
+* Optimized SpriteComponent initialization.
 * Avoid cloning appearance data on client appearance state if it's unchanged.
 * `TransformComponent.Children` exposes a shared empty set across instances and only allocates when children are added, saving memory.
 

@@ -21,7 +21,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -39,10 +38,8 @@ namespace Robust.Client.GameObjects
     {
         public const string LogCategory = "go.comp.sprite";
 
-        [Dependency] private IResourceCacheInternal resourceCache = default!;
         [Dependency] private IPrototypeManager prototypes = default!;
         [Dependency] private EntityManager entities = default!;
-        [Dependency] private IReflectionManager reflection = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
@@ -283,8 +280,6 @@ namespace Robust.Client.GameObjects
 
             IoCManager.InjectDependencies(this);
 
-            resourceCache.AddToDeserialize(this);
-
             if (layerDatums.Count == 0)
             {
                 if (state != null || texture != null)
@@ -517,152 +512,7 @@ namespace Robust.Client.GameObjects
 
         [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
         internal void LayerSetData(Layer layer, PrototypeLayerData layerDatum)
-        {
-            DebugTools.AssertEqual(layer, layer.Owner.Comp.Layers[layer.Index]);
-
-            if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
-            {
-                var path = TextureRoot / layerDatum.RsiPath;
-
-                if (resourceCache.TryGetResource(path, out RSIResource? resource))
-                {
-                    layer.RSI = resource.RSI;
-                }
-                else
-                {
-                    Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(layerDatum.State))
-            {
-                var theRsi = layer.RSI ?? BaseRSI;
-                if (theRsi == null)
-                {
-                    Logger.ErrorS(LogCategory,
-                        "Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
-                        layerDatum.State);
-                }
-                else
-                {
-                    var stateid = new RSI.StateId(layerDatum.State);
-                    layer.State = stateid;
-                    if (theRsi.TryGetState(stateid, out var state))
-                    {
-                        // Always use south because this layer will be cached in the serializer.
-                        layer.AnimationTimeLeft = state.GetDelay(0);
-                        layer.AnimationTime = 0;
-                        layer.AnimationFrame = 0;
-                    }
-                    else
-                    {
-                        Logger.ErrorS(LogCategory,
-                            $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
-                            stateid);
-                    }
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
-            {
-                if (layer.State.IsValid)
-                {
-                    Logger.ErrorS(LogCategory,
-                        "Cannot specify 'texture' on a layer if it has an RSI state specified."
-                    );
-                }
-                else
-                {
-                    layer.Texture =
-                        resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
-                }
-            }
-
-            if (layerDatum.Shader != null)
-            {
-                if (layerDatum.Shader == string.Empty)
-                {
-                    layer.ShaderPrototype = null;
-                    layer.UnShaded = false;
-                    layer.Shader = null;
-                }
-                else if (layerDatum.Shader == SpriteSystem.UnshadedId.Id)
-                {
-                    layer.ShaderPrototype = SpriteSystem.UnshadedId;
-                    layer.UnShaded = true;
-                    layer.Shader = null;
-                }
-                else if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
-                {
-                    layer.ShaderPrototype = layerDatum.Shader;
-                    layer.Shader = prototype.Instance();
-                    layer.UnShaded = false;
-                }
-                else
-                {
-                    Logger.ErrorS(LogCategory,
-                        "Shader prototype '{0}' does not exist.",
-                        layerDatum.Shader);
-                }
-            }
-
-            if (layerDatum.MapKeys != null)
-            {
-                foreach (var keyString in layerDatum.MapKeys)
-                {
-                    var key = ParseKey(keyString);
-
-                    if (LayerMap.TryGetValue(key, out var mappedIndex))
-                    {
-                        if (mappedIndex != layer.Index)
-                            Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
-                        continue;
-                    }
-
-                    LayerMap[key] = layer.Index;
-                }
-            }
-
-            layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
-            layer.Cycle = layerDatum.Cycle;
-            layer.Loop = layerDatum.Loop;
-
-            layer.Color = layerDatum.Color ?? layer.Color;
-            layer._rotation = layerDatum.Rotation ?? layer._rotation;
-            layer._offset = layerDatum.Offset ?? layer._offset;
-            layer._scale = layerDatum.Scale ?? layer._scale;
-            layer.UpdateLocalMatrix();
-
-            // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
-            layer.Visible = layerDatum.Visible ?? layer.Visible;
-
-            if (layerDatum.CopyToShaderParameters is { } copyParameters)
-            {
-                layer.CopyToShaderParameters = new CopyToShaderParameters(ParseKey(copyParameters.LayerKey))
-                {
-                    ParameterTexture = copyParameters.ParameterTexture,
-                    ParameterUV = copyParameters.ParameterUV
-                };
-            }
-            else
-            {
-                layer.CopyToShaderParameters = null;
-            }
-
-            BoundsDirty = true;
-            layer.BoundsDirty = true;
-            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-            if (Owner != EntityUid.Invalid)
-                TreeSys?.QueueTreeUpdate((Owner, this));
-        }
-
-        private object ParseKey(string keyString)
-        {
-            if (reflection.TryParseEnumReference(keyString, out var @enum))
-                return @enum;
-
-            return keyString;
-        }
+            => Sys.LayerSetData(layer, layerDatum);
 
         [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
         public void LayerSetData(object layerKey, PrototypeLayerData data)

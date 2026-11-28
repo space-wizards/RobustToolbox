@@ -1,7 +1,5 @@
-﻿using Robust.Client.GameObjects;
-using Robust.LoaderApi;
+﻿using Robust.LoaderApi;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement;
@@ -14,8 +12,4 @@ internal interface IResourceCacheInternal : IResourceCache
     void PreloadTextures();
 
     void MountLoaderApi(IResourceManager manager, IFileApi api, string apiPrefix, ResPath? prefix = null);
-
-    void AddToDeserialize(SpriteComponent component);
-    void LoadBaseRsi(EntityUid uid, SpriteComponent component);
-    void AfterDeserialization();
 }

@@ -3,6 +3,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Arch.LowLevel.Jagged;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Reflection;
@@ -16,6 +17,8 @@ internal sealed partial class EntityEventBus : IEventBus
     private IComponentFactory _comFac;
     private IReflectionManager _reflection;
 
+    private const int EventBusDefaultCapacity = 256;
+
     // Data on individual events. Used to check ordering info and fire broadcast events.
     private FrozenDictionary<Type, EventData> _eventData = FrozenDictionary<Type, EventData>.Empty;
     private readonly Dictionary<Type, EventData> _eventDataUnfrozen = new();
@@ -27,9 +30,11 @@ internal sealed partial class EntityEventBus : IEventBus
     // For queued message broadcast.
     private readonly Queue<(EventSource source, object args)> _eventQueue = new();
 
-    // eUid -> EventType -> { CompType1, ... CompTypeN }
-    // See EventTable declaration for layout details
-    internal Dictionary<EntityUid, EventTable> _entEventTables = new();
+    /// <summary>
+    /// Directed event table for each archetype (by archetype index): event type -> subscribed components.
+    /// Built the first time an event is raised on an entity with that archetype.
+    /// </summary>
+    internal JaggedArray<FrozenDictionary<Type, ArchetypeEventEntry[]>?> _archetypeEventTables = new(EventBusDefaultCapacity, EventBusDefaultCapacity);
 
     /// <summary>
     /// Array of component events and their handlers. The array is indexed by a component's

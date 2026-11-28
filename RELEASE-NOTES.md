@@ -35,7 +35,10 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Entities no longer directly store their EventTables for the EventBus and they are stored as an archetype.
+- All events are now also ordered with no additional cost.
+- This may expose some ordering-specific behavior and require ordering subscriptions.
+- Memory usage for entities is expected to drop by almost half.
 
 ### New features
 

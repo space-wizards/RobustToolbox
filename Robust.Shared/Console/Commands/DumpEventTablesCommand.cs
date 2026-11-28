@@ -28,18 +28,16 @@ internal sealed partial class DumpEventTablesCommand : LocalizedCommands
         }
 
         var eventBus = (EntityEventBus)_entities.EventBus;
+        var archetype = _entities.GetArchetypeIndex(entity.Value);
+        if (archetype == EntityManager.NoArchetype)
+            return;
 
-        var table = eventBus._entEventTables[entity.Value];
-        foreach (var (evType, comps) in table.EventIndices)
+        foreach (var (evType, entries) in eventBus.GetEventTable(archetype))
         {
             shell.WriteLine($"{evType}:");
 
-            var idx = comps.Start;
-            while (idx != -1)
+            foreach (var entry in entries)
             {
-                ref var entry = ref table.ComponentLists[idx];
-                idx = entry.Next;
-
                 var reg = _componentFactory.IdxToType(entry.Component);
                 shell.WriteLine($"    {reg.Name}");
             }

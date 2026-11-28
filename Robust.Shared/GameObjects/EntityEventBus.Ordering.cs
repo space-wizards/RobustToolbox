@@ -8,51 +8,6 @@ namespace Robust.Shared.GameObjects
 {
     internal partial class EntityEventBus
     {
-        private static void CollectBroadcastOrdered(
-            EventSource source,
-            EventData sub,
-            ref ValueList<OrderedEventDispatch> found)
-        {
-            foreach (var handler in sub.BroadcastRegistrations.Span)
-            {
-                if ((handler.Mask & source) != 0)
-                    found.Add(new OrderedEventDispatch(handler.Handler, handler.Order));
-            }
-        }
-
-        private void RaiseLocalOrdered(
-            EntityUid uid,
-            Type eventType,
-            EventData subs,
-            ref Unit unitRef,
-            bool broadcast)
-        {
-            if (!subs.OrderingUpToDate)
-                UpdateOrderSeq(eventType, subs);
-
-            var found = new ValueList<OrderedEventDispatch>();
-
-            if (broadcast)
-                CollectBroadcastOrdered(EventSource.Local, subs, ref found);
-
-            // TODO PERF
-            // consider ordering the linked list itself?
-            // Then make broadcast events always a lower priority and replace the valuelist with stackalloc?
-            EntCollectOrdered(uid, eventType, ref found);
-
-            DispatchOrderedEvents(ref unitRef, ref found);
-        }
-
-        private static void DispatchOrderedEvents(ref Unit eventArgs, ref ValueList<OrderedEventDispatch> found)
-        {
-            found.Sort(OrderedEventDispatchComparer.Instance);
-
-            foreach (var (handler, _) in found.Span)
-            {
-                handler(ref eventArgs);
-            }
-        }
-
         /// <summary>
         /// Calculate sequence order for all event subscriptions, broadcast and directed.
         /// </summary>
@@ -154,18 +109,6 @@ namespace Robust.Shared.GameObjects
             public int Compare(OrderedRegistration? x, OrderedRegistration? y)
             {
                 return x!.Order.CompareTo(y!.Order);
-            }
-        }
-
-        private record struct OrderedEventDispatch(RefEventHandler Handler, int Order);
-
-        private sealed class OrderedEventDispatchComparer : IComparer<OrderedEventDispatch>
-        {
-            public static readonly OrderedEventDispatchComparer Instance = new();
-
-            public int Compare(OrderedEventDispatch x, OrderedEventDispatch y)
-            {
-                return x.Order.CompareTo(y.Order);
             }
         }
 

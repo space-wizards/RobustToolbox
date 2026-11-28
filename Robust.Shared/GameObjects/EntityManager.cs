@@ -180,37 +180,45 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var comps = _entCompIndex[uid];
             var hasIgnoredComps = ignoredComps is { Count: > 0 };
+            FixedArray32<IComponent?> compsFixed = default;
+            var comps = CopyComponents(uid, compsFixed.AsSpan, out var rented);
 
-            // Fast check if the component counts match.
-            if (prototype.Components.Count + 2 != comps.Count)
-                return false;
-
-            foreach (var component in comps)
+            try
             {
-                if (component.Deleted)
+                // Fast check if the component counts match.
+                if (prototype.Components.Count + 2 != comps.Length)
                     return false;
 
-                var compType = component.GetType();
+                foreach (var component in comps)
+                {
+                    if (component == null || component.Deleted)
+                        return false;
 
-                if (compType == _xformReg.Type || compType == _metaReg.Type)
-                    continue;
+                    var compType = component.GetType();
 
-                var compReg = _componentFactory.GetRegistration(compType);
+                    if (compType == _xformReg.Type || compType == _metaReg.Type)
+                        continue;
 
-                if (hasIgnoredComps && ignoredComps!.Contains(compReg.Name))
-                    continue;
+                    var compReg = _componentFactory.GetRegistration(compType);
 
-                // If the component isn't on the prototype then it's custom.
-                if (!prototype.Components.TryGetValue(compReg.Name, out var protoEntry))
-                    return false;
+                    if (hasIgnoredComps && ignoredComps!.Contains(compReg.Name))
+                        continue;
 
-                if (!_serManager.DataFieldEquals(compReg.Type, component, protoEntry.Component, _context))
-                    return false;
+                    // If the component isn't on the prototype then it's custom.
+                    if (!prototype.Components.TryGetValue(compReg.Name, out var protoEntry))
+                        return false;
+
+                    if (!_serManager.DataFieldEquals(compReg.Type, component, protoEntry.Component, _context))
+                        return false;
+                }
+
+                return true;
             }
-
-            return true;
+            finally
+            {
+                ReturnComponents(rented);
+            }
         }
 
         public virtual void Startup()
@@ -702,22 +710,33 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
 
             // Shut down all components.
-            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            // Reverse CompIdx order.
+            FixedArray32<IComponent?> compsFixed = default;
+            var shutdown = CopyComponents(uid, compsFixed.AsSpan, out var rented);
+            try
             {
-                if (component.Running)
+                for (var i = shutdown.Length - 1; i >= 0; i--)
                 {
-                    try
+                    var component = shutdown[i]!;
+                    if (component.Running)
                     {
-                        LifeShutdown(uid, component, metadata, _componentFactory.GetIndex(component.GetType()));
-                    }
-                    catch (Exception e)
-                    {
-                        _sawmill.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
+                        try
+                        {
+                            LifeShutdown(uid, component, metadata, _componentFactory.GetIndex(component.GetType()));
+                        }
+                        catch (Exception e)
+                        {
+                            _sawmill.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
 #if !EXCEPTION_TOLERANCE
-                        throw;
+                            throw;
 #endif
+                        }
                     }
                 }
+            }
+            finally
+            {
+                ReturnComponents(rented);
             }
 
             // Dispose all my components, in a safe order so transform is available

@@ -62,6 +62,7 @@ public class EntitySystemSubscriptionGeneratorErrorAnalyzer : DiagnosticAnalyzer
         List<string> attributeNames =
         [
             KnownTypes.AllSubscriptionMemberAttributeName,
+            KnownTypes.AllSubscriptionMemberAttributeFallbackName, // Temporary fallback, to be deleted later. See the TO DO in EntitySystemSubscriptionsGeneratorAttributes.cs
             KnownTypes.NetworkSubscriptionMemberAttributeName,
             KnownTypes.LocalSubscriptionMemberAttributeName,
         ];
@@ -124,6 +125,14 @@ public class EntitySystemSubscriptionGeneratorErrorAnalyzer : DiagnosticAnalyzer
         EnsureAnnotatedSubscriptionMethodHasCorrectSignature(
             context,
             KnownTypes.AllSubscriptionMemberAttributeName,
+            m => (EntitySystemSubscriptionGenerator.TryParseEntityEventHandler(m) ??
+                  EntitySystemSubscriptionGenerator.TryParseEntitySessionEventHandler(m)) is not null,
+            KnownTypes.NonComponentSubscriptionHandlerTypes
+        );
+        // Temporary fallback, to be deleted later. See the TO DO in EntitySystemSubscriptionsGeneratorAttributes.cs
+        EnsureAnnotatedSubscriptionMethodHasCorrectSignature(
+            context,
+            KnownTypes.AllSubscriptionMemberAttributeFallbackName,
             m => (EntitySystemSubscriptionGenerator.TryParseEntityEventHandler(m) ??
                   EntitySystemSubscriptionGenerator.TryParseEntitySessionEventHandler(m)) is not null,
             KnownTypes.NonComponentSubscriptionHandlerTypes

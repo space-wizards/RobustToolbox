@@ -131,9 +131,48 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
         Assert.That(compB!.Target, Is.EqualTo(new EntProtoId(UploadTestIdA)));
     }
 
+    [Test]
+    public void TestDumpRedefinesPrototypeFromPreviousDump()
+    {
+        const string firstPrototype = @"- type: prototypeUploadTest
+  id: DumpCrossNumber
+  number: 1";
+
+        const string secondPrototype = @"- type: prototypeUploadTest
+  id: DumpCrossNumber
+  number: 2";
+
+        Assert.That(_prototypeLoad.TryApplyDump([firstPrototype]), Is.True);
+        Assert.That(_prototype.Index<PrototypeUploadTestPrototype>("DumpCrossNumber").Number, Is.EqualTo(1));
+
+        Assert.That(_prototypeLoad.TryApplyDump([secondPrototype]), Is.True);
+        Assert.That(_prototype.Index<PrototypeUploadTestPrototype>("DumpCrossNumber").Number, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void TestDumpKeepsConcreteEntityMadeAbstractByLaterDump()
+    {
+        const string concretePrototype = @"- type: entity
+  id: DumpCrossAbstract";
+
+        const string abstractPrototype = @"- type: entity
+  id: DumpCrossAbstract
+  abstract: true";
+
+        Assert.That(_prototypeLoad.TryApplyDump([concretePrototype]), Is.True);
+        Assert.That(_prototype.Index<EntityPrototype>("DumpCrossAbstract").Abstract, Is.False);
+
+        Assert.That(_prototypeLoad.TryApplyDump([abstractPrototype]), Is.True);
+        Assert.That(_prototype.HasIndex<EntityPrototype>("DumpCrossAbstract"), Is.True);
+        Assert.That(_prototype.Index<EntityPrototype>("DumpCrossAbstract").Abstract, Is.False);
+    }
+
     private sealed class TestPrototypeLoadManager : SharedPrototypeLoadManager
     {
         public bool TryLoad(string prototype) => TryLoadPrototypeData(prototype);
+
+        public bool TryApplyDump(IReadOnlyList<string> prototypes, bool sequential = false)
+            => TryApplyPrototypeDump(prototypes, sequential);
 
         public override void SendGamePrototype(string prototype)
         {

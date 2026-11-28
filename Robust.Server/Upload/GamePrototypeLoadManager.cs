@@ -1,36 +1,40 @@
+using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Upload;
 
 namespace Robust.Server.Upload;
 
+internal enum SendDumpResult
+{
+    NoData,
+    Sent,
+    Failed,
+}
+
 /// <summary>
-///     Manages sending runtime-loaded prototypes from game staff to clients.
+///     Handles server-side prototype uploads, limits, and dumps sent to clients.
 /// </summary>
 public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManager
 {
-    [Dependency] private IServerNetManager _netManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IConGroupController _controller = default!;
-    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
 
-    private ISawmill _sawmill = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        _sawmill = _logManager.GetSawmill("adminbus");
-    }
+    internal event Action<string>? PrototypeLoaded;
 
     public override void SendGamePrototype(string prototype)
     {
-        var msg = new GamePrototypeLoadMessage { PrototypeData = prototype };
         if (TryLoadPrototypeData(prototype))
-            _netManager.ServerSendToAll(msg);
+            PrototypeLoaded?.Invoke(prototype);
     }
 
     protected override void LoadPrototypeData(GamePrototypeLoadMessage message)
@@ -40,8 +44,8 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         {
             if (TryLoadPrototypeData(message.PrototypeData))
             {
-                _netManager.ServerSendToAll(message); // everyone load it up!
-                _sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
+                PrototypeLoaded?.Invoke(message.PrototypeData);
+                Sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
             }
         }
         else
@@ -50,16 +54,129 @@ public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManage
         }
     }
 
-    internal void SendToNewUser(INetChannel channel)
+    protected override bool CanAcceptPrototype(string data)
     {
-        if (LoadedPrototypes.Count == 0)
-            return;
+        var limit = GetPrototypeDumpMaxBytes();
+        var size = PrototypeDumpFormat.GetPayloadSize(LoadedPrototypesSize, data);
 
-        // Just dump all the prototypes on connect, before them missing could be an issue.
-        var msg = new GamePrototypeLoadMessage
+        if (size > limit)
         {
-            PrototypeData = string.Join("\n\n", LoadedPrototypes)
-        };
-        channel.SendMessage(msg);
+            Sawmill.Error(
+                $"Rejecting prototype upload: dump would be {size} bytes, limit is {limit} bytes.");
+
+            return false;
+        }
+
+        return true;
+    }
+
+    internal SendDumpResult SendToNewUser(INetChannel channel, int ackKey, Action? onProgress = null)
+    {
+        return SendDump(channel, LoadedPrototypes, ackKey, onProgress);
+    }
+
+    internal SendDumpResult SendDump(
+        INetChannel channel,
+        IReadOnlyList<string> prototypes,
+        int ackKey,
+        Action? onProgress = null,
+        bool sequential = false)
+    {
+        if (prototypes.Count == 0)
+            return SendDumpResult.NoData;
+
+        if (!channel.IsConnected)
+        {
+            Sawmill.Warning(
+                $"Cannot send prototype dump to {channel.RemoteEndPoint}: channel is not connected.");
+
+            return SendDumpResult.Failed;
+        }
+
+        var snapshot = new string[prototypes.Count];
+        for (var i = 0; i < prototypes.Count; i++)
+            snapshot[i] = prototypes[i];
+
+        Stream stream;
+        try
+        {
+            stream = TransferManager.StartTransfer(
+                channel,
+                new TransferStartInfo { MessageKey = TransferKeyPrototypeDump });
+        }
+        catch (InvalidOperationException)
+        {
+            // IntegrationNetManager does not run the transfer handshake.
+            Sawmill.Debug($"Transfer not ready for {channel.RemoteEndPoint}; sending prototype dump as messages.");
+
+            foreach (var prototype in snapshot)
+                channel.SendMessage(new GamePrototypeLoadMessage { PrototypeData = prototype });
+
+            return SendDumpResult.NoData;
+        }
+        catch (Exception e)
+        {
+            Sawmill.Error($"Failed to start prototype dump to {channel.RemoteEndPoint}:\n{e}");
+            channel.Disconnect("Failed to start prototype dump.");
+            return SendDumpResult.Failed;
+        }
+
+        SendDumpAsync(stream, channel, snapshot, ackKey, onProgress, sequential);
+        return SendDumpResult.Sent;
+    }
+
+    private async void SendDumpAsync(
+        Stream stream,
+        INetChannel channel,
+        string[] prototypes,
+        int ackKey,
+        Action? onProgress,
+        bool sequential)
+    {
+        const int progressChunkSize = 16 * 1024;
+        var remoteEndPoint = channel.RemoteEndPoint;
+
+        try
+        {
+            await using (stream)
+            {
+                var header = new byte[PrototypeDumpFormat.LengthSize];
+                BinaryPrimitives.WriteInt32LittleEndian(header, ackKey);
+                await stream.WriteAsync(header).ConfigureAwait(false);
+                onProgress?.Invoke();
+
+                BinaryPrimitives.WriteInt32LittleEndian(header, prototypes.Length);
+                await stream.WriteAsync(header).ConfigureAwait(false);
+                onProgress?.Invoke();
+
+                BinaryPrimitives.WriteInt32LittleEndian(header, sequential ? 1 : 0);
+                await stream.WriteAsync(header).ConfigureAwait(false);
+                onProgress?.Invoke();
+
+                foreach (var prototype in prototypes)
+                {
+                    var bytes = Encoding.UTF8.GetBytes(prototype);
+                    BinaryPrimitives.WriteInt32LittleEndian(header, bytes.Length);
+                    await stream.WriteAsync(header).ConfigureAwait(false);
+                    onProgress?.Invoke();
+
+                    for (var offset = 0; offset < bytes.Length; offset += progressChunkSize)
+                    {
+                        var count = Math.Min(progressChunkSize, bytes.Length - offset);
+                        await stream.WriteAsync(bytes.AsMemory(offset, count)).ConfigureAwait(false);
+                        onProgress?.Invoke();
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Sawmill.Error($"Failed to send prototype dump to {remoteEndPoint}:\n{e}");
+            _taskManager.RunOnMainThread(() =>
+            {
+                if (channel.IsConnected)
+                    channel.Disconnect("Failed to send prototype dump.");
+            });
+        }
     }
 }

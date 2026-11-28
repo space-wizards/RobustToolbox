@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.ColorNaming;
 
-// color naming algorithim is inspired by https://react-spectrum.adobe.com/blog/accessible-color-descriptions.html
+// Color naming algorithm is inspired by https://react-spectrum.adobe.com/blog/accessible-color-descriptions.html
 
 public static class ColorNaming
 {

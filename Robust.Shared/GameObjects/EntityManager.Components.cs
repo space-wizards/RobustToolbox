@@ -2018,7 +2018,7 @@ namespace Robust.Shared.GameObjects
     /// <typeparam name="TComp1">Any component type.</typeparam>
     /// <example>
     ///     <code>
-    ///         public sealed class MySystem : EntitySystem
+    ///         public sealed partial class MySystem : EntitySystem
     ///         {
     ///             private EntityQuery&lt;TransformComponent&gt; _transforms = default!;
     ///             <br/>

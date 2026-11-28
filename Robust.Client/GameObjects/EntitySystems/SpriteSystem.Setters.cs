@@ -171,7 +171,6 @@ public sealed partial class SpriteSystem
             return;
 
         sprite.Comp._snapCardinals = value;
-        _tree.QueueTreeUpdate(sprite!);
         DirtyBounds(sprite!);
     }
 
@@ -184,7 +183,6 @@ public sealed partial class SpriteSystem
             return;
 
         sprite.Comp.GranularLayersRendering = value;
-        _tree.QueueTreeUpdate(sprite!);
         DirtyBounds(sprite!);
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -707,7 +708,7 @@ public abstract partial class SharedContainerSystem
 
         // Eject entities from their parent container if the parent change is done via setting the transform.
         if (TryComp(message.OldParent, out ContainerManagerComponent? containerManager))
-            RemoveEntity(message.OldParent.Value, message.Entity, containerManager, message.Transform, meta,  reparent: false, force: true);
+            RemoveEntity(message.OldParent.Value, message.Entity, containerManager, message.Transform, meta, reparent: false, force: true);
     }
 
     [Conditional("DEBUG"), Access(typeof(BaseContainer))]
@@ -721,3 +722,24 @@ public abstract partial class SharedContainerSystem
             $"Entity has bad container flags. Ent: {ToPrettyString(uid)}. Container: {container.ID}, Owner: {ToPrettyString(container.Owner)}");
     }
 }
+
+/// <summary>
+/// Base type for container action context that explains why or how container action occurred.
+/// I.e., the actor taking the item out of the container (<see cref="ContainerActorContext"/>).
+/// </summary>
+[PublicAPI]
+public interface IContainerActionContext;
+
+// This is needed only to not create almost identical implementations for contextual and uncontextualized overloads.
+/// <summary>
+/// The type that indicates that there are no container action context provided.
+/// </summary>
+internal struct NoContainerActionContext : IContainerActionContext;
+
+/// <summary>
+/// A container action context where an action was made by an entity.
+/// </summary>
+/// <param name="Actor">The entity that performed the container action.</param>
+/// <param name="Used">The entity that was used to perform the container action.</param>
+[PublicAPI]
+public readonly record struct ContainerActorContext(EntityUid Actor, EntityUid? Used = null) : IContainerActionContext;

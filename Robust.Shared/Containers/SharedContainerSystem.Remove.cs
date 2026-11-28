@@ -2,7 +2,6 @@ using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Utility;
 
@@ -10,6 +9,16 @@ namespace Robust.Shared.Containers;
 
 public abstract partial class SharedContainerSystem
 {
+    /// <inheritdoc cref="Remove{T}"/>
+    public bool Remove(
+        Entity<TransformComponent?, MetaDataComponent?> toRemove,
+        BaseContainer container,
+        bool reparent = true,
+        bool force = false,
+        EntityCoordinates? destination = null,
+        Angle? localRotation = null)
+        => Remove<NoContainerActionContext>(default, toRemove, container, reparent, force, destination, localRotation);
+
     /// <summary>
     /// Attempts to remove the entity from this container.
     /// </summary>
@@ -17,6 +26,8 @@ public abstract partial class SharedContainerSystem
     /// If the insertion is successful, the inserted entity will end up parented to the
     /// container entity, and the inserted entity's local position will be set to the zero vector.
     /// </remarks>
+    /// <typeparam name="T">The type of the container action context.</typeparam>
+    /// <param name="context">Context explaining why or how this container action occurred.</param>
     /// <param name="toRemove">The entity to remove.</param>
     /// <param name="container">The container to remove from.</param>
     /// <param name="reparent">If false, this operation will not rigger a move or parent change event. Ignored if
@@ -26,13 +37,16 @@ public abstract partial class SharedContainerSystem
     /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
     /// container, the grid, or the map.</param>
     /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
-    public bool Remove(
+    /// <returns>Whether the entity was removed from the container.</return>
+    public bool Remove<T>(
+        T context,
         Entity<TransformComponent?, MetaDataComponent?> toRemove,
         BaseContainer container,
         bool reparent = true,
         bool force = false,
         EntityCoordinates? destination = null,
         Angle? localRotation = null)
+        where T : struct, IContainerActionContext
     {
         var (uid, xform, meta) = toRemove;
 
@@ -98,8 +112,20 @@ public abstract partial class SharedContainerSystem
         RecursivelyUpdateJoints((toRemove, xform));
 
         // Raise container events (after re-parenting and internal remove).
-        RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container), true);
-        RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, container), false);
+        if (context is not NoContainerActionContext)
+        {
+            var evRemovedContext = new EntRemovedFromContainerMessage<T>(context, container, toRemove);
+            RaiseLocalEvent(container.Owner, ref evRemovedContext, true);
+
+            var evGotRemovedContext = new EntGotRemovedFromContainerMessage<T>(context, container, toRemove);
+            RaiseLocalEvent(uid, ref evGotRemovedContext, true);
+        }
+
+        var evRemoved = new EntRemovedFromContainerMessage(container, toRemove);
+        RaiseLocalEvent(container.Owner, ref evRemoved, true);
+
+        var evGotRemoved = new EntGotRemovedFromContainerMessage(container, toRemove);
+        RaiseLocalEvent(uid, ref evGotRemoved, true);
 
         DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value), $"Failed to set coordinates of {ToPrettyString(toRemove, meta)} to be inside {ToPrettyString(container.Owner)} container '{container.ID}'");
 
@@ -107,23 +133,49 @@ public abstract partial class SharedContainerSystem
         return true;
     }
 
+    /// <inheritdoc cref="CanRemove{T}"/>
+    public bool CanRemove(EntityUid toRemove, BaseContainer container)
+        => CanRemove<NoContainerActionContext>(default, toRemove, container);
+
     /// <summary>
     /// Checks if the entity can be removed from this container.
     /// </summary>
+    /// <typeparam name="T">The type of the container action context.</typeparam>
+    /// <param name="context">Context explaining why or how this container action occurred.</param>
+    /// <param name="toRemove">The entity to remove.</param>
+    /// <param name="container">The container to remove from.</param>
     /// <returns>True if the entity can be removed, false otherwise.</returns>
-    public bool CanRemove(EntityUid toRemove, BaseContainer container)
+    public bool CanRemove<T>(T context, EntityUid toRemove, BaseContainer container)
+        where T : struct, IContainerActionContext
     {
         if (!container.Contains(toRemove))
             return false;
 
         //raise events
-        var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(container, toRemove);
-        RaiseLocalEvent(container.Owner, removeAttemptEvent, true);
-        if (removeAttemptEvent.Cancelled)
+        if (context is not NoContainerActionContext)
+        {
+            var evRemovingAttemptContext = new ContainerIsRemovingAttemptEvent<T>(context, container, toRemove);
+            RaiseLocalEvent(container.Owner, ref evRemovingAttemptContext, true);
+
+            if (evRemovingAttemptContext.Cancelled)
+                return false;
+
+            var evRemovedAttemptContext = new ContainerGettingRemovedAttemptEvent<T>(context, container, toRemove);
+            RaiseLocalEvent(toRemove, ref evRemovedAttemptContext, true);
+
+            if (evRemovedAttemptContext.Cancelled)
+                return false;
+        }
+
+        var evRemovingAttempt = new ContainerIsRemovingAttemptEvent(container, toRemove);
+        RaiseLocalEvent(container.Owner, ref evRemovingAttempt, true);
+
+        if (evRemovingAttempt.Cancelled)
             return false;
 
-        var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(container, toRemove);
-        RaiseLocalEvent(toRemove, gettingRemovedAttemptEvent, true);
-        return !gettingRemovedAttemptEvent.Cancelled;
+        var evRemovedAttempt = new ContainerGettingRemovedAttemptEvent(container, toRemove);
+        RaiseLocalEvent(toRemove, ref evRemovedAttempt, true);
+
+        return !evRemovedAttempt.Cancelled;
     }
 }

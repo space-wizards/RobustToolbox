@@ -15,10 +15,11 @@ namespace Robust.Shared.Maths.Tests
             var box = new Box2(new Vector2(5, -5), new Vector2(10, 5));
             var ray = new Ray(new Vector2(0, 1), Vector2.UnitX);
 
-            var result = ray.Intersects(box, out var dist, out var hitPos);
+            var result = ray.Intersects(box, out var dist, out var hitPos, out var exit);
 
             Assert.That(result, Is.True);
             Assert.That(dist, Is.EqualTo(5));
+            Assert.That(exit, Is.EqualTo(10));
             Assert.That(hitPos.X, Is.EqualTo(5));
             Assert.That(hitPos.Y, Is.EqualTo(1));
         }

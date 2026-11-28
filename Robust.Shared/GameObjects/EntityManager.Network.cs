@@ -151,6 +151,19 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityRelation EnsureEntityRelation<T>(NetEntity? nEntity, EntityUid callerEntity)
+    {
+        // Invalid NetEntities get converted to null relations for safety.
+        if (nEntity == null
+            || nEntity == NetEntity.Invalid
+            || !NetEntityLookup.ContainsKey(nEntity.Value))
+            return EntityRelation.Null;
+
+        return new EntityRelation(EnsureEntity<T>(nEntity.Value, callerEntity));
+    }
+
+    /// <inheritdoc />
     public EntityUid GetEntity(NetEntity nEntity)
     {
         if (nEntity == NetEntity.Invalid)
@@ -362,6 +375,31 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public HashSet<EntityRelation> EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = new HashSet<EntityRelation>(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
+    public void EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityRelation> relations)
+    {
+        relations.Clear();
+        relations.EnsureCapacity(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            relations.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
+        }
+    }
+
+    /// <inheritdoc />
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
         var entities = new List<EntityUid>(netEntities.Count);
@@ -384,7 +422,34 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
+    /// <inheritdoc />
+    public List<EntityRelation> EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = new List<EntityRelation>(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
+    public void EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityRelation> relations)
+    {
+        relations.Clear();
+        relations.EnsureCapacity(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            relations.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
+        }
+    }
+
+    public void EnsureEntityDictionary<TComp, TValue>(
+        Dictionary<NetEntity, TValue> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, TValue> entities)
     {
         entities.Clear();
@@ -395,7 +460,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionaryNullableValue<TComp, TValue>(
+        Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, TValue?> entities)
     {
         entities.Clear();
@@ -406,7 +473,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity> netEntities,
+        EntityUid callerEntity,
         Dictionary<TKey, EntityUid> entities) where TKey : notnull
     {
         entities.Clear();
@@ -417,7 +486,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity?> netEntities,
+        EntityUid callerEntity,
         Dictionary<TKey, EntityUid?> entities) where TKey : notnull
     {
         entities.Clear();
@@ -428,7 +499,61 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp, TValue>(
+        Dictionary<NetEntity, TValue> netEntities,
+        EntityUid callerEntity,
+        Dictionary<EntityRelation, TValue> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var pair in netEntities)
+        {
+            entities.TryAdd(EnsureEntityRelation<TComp>(pair.Key, callerEntity), pair.Value);
+        }
+    }
+
+    public void EnsureEntityDictionaryNullableValue<TComp, TValue>(
+        Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
+        Dictionary<EntityRelation, TValue?> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var pair in netEntities)
+        {
+            entities.TryAdd(EnsureEntityRelation<TComp>(pair.Key, callerEntity), pair.Value);
+        }
+    }
+
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity?> netEntities,
+        EntityUid callerEntity,
+        Dictionary<TKey, EntityRelation> entities) where TKey : notnull
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var pair in netEntities)
+        {
+            entities.TryAdd(pair.Key, EnsureEntityRelation<TComp>(pair.Value, callerEntity));
+        }
+    }
+
+    public void EnsureEntityDictionary<TComp, TKey>(
+        Dictionary<TKey, NetEntity?> netEntities,
+        EntityUid callerEntity,
+        Dictionary<TKey, EntityRelation?> entities) where TKey : notnull
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var pair in netEntities)
+        {
+            entities.TryAdd(pair.Key, EnsureEntityRelation<TComp>(pair.Value, callerEntity));
+        }
+    }
+
+    public void EnsureEntityDictionary<TComp>(
+        Dictionary<NetEntity, NetEntity> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, EntityUid> entities)
     {
         entities.Clear();
@@ -439,7 +564,9 @@ public partial class EntityManager
         }
     }
 
-    public void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity,
+    public void EnsureEntityDictionary<TComp>(
+        Dictionary<NetEntity, NetEntity?> netEntities,
+        EntityUid callerEntity,
         Dictionary<EntityUid, EntityUid?> entities)
     {
         entities.Clear();
@@ -516,6 +643,22 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityRelation> entities)
+    {
+        var netEntities = new HashSet<NetEntity>(entities.Count);
+
+        foreach (var relation in entities)
+        {
+            if (relation.Entity == null)
+                continue;
+
+            netEntities.Add(GetNetEntity(relation.Entity.Value));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities)
     {
         var netEntities = new List<NetEntity>(entities.Count);
@@ -562,6 +705,22 @@ public partial class EntityManager
         foreach (var netEntity in entities)
         {
             netEntities.Add(GetNetEntity(netEntity));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public List<NetEntity> GetNetEntityList(List<EntityRelation> entities)
+    {
+        var netEntities = new List<NetEntity>(entities.Count);
+
+        foreach (var relation in entities)
+        {
+            if (relation.Entity == null)
+                continue;
+
+            netEntities.Add(GetNetEntity(relation.Entity.Value));
         }
 
         return netEntities;
@@ -621,6 +780,49 @@ public partial class EntityManager
 
     /// <inheritdoc />
     public Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityUid?> entities) where T : notnull
+    {
+        var netEntities = new Dictionary<T, NetEntity?>(entities.Count);
+
+        foreach (var pair in entities)
+        {
+            netEntities.Add(pair.Key, GetNetEntity(pair.Value));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityRelation, T> entities)
+    {
+        var netEntities = new Dictionary<NetEntity, T>(entities.Count);
+
+        foreach (var pair in entities)
+        {
+            var netEntity = GetNetEntity(pair.Key);
+            if (netEntity == null)
+                continue;
+
+            netEntities.Add(netEntity.Value, pair.Value);
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityRelation> entities) where T : notnull
+    {
+        var netEntities = new Dictionary<T, NetEntity?>(entities.Count);
+
+        foreach (var pair in entities)
+        {
+            netEntities.Add(pair.Key, GetNetEntity(pair.Value));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityRelation?> entities) where T : notnull
     {
         var netEntities = new Dictionary<T, NetEntity?>(entities.Count);
 

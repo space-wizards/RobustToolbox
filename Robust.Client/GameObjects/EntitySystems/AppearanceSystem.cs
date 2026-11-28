@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
+using Robust.Client.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.GameStates;
@@ -16,12 +17,12 @@ namespace Robust.Client.GameObjects
         private readonly Queue<(EntityUid uid, AppearanceComponent)> _queuedUpdates = new();
         [Dependency] private ISerializationManager _serialization = default!;
 
-        public override void Initialize()
+        [SubscribeLocalEvent]
+        private void OnReenteredPvs(Entity<AppearanceComponent> ent, ref ReenteredPvsEvent args)
         {
-            base.Initialize();
-
-            SubscribeLocalEvent<AppearanceComponent, ComponentStartup>(OnAppearanceStartup);
-            SubscribeLocalEvent<AppearanceComponent, ComponentHandleState>(OnAppearanceHandleState);
+            // Force an update even if not dirty because when detaching the visualizers get skipped.
+            if (ent.Comp.AppearanceDirty)
+                QueueUpdate(ent, ent.Comp);
         }
 
         protected override void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
@@ -32,11 +33,13 @@ namespace Robust.Client.GameObjects
             args.State = new AppearanceComponentState(clone);
         }
 
+        [SubscribeLocalEvent]
         private void OnAppearanceStartup(EntityUid uid, AppearanceComponent component, ComponentStartup args)
         {
             QueueUpdate(uid, component);
         }
 
+        [SubscribeLocalEvent]
         private void OnAppearanceHandleState(EntityUid uid, AppearanceComponent component, ref ComponentHandleState args)
         {
             if (args.Current is not AppearanceComponentState actualState)

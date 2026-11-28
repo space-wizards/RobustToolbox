@@ -77,6 +77,14 @@ namespace Robust.UnitTesting.Shared.Localization
     gender: male
     proper: true
 
+# Values specified in fluent at PARENT and supplemented by empty child fluent.
+- type: entity
+  id: TestInheritEmptyValueParent
+
+- type: entity
+  id: TestInheritEmptyValueChild
+  parent: TestInheritEmptyValueParent
+
 # Attribures stored in grammar component
 - type: entity
   id: PropsInGrammar
@@ -140,6 +148,14 @@ ent-TestInheritOverridingParent = XA
   .suffix = XC
   .gender = female
   .proper = false
+
+ent-TestInheritEmptyValueParent = A
+  .desc = B
+  .gender = male
+  .proper = true
+
+ent-TestInheritEmptyValueChild =
+  .suffix = C
 
 
 test-message-gender = { GENDER($entity) ->
@@ -234,6 +250,7 @@ test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
         [TestCase("PropsInLocOverriding")]
         [TestCase("PropsInGrammar")]
         [TestCase("TestInheritOverridingChild")]
+        [TestCase("TestInheritEmptyValueChild")]
         public void TestLocData(string prototype)
         {
             var loc = IoCManager.Resolve<ILocalizationManager>();

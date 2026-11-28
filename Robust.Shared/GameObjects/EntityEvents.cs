@@ -13,6 +13,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public abstract class EntityEventArgs { }
 
+    [Obsolete("Use IHandleableEvent instead with a by ref struct event")]
     [Serializable, NetSerializable]
     public abstract class HandledEntityEventArgs : EntityEventArgs
     {
@@ -22,6 +23,7 @@ namespace Robust.Shared.GameObjects
         public bool Handled { get; set; }
     }
 
+    [Obsolete("Use ICancelableEvent instead with a by ref struct event")]
     [Serializable, NetSerializable]
     public abstract class CancellableEntityEventArgs : EntityEventArgs
     {
@@ -39,6 +41,56 @@ namespace Robust.Shared.GameObjects
         ///     Uncancels the event. Don't call this unless you know what you're doing.
         /// </summary>
         public void Uncancel() => Cancelled = false;
+    }
+
+    /// <summary>
+    /// An interface which allows an event to be "Handled" meaning a method has successfully responded to it in some way.
+    /// </summary>
+    public interface IHandleableEvent
+    {
+        bool Handled { get; protected set; }
+
+        /// <summary>
+        /// Handles the event, call this when your method has correctly responded to the event implementing this interface.
+        /// </summary>
+        public void Handle()
+        {
+            Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// An interface which allows an event to be "Canceled" meaning a method has negatively responded to it in some way.
+    /// This is typically used for attempt events to prevent further code from being run.
+    /// </summary>
+    public interface ICancelableEvent
+    {
+        bool Cancelled { get; protected set; }
+
+        /// <summary>
+        /// Cancels the event, call this when your method wishes to cancel the event implementing this interface.
+        /// </summary>
+        public void Cancel()
+        {
+            Cancelled = true;
+        }
+    }
+
+    /// <summary>
+    /// Extension methods for Events so that inheritors of these event interfaces don't need to redefine their public methods.
+    /// These are filtered by struct and interfaces respectively because you should really be using ByRef structs for your events.
+    /// </summary>
+    public static class EventExtensions
+    {
+        extension<T>(ref T ev) where T : struct, IHandleableEvent
+        {
+            public void Handle() => ev.Handle();
+        }
+
+        extension<T>(ref T ev) where T : struct, ICancelableEvent
+        {
+            public void Cancel() => ev.Cancel();
+        }
     }
 
     public readonly struct EntitySessionEventArgs

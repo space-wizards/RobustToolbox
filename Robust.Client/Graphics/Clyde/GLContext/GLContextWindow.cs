@@ -126,10 +126,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (reg.IsMainWindow)
                     return;
 
-                // Recreate render texture for the window.
-                var data = _windowData[reg.Id];
-                data.RenderTexture!.Dispose();
-                CreateWindowRenderTexture(data);
+                // This can crash if 2 popouts open at once due to no context so just queue it.
+                _windowData[reg.Id].RenderTextureStale = true;
             }
 
             public override unsafe void* GetProcAddress(string name)
@@ -147,6 +145,12 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
+                    if (data.RenderTextureStale)
+                    {
+                        data.RenderTextureStale = false;
+                        CreateWindowRenderTexture(data);
+                    }
+
                     var loaded = Clyde.RtToLoaded(data.RenderTexture!);
                     GL.BindFramebuffer(FramebufferTarget.Framebuffer, loaded.FramebufferHandle.Handle);
                 }
@@ -351,6 +355,7 @@ namespace Robust.Client.Graphics.Clyde
                 public WindowReg Reg = default!;
 
                 public RenderTexture? RenderTexture;
+                public bool RenderTextureStale;
                 // Used EXCLUSIVELY to run the two rendering commands to blit to the window.
                 public Thread? BlitThread;
                 public ManualResetEventSlim? BlitStartEvent;
